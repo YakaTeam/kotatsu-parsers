@@ -69,8 +69,7 @@ internal class AnimeSama(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        val url = "$baseUrl/catalogue"
-            .toHttpUrl().newBuilder()
+        val url = "$baseUrl/catalogue".toHttpUrl().newBuilder()
 
         // keyword
         val encodedQuery = filter.query?.splitByWhitespace()?.joinToString(separator = "+") { part ->
@@ -89,7 +88,7 @@ internal class AnimeSama(context: MangaLoaderContext) :
             url.addQueryParameter("page", page.toString())
         }
 
-		val doc = webClient.httpGet("https://$url").parseHtml()
+		val doc = webClient.httpGet(url.toString()).parseHtml()
         return parseCataloguePage(doc)
 	}
 
