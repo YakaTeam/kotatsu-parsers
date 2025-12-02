@@ -186,7 +186,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
             ?: throw ParseException("Comic data not found", url)
         val jo = JSONObject(comicDataJS)
 
-        val altTitles = jo.getJSONArray("titles")
+        val altTitles = jo.getJSONArray("md_titles")
             ?.asTypedList<JSONObject>()
             ?.mapNotNullToSet { it.getStringOrNull("title") }
             ?: emptySet()
