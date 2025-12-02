@@ -52,7 +52,12 @@ internal class ComicKLive(context: MangaLoaderContext) :
 
     override suspend fun getFilterOptions() = MangaListFilterOptions(
         availableTags = fetchAvailableTags(),
-        availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED, MangaState.PAUSED, MangaState.ABANDONED),
+        availableStates = EnumSet.of(
+            MangaState.ONGOING,
+            MangaState.FINISHED,
+            MangaState.PAUSED,
+            MangaState.ABANDONED
+        ),
         availableContentTypes = EnumSet.of(
             ContentType.MANGA,
             ContentType.MANHWA,
@@ -150,12 +155,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
             )
         }
 
-        val ja = try {
-            webClient.httpGet(url.build()).parseJsonArray()
-        } catch (e: Exception) {
-            throw Exception(e) // debugging
-        }
-
+        val ja = webClient.httpGet(url.build()).parseJsonArray()
         val tagsMap = tagsArray.get()
         return ja.mapJSON { jo ->
             val slug = jo.getString("slug")
