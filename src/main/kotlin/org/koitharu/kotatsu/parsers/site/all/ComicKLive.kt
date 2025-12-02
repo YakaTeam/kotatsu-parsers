@@ -277,7 +277,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
 
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
         // Again :p?
-        val jo = webClient.httpGet("https://${domain}/${chapter.url}")
+        val jo = webClient.httpGet("https://${domain}/comic/${chapter.url}")
             .parseHtml().selectFirst("#sv-data")?.data()
             ?: throw IllegalArgumentException("Page data not found")
 
