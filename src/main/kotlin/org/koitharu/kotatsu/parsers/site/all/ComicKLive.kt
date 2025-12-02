@@ -74,7 +74,6 @@ internal class ComicKLive(context: MangaLoaderContext) :
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        val domain = domain
         val url = urlBuilder()
             .host(domain)
             .addPathSegment("api")
