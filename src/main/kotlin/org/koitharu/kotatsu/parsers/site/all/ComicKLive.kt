@@ -206,9 +206,9 @@ internal class ComicKLive(context: MangaLoaderContext) :
             description = jo.getStringOrNull("desc")?.let { desc ->
                 parseBodyFragment(desc).wholeText()
             },
-            tags = jo.optJSONArray("genres")?.let { arr ->
+            tags = jo.optJSONArray("md_comic_md_genres")?.let { arr ->
                 (0 until arr.length()).map { i ->
-                    val tag = arr.getJSONObject(i).getJSONObject("genres")
+                    val tag = arr.getJSONObject(i).getJSONObject("md_genres")
                     MangaTag(
                         title = tag.getString("name"),
                         key = tag.getString("slug"),
