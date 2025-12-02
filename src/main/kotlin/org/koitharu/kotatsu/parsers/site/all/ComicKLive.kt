@@ -155,7 +155,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
             )
         }
 
-        val ja = webClient.httpGet(url.build()).parseJsonArray()
+        val ja = webClient.httpGet(url.build()).parseJson().getJSONArray("data")
         val tagsMap = tagsArray.get()
         return ja.mapJSON { jo ->
             val slug = jo.getString("slug")
@@ -165,18 +165,21 @@ internal class ComicKLive(context: MangaLoaderContext) :
                 altTitles = emptySet(),
                 url = slug,
                 publicUrl = "https://$domain/comic/$slug",
-                rating = jo.getDoubleOrDefault("rating", -10.0).toFloat() / 10f,
-                contentRating = null,
-                coverUrl = jo.getStringOrNull("cover_url"),
+                rating = RATING_UNKNOWN,
+                contentRating = when (jo.optString("content_rating")) {
+                    "safe" -> ContentRating.SAFE
+                    "suggestive" -> ContentRating.SUGGESTIVE
+                    "erotica" -> ContentRating.ADULT
+                    else -> ContentRating.SAFE // Default to safe if empty or unknown
+                },
+                coverUrl = jo.getStringOrNull("default_thumbnail"),
                 largeCoverUrl = null,
-                description = jo.getStringOrNull("desc"),
+                description = null,
                 tags = jo.selectGenres(tagsMap),
-                state = when (jo.getIntOrDefault("status", 0)) {
-                    1 -> MangaState.ONGOING
-                    2 -> MangaState.FINISHED
-                    3 -> MangaState.ABANDONED
-                    4 -> MangaState.PAUSED
-                    else -> null
+                state = if (jo.optBoolean("is_ended", false)) {
+                    MangaState.FINISHED
+                } else {
+                    MangaState.ONGOING
                 },
                 authors = emptySet(),
                 source = source,
