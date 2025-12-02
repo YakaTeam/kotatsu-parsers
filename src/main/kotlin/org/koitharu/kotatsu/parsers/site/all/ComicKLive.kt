@@ -5,19 +5,19 @@ import androidx.collection.SparseArrayCompat
 import okhttp3.HttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
+import org.jsoup.Jsoup.parseBodyFragment
 import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
+import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
-
-private const val CHAPTERS_LIMIT = 99999
 
 @Broken("Debugging")
 @MangaSourceParser("COMICKLIVE", "ComicK (Unofficial)")
@@ -160,22 +160,21 @@ internal class ComicKLive(context: MangaLoaderContext) :
             val slug = jo.getString("slug")
             Manga(
                 id = generateUid(slug),
-                title = jo.getString("title"),
+                title = jo.optString("title", "No title available"),
                 altTitles = emptySet(),
                 url = slug,
                 publicUrl = "https://$domain/comic/$slug",
                 rating = RATING_UNKNOWN,
                 contentRating = when (jo.optString("content_rating")) {
-                    "safe" -> ContentRating.SAFE
                     "suggestive" -> ContentRating.SUGGESTIVE
                     "erotica" -> ContentRating.ADULT
-                    else -> ContentRating.SAFE // Default to safe if empty or unknown
+                    else -> ContentRating.SAFE
                 },
                 coverUrl = jo.getStringOrNull("default_thumbnail"),
                 largeCoverUrl = null,
                 description = null,
                 tags = jo.selectGenres(tagsMap),
-                state = if (jo.optBoolean("is_ended", false)) {
+                state = if (jo.getBoolean("is_ended")) {
                     MangaState.FINISHED
                 } else {
                     MangaState.ONGOING
@@ -187,38 +186,52 @@ internal class ComicKLive(context: MangaLoaderContext) :
     }
 
     override suspend fun getDetails(manga: Manga): Manga {
-        val domain = domain
-        val url = "https://$domain/api/comic/${manga.url}?tachiyomi=true"
-        val jo = webClient.httpGet(url).parseJson()
-        val comic = jo.getJSONObject("comic")
-        val alt = comic.getJSONArray("md_titles").asTypedList<JSONObject>().mapNotNullToSet {
-            it.getStringOrNull("title")
-        }
-        val authors = jo.getJSONArray("artists").mapJSONNotNullToSet { it.getStringOrNull("name") }
+        val url = "https://$domain/comic/${manga.url}"
+        val htmlPage = webClient.httpGet(url).parseHtml()
+
+        // get (pre-loaded) embedded <script> from html :p?
+        val comicDataJS = htmlPage.selectFirst("#comic-data")?.data()
+            ?: throw ParseException("Comic data not found", url)
+        val jo = JSONObject(comicDataJS)
+
+        val altTitles = jo.getJSONArray("titles")
+            ?.asTypedList<JSONObject>()
+            ?.mapNotNullToSet { it.getStringOrNull("title") }
+            ?: emptySet()
+
+        val authors = jo.getJSONArray("authors")
+            ?.mapJSONNotNullToSet { it.getStringOrNull("name") }
+            ?: emptySet()
+
         return manga.copy(
-            altTitles = alt,
-            contentRating = when {
-                comic.getBooleanOrDefault("hentai", false) -> ContentRating.ADULT
-                jo.getBooleanOrDefault("matureContent", false) -> ContentRating.SUGGESTIVE
+            title = jo.optString("title", manga.title),
+            altTitles = altTitles,
+            contentRating = when (jo.getStringOrNull("content_rating")) {
+                "suggestive" -> ContentRating.SUGGESTIVE
+                "erotica" -> ContentRating.ADULT
                 else -> ContentRating.SAFE
             },
-            description = comic.getStringOrNull("parsed") ?: comic.getStringOrNull("desc"),
-            tags = manga.tags + comic.getJSONArray("md_comic_md_genres").mapJSONToSet {
-                val g = it.getJSONObject("md_genres")
-                MangaTag(
-                    title = g.getString("name"),
-                    key = g.getString("slug"),
-                    source = source,
-                )
+            description = jo.getStringOrNull("desc")?.let { desc ->
+                parseBodyFragment(desc).wholeText()
             },
+            tags = jo.optJSONArray("genres")?.let { arr ->
+                (0 until arr.length()).map { i ->
+                    val tag = arr.getJSONObject(i).getJSONObject("genres")
+                    MangaTag(
+                        title = tag.getString("name"),
+                        key = tag.getString("slug"),
+                        source = source
+                    )
+                }.toSet()
+            } ?: emptySet(),
             authors = authors,
-            chapters = getChapters(comic.getString("hid")),
+            chapters = getChapters(manga.url),
         )
     }
 
     private suspend fun getChapters(hid: String): List<MangaChapter> {
         val ja = webClient.httpGet(
-            url = "https://api.${domain}/comic/$hid/chapters?limit=$CHAPTERS_LIMIT",
+            url = "https://api.${domain}/comic/$hid/chapters?limit=99999",
         ).parseJson().getJSONArray("chapters")
         val dateFormat = SimpleDateFormat("yyyy-MM-dd")
         return ja.asTypedList<JSONObject>().reversed().mapChapters { _, jo ->
@@ -300,14 +313,38 @@ internal class ComicKLive(context: MangaLoaderContext) :
     }
 
     private fun JSONObject.selectGenres(tags: SparseArrayCompat<MangaTag>): Set<MangaTag> {
+        // Ref from Redo, like a mess
+        // Need to debug that website to refactor it, leave it later
         val array = optJSONArray("genres") ?: return emptySet()
         val res = ArraySet<MangaTag>(array.length())
         for (i in 0 until array.length()) {
-            val id = array.getInt(i)
-            val tag = tags[id] ?: continue
-            res.add(tag)
+            val element = array.opt(i)
+            val tag = when (element) {
+                is Int -> tags[element]
+                is JSONObject -> {
+                    val slug = element.optString("slug")
+                    if (slug.isNotEmpty()) {
+                        findTagBySlug(tags, slug)
+                    } else {
+                        null
+                    }
+                }
+                else -> null
+            }
+            tag?.let { res.add(it) }
         }
         return res
+    }
+
+    private fun findTagBySlug(tags: SparseArrayCompat<MangaTag>, slug: String): MangaTag? {
+        // Same problem
+        for (i in 0 until tags.size()) {
+            val tag = tags.valueAt(i)
+            if (tag.key == slug) {
+                return tag
+            }
+        }
+        return null
     }
 
     private fun JSONArray.joinToString(separator: String): String {
