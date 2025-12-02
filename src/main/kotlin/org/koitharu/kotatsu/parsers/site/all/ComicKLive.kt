@@ -20,7 +20,7 @@ import java.util.*
 
 @MangaSourceParser("COMICKLIVE", "ComicK (Unofficial)")
 internal class ComicKLive(context: MangaLoaderContext) :
-    PagedMangaParser(context, MangaParserSource.COMICKLIVE, 20) {
+    PagedMangaParser(context, MangaParserSource.COMICKLIVE, 50) {
 
     override val configKeyDomain = ConfigKey.Domain(
         "comick.live",
@@ -71,15 +71,16 @@ internal class ComicKLive(context: MangaLoaderContext) :
         ),
     )
 
+    init {
+        null.also { this.pageCursor = null }
+    }
+
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         val url = urlBuilder()
             .host(domain)
             .addPathSegment("api")
             .addPathSegment("search")
             .addQueryParameter("type", "comic")
-            .addQueryParameter("tachiyomi", "true")
-            .addQueryParameter("limit", pageSize.toString())
-            .addQueryParameter("page", page.toString())
 
         filter.query?.let {
             url.addQueryParameter("q", filter.query)
@@ -152,7 +153,14 @@ internal class ComicKLive(context: MangaLoaderContext) :
             )
         }
 
-        val ja = webClient.httpGet(url.build()).parseJson().getJSONArray("data")
+        // no "page" parameter, use "cursor" to prevent empty list when searching with keyword
+        if (filter.query.isNullOrEmpty() && page > 1) {
+            url.addQueryParameter("cursor", pageCursor)
+        }
+
+        val res = webClient.httpGet(url.build()).parseJson()
+        pageCursor = res.getString("next_cursor")
+        val ja = res.getJSONArray("data")
         val tagsMap = tagsArray.get()
         return ja.mapJSON { jo ->
             val slug = jo.getString("slug")
@@ -378,5 +386,6 @@ internal class ComicKLive(context: MangaLoaderContext) :
         return (0 until length()).joinToString(separator) { i -> getString(i) }
     }
 
+    private var pageCursor: String? = null
     private val tagsArray = suspendLazy(initializer = ::loadTags)
 }
