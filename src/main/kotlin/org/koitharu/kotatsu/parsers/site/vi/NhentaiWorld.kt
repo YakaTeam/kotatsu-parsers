@@ -20,12 +20,6 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.NHENTAIWORLD, 24) {
 
     private val apiDomain = "nhentaiclub.cyou"
-    private val cdnDomains = listOf(
-        "i1.nhentaiclub.shop",
-        "i3.nhentaiclub.shop",
-        "i7.nhentaiclub.shop",
-    )
-
     override val configKeyDomain = ConfigKey.Domain("nhentaiclub.icu")
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
@@ -115,12 +109,13 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 		val res = webClient.httpGet(urlBuilder.build()).parseJson()
 		return res.getJSONArray("data").mapJSONNotNull { ja ->
 			val id = ja.getLong("id")
-            val cdn = cdnCache.getOrPut(id) { findWorkingCdn(id) }
+			val url = id.toString()
+            val cdn = getCDNDomain(url)
 			Manga(
 				id = generateUid(id),
 				title = ja.getString("name"),
 				altTitles = emptySet(),
-				url = id.toString(),
+				url = url,
 				publicUrl = "/g/$id".toAbsoluteUrl(domain),
 				rating = RATING_UNKNOWN,
 				contentRating = ContentRating.ADULT,
@@ -239,7 +234,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 				throw ParseException("Cant get manga ID for images", chapter.url)
 			}
 
-		val imgDomain = getImageDomain(mangaId)
+		val imgDomain = getCDNDomain(mangaId)
 		return (1..pictures).map { pageNumber ->
 			val imgUrl = "https://$imgDomain/$mangaId/$language/$name/$pageNumber.jpg"
 			MangaPage(
@@ -267,17 +262,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
         }
     }
 
-    private suspend fun findWorkingCdn(id: Long): String {
-        for (cdn in cdnDomains) {
-            val testUrl = "https://$cdn/$id/thumbnail.jpg"
-            if (webClient.httpHead(testUrl).isSuccessful) {
-                return cdn
-            }
-        }
-        return cdnDomains.first()
-    }
-
-	private fun getImageDomain(mangaId: String): String {
+	private fun getCDNDomain(mangaId: String): String {
 		val firstDigit = mangaId.firstOrNull()?.digitToIntOrNull() ?: 0
 		return when {
 			firstDigit < 4 -> "i7.nhentaiclub.shop"
@@ -295,6 +280,4 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 			}
 			.toMap()
 	}
-
-    private val cdnCache = mutableMapOf<Long, String>()
 }
