@@ -110,7 +110,6 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 		val res = webClient.httpGet(urlBuilder.build()).parseJson()
 		return res.getJSONArray("data").mapJSONNotNull { ja ->
 			val id = ja.getLong("id")
-            val thumbnail = "$cdnDomain/$id/thumbnail.jpg"
 			Manga(
 				id = generateUid(id),
 				title = ja.getString("name"),
@@ -119,7 +118,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 				publicUrl = "/g/$id".toAbsoluteUrl(domain),
 				rating = RATING_UNKNOWN,
 				contentRating = ContentRating.ADULT,
-				coverUrl = thumbnail,
+				coverUrl = "https://$cdnDomain/$id/thumbnail.jpg",
 				tags = emptySet(),
 				state = null,
 				authors = emptySet(),
