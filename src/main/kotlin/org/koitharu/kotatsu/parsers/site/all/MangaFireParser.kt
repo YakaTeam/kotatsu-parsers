@@ -40,7 +40,6 @@ import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.parseSafe
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
-import org.koitharu.kotatsu.parsers.util.splitByWhitespace
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.toTitleCase
@@ -193,12 +192,10 @@ internal abstract class MangaFireParser(
 
             when {
                 !filter.query.isNullOrEmpty() -> {
-					// No need to encode query
-                    val query = filter.query.splitByWhitespace().joinToString("+") { it }
+                    val query = filter.query.trim()
+                    // Removed manual encoding, using standard addQueryParameter
                     addQueryParameter("keyword", query)
 
-                    // TS: const vrf = this.generate(opts.query.trim());
-                    // Generate VRF for search query (raw, before + replacement)
                     val searchVrf = VrfGenerator.generate(query)
                     addQueryParameter("vrf", searchVrf)
 
@@ -362,7 +359,6 @@ internal abstract class MangaFireParser(
     }
 
     private suspend fun getChaptersBranch(mangaId: String, branch: ChapterBranch): List<MangaChapter> {
-        // TS: this.generate(mangaIdShort + "@chapter@" + lang);
         val readVrfInput = "$mangaId@${branch.type}@${branch.langCode}"
         val readVrf = VrfGenerator.generate(readVrfInput)
 
@@ -495,13 +491,15 @@ internal abstract class MangaFireParser(
     }
 
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-        val chapterId = chapter.url.substringAfterLast('/')
+        // Url format: mangaId/type/lang/chapterId
+        val parts = chapter.url.split('/')
+        val type = parts[1] // "chapter" or "volume"
+        val chapterId = parts[3]
 
-        // TS: this.generate("chapter@" + chapterId);
-        val vrf = VrfGenerator.generate("chapter@$chapterId")
+        val vrf = VrfGenerator.generate("$type@$chapterId")
 
         val images = client
-            .httpGet("https://$domain/ajax/read/chapter/$chapterId?vrf=$vrf")
+            .httpGet("https://$domain/ajax/read/$type/$chapterId?vrf=$vrf")
             .parseJson()
             .getJSONObject("result")
             .getJSONArray("images")
@@ -557,14 +555,7 @@ internal abstract class MangaFireParser(
         MangaFireParser(context, MangaParserSource.MANGAFIRE_PTBR, "pt-br")
 }
 
-// -------------------------------------------------------------------------------------
-// VRF Generator (Ported strictly from TypeScript provided)
-// -------------------------------------------------------------------------------------
-
 private object VrfGenerator {
-    // -------------------------------------------------
-    // 1. Keys (Matches TypeScript exactly)
-    // -------------------------------------------------
     private val rc4Keys = mapOf(
         "l" to "FgxyJUQDPUGSzwbAq/ToWn4/e8jYzvabE+dLMb1XU1o=",
         "g" to "CQx3CLwswJAnM1VxOqX+y+f3eUns03ulxv8Z+0gUyik=",
@@ -589,17 +580,11 @@ private object VrfGenerator {
         "W" to "5Rr27rWd"
     )
 
-    // -------------------------------------------------
-    // 2. Helper Functions (Bitwise Logic)
-    // -------------------------------------------------
     private fun add8(n: Int): (Int) -> Int = { c -> (c + n) and 0xFF }
     private fun sub8(n: Int): (Int) -> Int = { c -> (c - n + 256) and 0xFF }
     private fun rotl8(n: Int): (Int) -> Int = { c -> ((c shl n) or (c ushr (8 - n))) and 0xFF }
     private fun rotr8(n: Int): (Int) -> Int = { c -> ((c ushr n) or (c shl (8 - n))) and 0xFF }
 
-    // -------------------------------------------------
-    // 3. Schedules
-    // -------------------------------------------------
     private val scheduleC = listOf(
         sub8(223), rotr8(4), rotr8(4), add8(234), rotr8(7),
         rotr8(2), rotr8(7), sub8(223), rotr8(7), rotr8(6)
@@ -625,38 +610,25 @@ private object VrfGenerator {
         rotr8(4), rotl8(1), rotl8(1), sub8(223), rotl8(2)
     )
 
-    // -------------------------------------------------
-    // 4. Core Logic
-    // -------------------------------------------------
     fun generate(input: String): String {
-        // TS: encodeURIComponent(input) -> textEncode(str)
-        // Java's URLEncoder encodes spaces as "+", but JS encodes them as "%20".
-        // We use standard URLEncoder but replace the + with %20 to match JS behavior before getting bytes.
         val encodedInput = URLEncoder.encode(input, "UTF-8").replace("+", "%20")
         var bytes = encodedInput.toByteArray(Charsets.UTF_8)
 
-        // Stage 1
         bytes = rc4(atob(rc4Keys["l"]!!), bytes)
         bytes = transform(bytes, atob(seeds32["A"]!!), atob(prefixKeys["O"]!!), scheduleC)
 
-        // Stage 2
         bytes = rc4(atob(rc4Keys["g"]!!), bytes)
         bytes = transform(bytes, atob(seeds32["V"]!!), atob(prefixKeys["v"]!!), scheduleY)
 
-        // Stage 3
         bytes = rc4(atob(rc4Keys["B"]!!), bytes)
         bytes = transform(bytes, atob(seeds32["N"]!!), atob(prefixKeys["L"]!!), scheduleB)
 
-        // Stage 4
         bytes = rc4(atob(rc4Keys["m"]!!), bytes)
         bytes = transform(bytes, atob(seeds32["P"]!!), atob(prefixKeys["p"]!!), scheduleJ)
 
-        // Stage 5
         bytes = rc4(atob(rc4Keys["F"]!!), bytes)
         bytes = transform(bytes, atob(seeds32["k"]!!), atob(prefixKeys["W"]!!), scheduleE)
 
-        // TS: btoa(bytes).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-        // This is standard Base64 URL Safe (RFC 4648) without padding.
         return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes)
     }
 
@@ -666,7 +638,6 @@ private object VrfGenerator {
         val s = IntArray(256) { it }
         var j = 0
 
-        // Key Scheduling Algorithm (KSA)
         for (i in 0..255) {
             j = (j + s[i] + key[i % key.size].toInt().and(0xFF)) and 0xFF
             val temp = s[i]
@@ -674,18 +645,15 @@ private object VrfGenerator {
             s[j] = temp
         }
 
-        // Pseudo-Random Generation Algorithm (PRGA)
         val output = ByteArray(input.size)
         var i = 0
         j = 0
         for (k in input.indices) {
             i = (i + 1) and 0xFF
             j = (j + s[i]) and 0xFF
-
             val temp = s[i]
             s[i] = s[j]
             s[j] = temp
-
             val t = (s[i] + s[j]) and 0xFF
             val kByte = s[t]
             output[k] = (input[k].toInt() xor kByte).toByte()
@@ -700,23 +668,16 @@ private object VrfGenerator {
         schedule: List<(Int) -> Int>
     ): ByteArray {
         val out = ByteArrayOutputStream()
-
-        // Matches TS Logic: Interleave prefix bytes with transformed bytes
-        // The output array grows: input.length + prefix.length (if input is long enough)
         for (i in input.indices) {
             if (i < prefix.size) {
                 out.write(prefix[i].toInt())
             }
-
             val inputByte = input[i].toInt() and 0xFF
             val seedByte = seed[i % 32].toInt() and 0xFF
             val xored = inputByte xor seedByte
-
-            // Apply schedule function
             val transformed = schedule[i % 10](xored)
             out.write(transformed)
         }
-
         return out.toByteArray()
     }
 }
