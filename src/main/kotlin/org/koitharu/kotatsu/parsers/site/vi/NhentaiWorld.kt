@@ -191,12 +191,18 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 				name.contains("oneshot", ignoreCase = true) -> 0f
 				else -> name.toFloatOrNull() ?: (i.toFloat() + 1)
 			}
+			val url = urlBuilder()
+				url.addQueryParameter("name", name)
+				url.addQueryParameter("language", "EN")
+				url.addQueryParameter("pictures", en.getInt("pictures").toString())
+				url.addQueryParameter("mangaId", manga.url)
+			.build()
 			MangaChapter(
 				id = generateUid(name),
 				title = name,
 				number = number,
 				volume = 0,
-				url = name,
+				url = url.toString(),
 				scanlator = null,
 				uploadDate = df.parseSafe(en.getString("createdAt")),
 				branch = locale.getDisplayName(locale).toTitleCase(locale),
