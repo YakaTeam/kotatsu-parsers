@@ -43,6 +43,7 @@ import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.toTitleCase
+import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.text.SimpleDateFormat
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
@@ -192,11 +193,10 @@ internal abstract class MangaFireParser(
 
             when {
                 !filter.query.isNullOrEmpty() -> {
-                    val query = filter.query.trim()
-                    // Removed manual encoding, using standard addQueryParameter
-                    addQueryParameter("keyword", query)
+					val keyword = encodeKeyword(filter.query)
+                    addEncodedQueryParameter("keyword", keyword)
 
-                    val searchVrf = VrfGenerator.generate(query)
+                    val searchVrf = VrfGenerator.generate(keyword)
                     addQueryParameter("vrf", searchVrf)
 
                     addQueryParameter(
@@ -531,7 +531,22 @@ internal abstract class MangaFireParser(
 
     private fun Int.ceilDiv(other: Int) = (this + (other - 1)) / other
 
-    @MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
+	//	Util / Helper
+	private	fun encodeKeyword(input: String): String {
+		val sb = StringBuilder()
+		// Separate each word, even whitespace
+		for (c in input) {
+			when {
+				c == ' ' -> sb.append('+')
+				c.isLetterOrDigit() || c.code > 0x7F -> sb.append(c)
+				else -> sb.append(String.format("%%%02X", c.code))
+			}
+		}
+		// Tested with "mẹ mày béo @@+" keyword
+		return sb.toString()
+	}
+
+	@MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
     class English(context: MangaLoaderContext) : MangaFireParser(context, MangaParserSource.MANGAFIRE_EN, "en")
 
     @MangaSourceParser("MANGAFIRE_ES", "MangaFire Spanish", "es")
