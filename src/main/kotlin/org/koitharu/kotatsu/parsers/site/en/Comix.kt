@@ -23,7 +23,7 @@ internal class Comix(context: MangaLoaderContext) :
 
     override val configKeyDomain = ConfigKey.Domain("comix.to")
 
-    // central path suffix (keeps intent from developer snippet)
+    // central path suffix
     private val apiSuffix = "api/v2/manga"
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -64,7 +64,8 @@ internal class Comix(context: MangaLoaderContext) :
     // -------------------------
     private fun urlToString(url: HttpUrl) = url.toString()
 
-    private fun safeParseJson(url: HttpUrl): JSONObject {
+    // FIX 1: Marked as suspend because httpGet is suspend
+    private suspend fun safeParseJson(url: HttpUrl): JSONObject {
         try {
             return webClient.httpGet(url).parseJson()
         } catch (e: Exception) {
@@ -102,7 +103,7 @@ internal class Comix(context: MangaLoaderContext) :
 
         if (!explicit.isNullOrBlank()) {
             when {
-                explicit.contains("manhwa") -> return "manhwa"
+                explicit!!.contains("manhwa") -> return "manhwa"
                 explicit.contains("manhua") -> return "manhua"
                 explicit.contains("webtoon") -> return "webtoon"
                 explicit.contains("comic") -> return "comic"
@@ -119,7 +120,7 @@ internal class Comix(context: MangaLoaderContext) :
         for (i in 0 until genreArray.length()) {
             val g = genreArray.optJSONObject(i)?.optString("title", null) ?: genreArray.optString(i, null)
             if (!g.isNullOrBlank()) {
-                val name = g.lowercase()
+                val name = g!!.lowercase()
                 when {
                     name.contains("webtoon") -> return "webtoon"
                     name.contains("manhwa") -> return "manhwa"
@@ -180,6 +181,7 @@ internal class Comix(context: MangaLoaderContext) :
     // Parse manga JSON -> Manga
     // -------------------------
     private fun parseMangaFromJson(json: JSONObject): Manga {
+        // FIX 2: Safe calls for nullable strings
         val hashId = json.optString("hash_id", "").nullIfEmpty() ?: ""
         val title = json.optString("title", "Untitled").nullIfEmpty() ?: "Untitled"
         val description = json.optString("synopsis", "").nullIfEmpty()
@@ -204,7 +206,7 @@ internal class Comix(context: MangaLoaderContext) :
             for (i in 0 until arr.length()) {
                 val obj = arr.optJSONObject(i)
                 val name = obj?.optString("title", null) ?: arr.optString(i, null)
-                if (!name.isNullOrBlank()) mappedTags.add(MangaTag(name, name.lowercase(), source))
+                if (!name.isNullOrBlank()) mappedTags.add(MangaTag(name!!, name.lowercase(), source))
             }
         }
         mappedTags.add(typeTag)
@@ -213,7 +215,7 @@ internal class Comix(context: MangaLoaderContext) :
             id = generateUid(hashId),
             url = "/title/$hashId",
             publicUrl = "https://$domain/title/$hashId",
-            coverUrl = coverUrl.nullIfEmpty(),
+            coverUrl = coverUrl?.nullIfEmpty(), // FIX 2: Safe call
             title = title,
             altTitles = emptySet(),
             description = description,
@@ -222,7 +224,8 @@ internal class Comix(context: MangaLoaderContext) :
             authors = emptySet(),
             state = state,
             source = source,
-            contentRating = if (json.optBoolean("is_nsfw", false)) ContentRating.MATURE else ContentRating.SAFE,
+            // FIX 3: MATURE -> ADULT
+            contentRating = if (json.optBoolean("is_nsfw", false)) ContentRating.ADULT else ContentRating.SAFE,
         )
     }
 
@@ -251,7 +254,10 @@ internal class Comix(context: MangaLoaderContext) :
             val updatedManga = parseMangaFromJson(result)
 
             val authors = result.optJSONArray("author")?.let { arr ->
-                (0 until arr.length()).mapNotNull { arr.optJSONObject(it)?.optString("title").nullIfEmpty() }
+                (0 until arr.length()).mapNotNull { 
+                    // FIX 2: Safe call before nullIfEmpty
+                    arr.optJSONObject(it)?.optString("title")?.nullIfEmpty() 
+                }
             }?.toSet() ?: emptySet()
 
             val genres = buildSet {
@@ -346,7 +352,8 @@ internal class Comix(context: MangaLoaderContext) :
             val name = item.optString("name", "").nullIfEmpty()
             val createdAt = epochToMillis(item.optLong("created_at", 0L))
             val scanlationGroup = item.optJSONObject("scanlation_group")
-            val scanlatorName = scanlationGroup?.optString("name", null).nullIfEmpty()
+            // FIX 2: Safe call for nullIfEmpty
+            val scanlatorName = scanlationGroup?.optString("name", null)?.nullIfEmpty()
 
             val volStr = if (volume != "0") "Vol. $volume " else ""
             val chStr = if (numberStr.isNotEmpty()) "Ch. ${number.niceString()}" else ""
