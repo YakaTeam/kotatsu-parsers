@@ -138,8 +138,10 @@ internal class MangaPark(context: MangaLoaderContext) :
         }
         val url = "https://$domain/apo/".toHttpUrl()
         
-        // FIX 1: Use Headers.of() and pass JSONObject payload directly to match extension signature
-        val headers = Headers.of(mapOf("Referer" to "https://$domain/"))
+        // FIX 1: Use Headers.Builder to avoid deprecation warning/error
+        val headers = Headers.Builder()
+            .add("Referer", "https://$domain/")
+            .build()
 
         val responseJson = try {
             webClient.httpPost(url, payload, headers).parseJson()
@@ -200,16 +202,17 @@ internal class MangaPark(context: MangaLoaderContext) :
                 publicUrl = "https://$domain$urlPath",
                 coverUrl = item.optString("urlCoverOri").nullIfEmpty(),
                 title = item.optString("name").nullIfEmpty() ?: "Untitled",
-                altTitles = emptySet(),
+                // FIX 2: Explicit types for emptySet
+                altTitles = emptySet<String>(),
                 rating = RATING_UNKNOWN,
                 state = when (item.optString("originalStatus")) {
                     "ongoing" -> MangaState.ONGOING
                     "completed" -> MangaState.FINISHED
                     else -> null
                 },
-                // FIX 2: Explicitly pass mandatory tags and authors parameters
-                tags = emptySet(),
-                authors = emptySet(),
+                // FIX 2: Explicit types for emptySet
+                tags = emptySet<MangaTag>(),
+                authors = emptySet<String>(),
                 source = source
             )
         }
