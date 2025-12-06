@@ -5,6 +5,7 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -13,28 +14,26 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
+@Broken("Need to refactor & implement more ContentType")
 @MangaSourceParser("COMIX", "Comix", "en", ContentType.MANGA)
 internal class Comix(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.COMIX, 28) {
 
     override val configKeyDomain = ConfigKey.Domain("comix.to")
 
-    override val availableSortOrders: Set<SortOrder> = LinkedHashSet(
-        listOf(
-            SortOrder.RELEVANCE,
-            SortOrder.UPDATED,
-            SortOrder.POPULARITY,
-            SortOrder.NEWEST,
-            SortOrder.ALPHABETICAL,
-        )
-    )
+    override val availableSortOrders: Set<SortOrder> = EnumSet.of(
+		SortOrder.RELEVANCE,
+		SortOrder.UPDATED,
+		SortOrder.POPULARITY,
+		SortOrder.NEWEST,
+		SortOrder.ALPHABETICAL,
+	)
 
     override val filterCapabilities: MangaListFilterCapabilities
         get() = MangaListFilterCapabilities(
             isSearchSupported = true,
             isSearchWithFiltersSupported = true,
             isMultipleTagsSupported = true,
-            isTagsExclusionSupported = false,
         )
 
     override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -55,6 +54,7 @@ internal class Comix(context: MangaLoaderContext) :
                 SortOrder.ALPHABETICAL -> "title"
                 else -> "chapter_updated_at"
             }
+
             val direction = if (order == SortOrder.ALPHABETICAL) "asc" else "desc"
             addQueryParameter("order[$orderParam]", direction)
 
@@ -119,7 +119,7 @@ internal class Comix(context: MangaLoaderContext) :
     override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
         // Lua: /manga/HASH-SLUG -> we extract just the hash
         val hashId = manga.url.substringAfter("/title/").substringBefore("-")
-        
+
         // Fetch details from API (Lua: includes[]=author&includes[]=artist...)
         val detailsUrl = "https://${domain}/api/v2/manga/$hashId".toHttpUrl().newBuilder()
             .addQueryParameter("includes[]", "author")
@@ -207,7 +207,7 @@ internal class Comix(context: MangaLoaderContext) :
         for (item in allChapters) {
             val numberStr = item.optString("number")
             val current = chapterMap[numberStr]
-            
+
             val scanGroupId = item.optInt("scanlation_group_id", 0)
             val votes = item.optInt("votes", 0)
             val updatedAt = item.optLong("updated_at", 0)
@@ -248,7 +248,7 @@ internal class Comix(context: MangaLoaderContext) :
         // Lua loop iterates chapterOrder to maintain sort
         val finalList = chapterOrder.mapNotNull { numberStr ->
             val item = chapterMap[numberStr] ?: return@mapNotNull null
-            
+
             val chapterId = item.getLong("chapter_id")
             val number = item.optDouble("number", 0.0).toFloat()
             val volume = item.optString("volume", "0")
@@ -261,7 +261,7 @@ internal class Comix(context: MangaLoaderContext) :
             val volStr = if (volume != "0") "Vol. $volume " else ""
             val chStr = if (numberStr.isNotEmpty()) "Ch. ${number.niceString()}" else ""
             val titleStr = if (name != null) " - $name" else ""
-            
+
             val fullTitle = "$volStr$chStr$titleStr".trim()
 
             MangaChapter(
@@ -276,8 +276,8 @@ internal class Comix(context: MangaLoaderContext) :
                 branch = null,
             )
         }
-        
-        // Reverse because list was fetched ASC (oldest first), Kotatsu usually expects newest first in list? 
+
+        // Reverse because list was fetched ASC (oldest first), Kotatsu usually expects newest first in list?
         // Actually, mapChapters(reversed=true) handles list ordering in UI usually, but let's provide desc.
         return finalList.reversed()
     }
@@ -342,7 +342,7 @@ internal class Comix(context: MangaLoaderContext) :
         MangaTag("Thriller", "28", source),
         MangaTag("Tragedy", "29", source),
         MangaTag("Wuxia", "30", source),
-        
+
         // Themes
         MangaTag("Aliens", "31", source),
         MangaTag("Animals", "32", source),
