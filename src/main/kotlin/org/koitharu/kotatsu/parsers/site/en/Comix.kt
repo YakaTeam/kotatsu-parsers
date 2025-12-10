@@ -2,10 +2,9 @@ package org.koitharu.kotatsu.parsers.site.en
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import okhttp3.Headers
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -14,8 +13,6 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import java.math.BigDecimal
@@ -29,16 +26,10 @@ internal class Comix(context: MangaLoaderContext) :
     private val apiBase = "api/v2"
     private val apiBaseUrl get() = "https://$domain/$apiBase"
 
-    // FIX 1: Wire up the Interceptor!
-    // Without this, 'override fun intercept' is never called.
-    override val webClient: WebClient by lazy {
-        val client = context.httpClient.newBuilder()
-            .addInterceptor(this)
-            .build()
-        OkHttpWebClient(client, source)
-    }
+    // FIX: Removed 'override val webClient'. 
+    // The base class automatically wires up the Interceptor when the interface is implemented.
 
-    // FIX 2: Interceptor to add Referer to ALL requests (Images, API, HTML)
+    // Interceptor to add Referer to ALL requests
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request().newBuilder()
             .addHeader("Referer", "https://$domain/")
@@ -325,7 +316,6 @@ internal class Comix(context: MangaLoaderContext) :
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
         val chapterUrl = "https://$domain${chapter.url}"
         
-        // Use standard webClient (which now includes Interceptor for headers)
         val response = try {
             webClient.httpGet(chapterUrl)
         } catch (e: Exception) {
@@ -368,13 +358,6 @@ internal class Comix(context: MangaLoaderContext) :
     }
 
     override suspend fun getRelatedManga(seed: Manga): List<Manga> = emptyList()
-
-    // Helpers
-    private fun safeBuildMangaId(hashId: String?): String =
-        hashId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
-
-    private fun extractHashFromUrl(url: String?): String? =
-        url?.substringAfter("/title/")?.substringBefore("/")?.nullIfEmpty()
 
     private fun fetchAvailableTags(): Set<MangaTag> = setOf(
         MangaTag("6", "Action", source),
