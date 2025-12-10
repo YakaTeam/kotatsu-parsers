@@ -4,6 +4,8 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -12,6 +14,8 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
+import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import java.math.BigDecimal
@@ -19,17 +23,29 @@ import java.math.RoundingMode
 
 @MangaSourceParser("COMIX", "Comix", "en", ContentType.MANGA)
 internal class Comix(context: MangaLoaderContext) :
-    PagedMangaParser(context, MangaParserSource.COMIX, 28) {
+    PagedMangaParser(context, MangaParserSource.COMIX, 28), Interceptor {
 
     override val configKeyDomain = ConfigKey.Domain("comix.to")
     private val apiBase = "api/v2"
     private val apiBaseUrl get() = "https://$domain/$apiBase"
 
-    // Fix: Add Referer to all requests (matches TS 'headers' logic)
-    override val headers: Headers
-        get() = super.headers.newBuilder()
-            .add("Referer", "https://$domain/")
+    // FIX 1: Wire up the Interceptor!
+    // Without this, 'override fun intercept' is never called.
+    override val webClient: WebClient by lazy {
+        val client = context.httpClient.newBuilder()
+            .addInterceptor(this)
             .build()
+        OkHttpWebClient(client, source)
+    }
+
+    // FIX 2: Interceptor to add Referer to ALL requests (Images, API, HTML)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request().newBuilder()
+            .addHeader("Referer", "https://$domain/")
+            .addHeader("Origin", "https://$domain")
+            .build()
+        return chain.proceed(request)
+    }
 
     private val nsfwGenreIds = listOf("87264", "8", "87265", "13", "87266", "87268")
 
@@ -59,11 +75,9 @@ internal class Comix(context: MangaLoaderContext) :
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         val builder = "$apiBaseUrl/manga".toHttpUrl().newBuilder().apply {
             if (!filter.query.isNullOrBlank()) {
-                // Matches TS: encodeURIComponent(queryParam) handled by addQueryParameter
                 addQueryParameter("keyword", filter.query)
             }
             
-            // Matches TS: &order[relevance]=desc
             val (param, dir) = when (order) {
                 SortOrder.RELEVANCE -> "relevance" to "desc"
                 SortOrder.UPDATED -> "chapter_updated_at" to "desc"
@@ -102,11 +116,10 @@ internal class Comix(context: MangaLoaderContext) :
 
     private fun parseMangaFromJson(json: JSONObject): Manga {
         val hashId = json.optString("hash_id", "").nullIfEmpty()
-        val slug = json.optString("slug", "").nullIfEmpty() // Needed for URL construction logic in TS
+        val slug = json.optString("slug", "").nullIfEmpty()
         val title = json.optString("title", "Unknown")
         val description = json.optString("synopsis", "").nullIfEmpty()
         
-        // Matches TS: item.poster.medium || large || small
         val poster = json.optJSONObject("poster")
         val coverUrl = poster?.optString("medium", "")?.nullIfEmpty()
             ?: poster?.optString("large", "")?.nullIfEmpty()
@@ -125,10 +138,6 @@ internal class Comix(context: MangaLoaderContext) :
         val rating = if (ratedAvg > 0.0) (ratedAvg / 20.0).toFloat() else RATING_UNKNOWN
 
         val resolvedHash = hashId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
-        
-        // Construct composite ID or safe URL
-        // TS uses `${item.hash_id}|${item.slug}` as ID. 
-        // We use hash_id as ID, but construct URL to match TS: /title/HASH-SLUG
         val urlSlug = if (slug != null) "$resolvedHash-$slug" else resolvedHash
 
         return Manga(
@@ -152,7 +161,6 @@ internal class Comix(context: MangaLoaderContext) :
     // Details
     // -------------------------
     override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
-        // Extract hash from URL: /title/HASH-SLUG
         val hash = manga.url.substringAfter("/title/").substringBefore("-").nullIfEmpty()
             ?: throw ParseException("Invalid manga URL", manga.url)
         
@@ -235,14 +243,13 @@ internal class Comix(context: MangaLoaderContext) :
     }
 
     // -------------------------
-    // Chapters (Matches TS Logic)
+    // Chapters
     // -------------------------
     private suspend fun getChapters(hashId: String): List<MangaChapter> {
         val allItems = ArrayList<JSONObject>()
         var page = 1
         var lastPage = Int.MAX_VALUE
         
-        // TS uses limit=100. Pagination logic added for robustness.
         while (page <= lastPage && page <= 200) {
             val url = "$apiBaseUrl/manga/$hashId/chapters".toHttpUrl().newBuilder().apply {
                 addQueryParameter("order[number]", "desc")
@@ -280,11 +287,10 @@ internal class Comix(context: MangaLoaderContext) :
             val name = item.optString("name", "").nullIfEmpty()
             val createdAt = item.optLong("created_at", 0L)
             
-            // Matches TS: scanlator = is_official ? "Official" : scanlation_group.name
             val scanlationGroup = item.optJSONObject("scanlation_group")
             var scanlatorName = scanlationGroup?.optString("name", null)?.nullIfEmpty()
             
-            if (item.optInt("is_official", 0) == 1) {
+            if (scanlatorName == null && item.optInt("is_official", 0) == 1) {
                 scanlatorName = "Official"
             }
 
@@ -297,7 +303,6 @@ internal class Comix(context: MangaLoaderContext) :
                 if (scanlatorName != null) append(" [$scanlatorName]")
             }.trim()
 
-            // Unique ID: Matches TS composite logic indirectly by ensuring uniqueness in Kotatsu
             val uid = if (chapterId != 0L) "$chapterId-$groupId" else UUID.randomUUID().toString()
             
             MangaChapter(
@@ -305,7 +310,6 @@ internal class Comix(context: MangaLoaderContext) :
                 title = title.ifBlank { "Chapter $number" },
                 number = number,
                 volume = item.optString("volume", "0").toIntOrNull() ?: 0,
-                // Matches TS URL construction: .../chapterID-chapter-number
                 url = "/title/$hashId/dummy-slug/$chapterId-chapter-${number.toInt()}",
                 uploadDate = createdAt * 1000L,
                 source = source,
@@ -316,22 +320,22 @@ internal class Comix(context: MangaLoaderContext) :
     }
 
     // -------------------------
-    // Pages (FIX: Matches TS Scraping Logic)
+    // Pages
     // -------------------------
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-        // Matches TS: HTML Scraping + Regex
-        // URL is: https://comix.to/title/HASH-SLUG/12345-chapter-10
         val chapterUrl = "https://$domain${chapter.url}"
         
-        val body = try {
-            webClient.httpGet(chapterUrl).parseString()
+        // Use standard webClient (which now includes Interceptor for headers)
+        val response = try {
+            webClient.httpGet(chapterUrl)
         } catch (e: Exception) {
             throw ParseException("Failed to load chapter page", chapterUrl)
         }
 
-        // Regex matches TS: /["\\]*images["\\]*\s*:\s*(\[[^\]]*\])/s
-        // Kotlin: """["\\]*images["\\]*\s*:\s*(\[[^\]]*\])"""
-        val regex = Regex("""["\\]*images["\\]*\s*:\s*(\[[^\]]*\])""", RegexOption.DOT_MATCHES_ALL)
+        val body = response.body?.string() 
+            ?: throw ParseException("Empty response body", chapterUrl)
+
+        val regex = Regex("""["\\]*images["\\]*\s*:\s*(\[[^\]]*(?:\](?!\s*[,\]}])|[^\]]*)\])""", RegexOption.DOT_MATCHES_ALL)
         
         val match = regex.find(body)
         if (match == null || match.groupValues.size < 2) {
@@ -339,8 +343,6 @@ internal class Comix(context: MangaLoaderContext) :
         }
 
         val jsonStringRaw = match.groupValues[1]
-        
-        // Matches TS: clean = match[1].replace(/\\"/g, '"');
         val jsonStringClean = jsonStringRaw.replace("\\\"", "\"")
 
         val imagesJson = try {
@@ -366,6 +368,13 @@ internal class Comix(context: MangaLoaderContext) :
     }
 
     override suspend fun getRelatedManga(seed: Manga): List<Manga> = emptyList()
+
+    // Helpers
+    private fun safeBuildMangaId(hashId: String?): String =
+        hashId?.takeIf { it.isNotBlank() } ?: UUID.randomUUID().toString()
+
+    private fun extractHashFromUrl(url: String?): String? =
+        url?.substringAfter("/title/")?.substringBefore("/")?.nullIfEmpty()
 
     private fun fetchAvailableTags(): Set<MangaTag> = setOf(
         MangaTag("6", "Action", source),
