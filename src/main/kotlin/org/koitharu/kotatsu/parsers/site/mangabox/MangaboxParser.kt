@@ -161,7 +161,7 @@ internal abstract class MangaboxParser(
 
 		val doc = webClient.httpGet(authorSearchUrl ?: url).parseHtml()
 
-		return doc.select("div.content-genres-item, div.list-story-item").ifEmpty {
+		return doc.select("div.content-genres-item, div.list-story-item, div.story_item_right").ifEmpty {
 			doc.select("div.search-story-item")
 		}.map { div ->
 			val href = div.selectFirstOrThrow("a").attrAsRelativeUrl("href")
