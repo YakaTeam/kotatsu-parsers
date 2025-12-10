@@ -1,12 +1,14 @@
 package org.koitharu.kotatsu.parsers.site.pt
 
 import okhttp3.FormBody
+import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
+import org.koitharu.kotatsu.parsers.exception.ParseException // FIX 1: Added import
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
@@ -43,7 +45,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
             val endpoint = if (order == SortOrder.POPULARITY) "/mangas" else "/"
             val url = "https://$domain$endpoint".toHttpUrl()
             
-            // Selector differs based on page type
             val selector = if (order == SortOrder.POPULARITY) {
                 ".eael-post-grid-container article"
             } else {
@@ -75,27 +76,27 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
     private suspend fun searchManga(query: String): List<Manga> {
         val url = "https://$domain/wp-admin/admin-ajax.php".toHttpUrl()
         
-        // Manual form body string construction for Kotatsu webClient
         val payload = "action=newscrunch_live_search&keyword=${query.urlEncoded()}"
+        
+        // FIX 2: Construct headers manually
+        val searchHeaders = Headers.Builder()
+            .add("Content-Type", "application/x-www-form-urlencoded")
+            .build()
         
         val doc = webClient.httpPost(
             url = url,
             payload = payload,
-            extraHeaders = headers.newBuilder()
-                .add("Content-Type", "application/x-www-form-urlencoded")
-                .build()
+            extraHeaders = searchHeaders
         ).parseHtml()
 
         return doc.select(".search-wrapper").mapNotNull { element ->
             val link = element.selectFirst("a") ?: return@mapNotNull null
             var href = link.attrAsRelativeUrl("href")
             
-            // Fix URL if it points to a chapter (remove 'capitulo-X')
             if (href.contains("capitulo")) {
                 href = href.substringBeforeLast("capitulo")
             }
             
-            // Clean title based on regex (remove trailing dash or numbers)
             val rawTitle = element.selectFirst(".search-content")?.text() ?: "Unknown"
             val title = rawTitle.replace(Regex("""[-–][^-–]*$"""), "").trim()
 
@@ -126,7 +127,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
         val artist = doc.selectFirst("li:contains(Arte:)")?.text()?.substringAfter(":")?.trim()
         val description = doc.selectFirst("meta[itemprop='description']")?.attr("content")
         
-        // Extract Category ID required for the WordPress API call
         val categoryId = doc.selectFirst("#container-capitulos")?.attr("data-categoria")
             ?: throw ParseException("Could not find category ID for chapters", manga.url)
 
@@ -142,7 +142,7 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
     }
 
     // ---------------------------------------------------------------
-    // 3. Chapters (WordPress REST API)
+    // 3. Chapters
     // ---------------------------------------------------------------
     private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
@@ -150,7 +150,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
         val allChapters = ArrayList<MangaChapter>()
         var page = 1
         
-        // Loop until no more chapters
         while (true) {
             val apiUrl = "https://$domain/wp-json/wp/v2/posts".toHttpUrl().newBuilder()
                 .addQueryParameter("categories", categoryId)
@@ -163,7 +162,7 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
             val response = try {
                 webClient.httpGet(apiUrl).parseJson()
             } catch (e: Exception) {
-                break // Stop on 404/Error (End of list)
+                break 
             }
 
             if (response !is JSONArray) break
@@ -173,7 +172,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
                 val item = response.getJSONObject(i)
                 val link = item.getString("link").toRelativeUrl(domain)
                 
-                // Tachiyomi filter: ensure it's a chapter link
                 if (!link.contains("capitulo")) continue
 
                 val titleObj = item.getJSONObject("title")
@@ -182,7 +180,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
                 
                 val dateStr = item.optString("date").take(10)
                 
-                // Attempt to extract number from slug or title
                 val slug = item.optString("slug")
                 val number = Regex("""(\d+(\.\d+)?)""").findAll(slug).lastOrNull()?.value?.toFloatOrNull() ?: 0f
 
@@ -207,12 +204,11 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
     }
 
     // ---------------------------------------------------------------
-    // 4. Pages (HTML Scraping)
+    // 4. Pages
     // ---------------------------------------------------------------
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
         val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
         
-        // Selectors from Tachiyomi code
         val container = doc.selectFirst(".spice-block-img-gallery, .wp-block-gallery, .spnc-entry-content")
             ?: throw ParseException("Page container not found", chapter.url)
 
