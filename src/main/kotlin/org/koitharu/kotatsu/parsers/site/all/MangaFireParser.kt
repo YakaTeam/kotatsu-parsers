@@ -1,8 +1,5 @@
 package org.koitharu.kotatsu.parsers.site.all
 
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import org.jsoup.Jsoup
@@ -191,12 +188,16 @@ internal abstract class MangaFireParser(
             addQueryParameter("language[]", siteLang)
 
             when {
+                // FIX: Use raw query string. Do not manually encode before passing to VrfGenerator.
                 !filter.query.isNullOrEmpty() -> {
-					val keyword = encodeKeyword(filter.query)
-                    addEncodedQueryParameter("keyword", keyword)
-
-                    val searchVrf = VrfGenerator.generate(keyword)
+                    val query = filter.query!!
+                    
+                    // 1. Calculate VRF using the raw query (generator handles internal encoding)
+                    val searchVrf = VrfGenerator.generate(query)
                     addQueryParameter("vrf", searchVrf)
+
+                    // 2. Add keyword using standard addQueryParameter (OkHttp handles URL encoding)
+                    addQueryParameter("keyword", query)
 
                     addQueryParameter(
                         name = "sort",
@@ -348,12 +349,9 @@ internal abstract class MangaFireParser(
 
         val id = mangaUrl.substringAfterLast('.')
 
-        return coroutineScope {
-            langTypePairs.map {
-                async {
-                    getChaptersBranch(id, it)
-                }
-            }.awaitAll().flatten()
+        // Sequential execution to prevent TooManyRequests error
+        return langTypePairs.flatMap {
+            getChaptersBranch(id, it)
         }
     }
 
@@ -407,18 +405,13 @@ internal abstract class MangaFireParser(
     private val dateFormat = SimpleDateFormat("MMM dd, yyyy", Locale.ENGLISH)
     private val volumeNumRegex = Regex("""vol(ume)?\s*(\d+)""", RegexOption.IGNORE_CASE)
 
-    override suspend fun getRelatedManga(seed: Manga): List<Manga> = coroutineScope {
+    override suspend fun getRelatedManga(seed: Manga): List<Manga> {
         val document = client.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
-        val total = document.select(
-            "section.m-related a[href*=/manga/], .side-manga:not(:has(.head:contains(trending))) .unit",
-        ).size
-        val mangas = ArrayList<Manga>(total)
+        
+        val mangas = document.select("section.m-related a[href*=/manga/]").mapNotNull {
+            val url = it.attrAsRelativeUrl("href")
 
-        // "Related Manga"
-        document.select("section.m-related a[href*=/manga/]").map {
-            async {
-                val url = it.attrAsRelativeUrl("href")
-
+            try {
                 val mangaDocument = client
                     .httpGet(url.toAbsoluteUrl(domain))
                     .parseHtml()
@@ -428,7 +421,7 @@ internal abstract class MangaFireParser(
 
 
                 if (!chaptersInManga.contains(siteLang)) {
-                    return@async null
+                    return@mapNotNull null
                 }
 
                 Manga(
@@ -447,11 +440,11 @@ internal abstract class MangaFireParser(
                     state = null,
                     tags = emptySet(),
                 )
+            } catch (e: Exception) {
+                null
             }
-        }.awaitAll()
-            .filterNotNullTo(mangas)
+        }.toMutableList()
 
-        // "You may also like"
         document.select(".side-manga:not(:has(.head:contains(trending))) .unit").forEach {
             val url = it.attrAsRelativeUrl("href")
             mangas.add(
@@ -473,24 +466,23 @@ internal abstract class MangaFireParser(
             )
         }
 
-        mangas.ifEmpty {
-            // fallback: author's other works
-            document.select("div.meta a[href*=/author/]").map {
-                async {
-                    val url = it.attrAsAbsoluteUrl("href").toHttpUrl()
-                        .newBuilder()
-                        .addQueryParameter("language[]", siteLang)
-                        .build()
+        if (mangas.isEmpty()) {
+            val authorMangas = document.select("div.meta a[href*=/author/]").flatMap {
+                val url = it.attrAsAbsoluteUrl("href").toHttpUrl()
+                    .newBuilder()
+                    .addQueryParameter("language[]", siteLang)
+                    .build()
 
-                    client.httpGet(url)
-                        .parseHtml().parseMangaList()
-                }
-            }.awaitAll().flatten()
+                client.httpGet(url)
+                    .parseHtml().parseMangaList()
+            }
+            mangas.addAll(authorMangas)
         }
+
+        return mangas
     }
 
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-        // Url format: mangaId/type/lang/chapterId
         val parts = chapter.url.split('/')
         val type = parts[1] // "chapter" or "volume"
         val chapterId = parts[3]
@@ -530,22 +522,7 @@ internal abstract class MangaFireParser(
 
     private fun Int.ceilDiv(other: Int) = (this + (other - 1)) / other
 
-	//	Util / Helper
-	private	fun encodeKeyword(input: String): String {
-		val sb = StringBuilder()
-		// Separate each word, even whitespace
-		for (c in input) {
-			when {
-				c == ' ' -> sb.append('+')
-				c.isLetterOrDigit() || c.code > 0x7F -> sb.append(c)
-				else -> sb.append(String.format("%%%02X", c.code))
-			}
-		}
-		// Tested with "mẹ mày béo @@+" keyword
-		return sb.toString()
-	}
-
-	@MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
+    @MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
     class English(context: MangaLoaderContext) : MangaFireParser(context, MangaParserSource.MANGAFIRE_EN, "en")
 
     @MangaSourceParser("MANGAFIRE_ES", "MangaFire Spanish", "es")
