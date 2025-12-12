@@ -120,7 +120,14 @@ internal abstract class KeyoappParser(
 	}
 
 	protected open val cover: (Element) -> String? = { div ->
-		div.selectFirst("a div.bg-cover")?.styleValueOrNull("background-image")?.cssUrl()
+		sequenceOf(
+			div.selectFirst("a div.bg-cover"),
+			div.selectFirst("div.bg-cover"),
+			div.selectFirst("a.bg-cover"),
+			div.selectFirst("[style*=background-image]"),
+		).mapNotNull { element ->
+			element?.styleValueOrNull("background-image")?.cssUrl()
+		}.firstOrNull()
 	}
 
 	private fun addManga(div: Element): Manga {

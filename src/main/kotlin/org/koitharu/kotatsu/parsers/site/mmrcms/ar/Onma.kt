@@ -2,16 +2,16 @@ package org.koitharu.kotatsu.parsers.site.mmrcms.ar
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.json.JSONObject
 import org.jsoup.nodes.Document
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.site.mmrcms.MmrcmsParser
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import java.util.*
 
-@Broken
 @MangaSourceParser("ONMA", "Onma", "ar")
 internal class Onma(context: MangaLoaderContext) :
 	MmrcmsParser(context, MangaParserSource.ONMA, "onma.me") {
@@ -21,6 +21,75 @@ internal class Onma(context: MangaLoaderContext) :
 	override val selectAlt = "h3:contains(أسماء أخرى) .text"
 	override val selectAut = "h3:contains(المؤلف) .text"
 	override val selectTag = "h3:contains(التصنيفات) .text"
+
+	override val filterCapabilities: MangaListFilterCapabilities
+		get() = MangaListFilterCapabilities(
+			isSearchSupported = true,
+			isSearchWithFiltersSupported = false, // Search and tag filters use separate endpoints
+		)
+
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		// Search uses completely separate endpoint and cannot be combined with tags
+		if (!filter.query.isNullOrEmpty()) {
+			if (filter.tags.isNotEmpty()) {
+				throw IllegalArgumentException("Search cannot be combined with tag filters on this source.")
+			}
+			return performSearch(filter.query, page)
+		}
+
+		// For UPDATED sort with tag filters, fall back to alphabetical to avoid exception
+		val actualOrder = if (order == SortOrder.UPDATED && filter.tags.isNotEmpty()) {
+			SortOrder.ALPHABETICAL
+		} else {
+			order
+		}
+
+		return super.getListPage(page, actualOrder, filter)
+	}
+
+	private suspend fun performSearch(query: String, page: Int): List<Manga> {
+		if (page > 1) {
+			// Search endpoint doesn't support pagination, return empty for page > 1
+			return emptyList()
+		}
+
+		val url = "https://$domain/search?query=${query.urlEncoded()}"
+		val response = webClient.httpGet(url).parseJson()
+		val suggestions = response.optJSONArray("suggestions") ?: return emptyList()
+
+		return suggestions.mapJSON<Manga> { suggestion ->
+			val title = suggestion.getString("value")
+			val slug = suggestion.getString("data")
+			val href = "/manga/$slug"
+
+			Manga(
+				id = generateUid(href),
+				url = href,
+				publicUrl = href.toAbsoluteUrl(domain),
+				coverUrl = "https://$domain/uploads/manga/$slug/cover/cover_250x350.jpg",
+				title = title,
+				altTitles = emptySet(),
+				rating = RATING_UNKNOWN,
+				tags = emptySet(),
+				authors = emptySet(),
+				state = null,
+				source = source,
+				contentRating = if (isNsfwSource) ContentRating.ADULT else null,
+			)
+		}
+	}
+
+	override suspend fun fetchAvailableTags(): Set<MangaTag> {
+		val doc = webClient.httpGet("https://$domain/$tagUrl/").parseHtml()
+		return doc.select("ul.list-category li").mapIndexedNotNull { index, li ->
+			val a = li.selectFirst("a") ?: return@mapIndexedNotNull null
+			MangaTag(
+				key = (index + 1).toString(), // Use 1-based index as key (cat=1, cat=2, etc.)
+				title = a.text(),
+				source = source,
+			)
+		}.toSet()
+	}
 
 
 	override fun parseMangaList(doc: Document): List<Manga> {
