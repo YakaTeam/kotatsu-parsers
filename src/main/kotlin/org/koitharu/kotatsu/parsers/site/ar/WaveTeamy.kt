@@ -1,11 +1,9 @@
 package org.koitharu.kotatsu.parsers.site.ar
 
-import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.json.JSONObject
-import org.jsoup.Jsoup
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -17,7 +15,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 @MangaSourceParser("WAVETEAMY", "Waveteamy", "ar")
-internal class Waveteamy(context: MangaLoaderContext) :
+internal class WaveTeamy(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WAVETEAMY, 50) {
 
 	override val configKeyDomain = ConfigKey.Domain("waveteamy.com")
