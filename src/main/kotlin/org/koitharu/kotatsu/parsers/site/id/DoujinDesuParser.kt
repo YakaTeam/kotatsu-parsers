@@ -56,27 +56,21 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				addQueryParameter("page", page.toString())
 			}
 
-            addQueryParameter(
-				"title",
-				filter.query?.let {
-					filter.query
-				},
-			)
+			if (!filter.query.isNullOrEmpty()) {
+				addQueryParameter("title", filter.query)
+			}
 
-            addQueryParameter(
-                name = "author",
-                value = filter.author?.let { it
-                    space2plus(it).lowercase()
-                }
-            )
+			if (!filter.author.isNullOrEmpty()) {
+				addQueryParameter("author", space2plus(filter.author).lowercase())
+			}
 
 			addQueryParameter(
 				"order",
 				when (order) {
-					SortOrder.UPDATED -> "update"
+					SortOrder.UPDATED -> "updated"
 					SortOrder.POPULARITY -> "popular"
 					SortOrder.ALPHABETICAL -> "title"
-					SortOrder.NEWEST -> "latest"
+					SortOrder.NEWEST -> "created"
 					else -> "latest"
 				},
 			)
@@ -89,8 +83,8 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				addEncodedQueryParameter(
 					"statusx",
 					when (it) {
-						MangaState.ONGOING -> "Publishing"
-						MangaState.FINISHED -> "Finished"
+						MangaState.ONGOING -> "publishing"
+						MangaState.FINISHED -> "finished"
 						else -> ""
 					},
 				)
