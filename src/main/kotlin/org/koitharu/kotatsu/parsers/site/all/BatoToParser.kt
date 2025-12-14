@@ -13,8 +13,6 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -37,13 +35,8 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
         keys.add(userAgentKey)
     }
 
-    // FIX 1: Wire up the interceptor to the webClient
-    override val webClient: WebClient by lazy {
-        val client = context.httpClient.newBuilder()
-            .addInterceptor(this)
-            .build()
-        OkHttpWebClient(client, source)
-    }
+    // FIX: Removed 'override val webClient'. 
+    // The base class automatically uses this Interceptor because we implemented the interface.
 
     override val authUrl: String
         get() = "https://${domain}/signin"
@@ -60,7 +53,7 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
             ?: body.parseFailed("Cannot find username")
     }
 
-    // FIX 2: Add Image Fallback constants (Ported from Tachiyomi)
+    // Fallback constants (Ported from Tachiyomi)
     companion object {
         private val SERVER_PATTERN = Regex("https://[a-zA-Z]\\d{2}")
         // Sorted list: Most reliable servers FIRST
@@ -70,7 +63,7 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
         )
     }
 
-    // FIX 3: Implement Interceptor with Fallback Logic
+    // Interceptor with Fallback Logic
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
         val response = chain.proceed(request)
@@ -467,61 +460,61 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
             "month" in date -> Calendar.MONTH
             "year" in date -> Calendar.YEAR
             else -> return 0
-		}
-		val calendar = Calendar.getInstance()
-		calendar.add(field, -value)
-		return calendar.timeInMillis
-	}
+        }
+        val calendar = Calendar.getInstance()
+        calendar.add(field, -value)
+        return calendar.timeInMillis
+    }
 
-	private fun decryptAES(encrypted: String, password: String): String {
-		val cipherData = context.decodeBase64(encrypted)
-		val saltData = cipherData.copyOfRange(8, 16)
-		val (key, iv) = generateKeyAndIV(
-			keyLength = 32,
-			ivLength = 16,
-			iterations = 1,
-			salt = saltData,
-			password = password.toByteArray(StandardCharsets.UTF_8),
-			md = MessageDigest.getInstance("MD5"),
-		)
-		val encryptedData = cipherData.copyOfRange(16, cipherData.size)
-		val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
-		cipher.init(Cipher.DECRYPT_MODE, key, iv)
-		return cipher.doFinal(encryptedData).toString(Charsets.UTF_8)
-	}
+    private fun decryptAES(encrypted: String, password: String): String {
+        val cipherData = context.decodeBase64(encrypted)
+        val saltData = cipherData.copyOfRange(8, 16)
+        val (key, iv) = generateKeyAndIV(
+            keyLength = 32,
+            ivLength = 16,
+            iterations = 1,
+            salt = saltData,
+            password = password.toByteArray(StandardCharsets.UTF_8),
+            md = MessageDigest.getInstance("MD5"),
+        )
+        val encryptedData = cipherData.copyOfRange(16, cipherData.size)
+        val cipher = Cipher.getInstance("AES/CBC/PKCS5Padding")
+        cipher.init(Cipher.DECRYPT_MODE, key, iv)
+        return cipher.doFinal(encryptedData).toString(Charsets.UTF_8)
+    }
 
-	@Suppress("SameParameterValue")
-	private fun generateKeyAndIV(
-		keyLength: Int,
-		ivLength: Int,
-		iterations: Int,
-		salt: ByteArray,
-		password: ByteArray,
-		md: MessageDigest,
-	): Pair<SecretKeySpec, IvParameterSpec> {
-		val digestLength = md.digestLength
-		val requiredLength = (keyLength + ivLength + digestLength - 1) / digestLength * digestLength
-		val generatedData = ByteArray(requiredLength)
-		var generatedLength = 0
-		md.reset()
-		while (generatedLength < keyLength + ivLength) {
-			if (generatedLength > 0) {
-				md.update(generatedData, generatedLength - digestLength, digestLength)
-			}
-			md.update(password)
-			md.update(salt, 0, 8)
-			md.digest(generatedData, generatedLength, digestLength)
-			repeat(iterations - 1) {
-				md.update(generatedData, generatedLength, digestLength)
-				md.digest(generatedData, generatedLength, digestLength)
-			}
-			generatedLength += digestLength
-		}
+    @Suppress("SameParameterValue")
+    private fun generateKeyAndIV(
+        keyLength: Int,
+        ivLength: Int,
+        iterations: Int,
+        salt: ByteArray,
+        password: ByteArray,
+        md: MessageDigest,
+    ): Pair<SecretKeySpec, IvParameterSpec> {
+        val digestLength = md.digestLength
+        val requiredLength = (keyLength + ivLength + digestLength - 1) / digestLength * digestLength
+        val generatedData = ByteArray(requiredLength)
+        var generatedLength = 0
+        md.reset()
+        while (generatedLength < keyLength + ivLength) {
+            if (generatedLength > 0) {
+                md.update(generatedData, generatedLength - digestLength, digestLength)
+            }
+            md.update(password)
+            md.update(salt, 0, 8)
+            md.digest(generatedData, generatedLength, digestLength)
+            repeat(iterations - 1) {
+                md.update(generatedData, generatedLength, digestLength)
+                md.digest(generatedData, generatedLength, digestLength)
+            }
+            generatedLength += digestLength
+        }
 
-		return SecretKeySpec(generatedData.copyOfRange(0, keyLength), "AES") to IvParameterSpec(
-			if (ivLength > 0) {
-				generatedData.copyOfRange(keyLength, keyLength + ivLength)
-			} else byteArrayOf(),
-		)
-	}
+        return SecretKeySpec(generatedData.copyOfRange(0, keyLength), "AES") to IvParameterSpec(
+            if (ivLength > 0) {
+                generatedData.copyOfRange(keyLength, keyLength + ivLength)
+            } else byteArrayOf(),
+        )
+    }
 }
