@@ -2,11 +2,10 @@ package org.koitharu.kotatsu.parsers.site.en
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import okhttp3.Interceptor
-import okhttp3.Response
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -18,25 +17,19 @@ import java.util.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+@Broken("Need some tests")
 @MangaSourceParser("COMIX", "Comix", "en", ContentType.MANGA)
 internal class Comix(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.COMIX, 28), Interceptor {
+	PagedMangaParser(context, MangaParserSource.COMIX, 28) {
 
 	override val configKeyDomain = ConfigKey.Domain("comix.to")
 	private val apiBase = "api/v2"
 	private val apiBaseUrl get() = "https://$domain/$apiBase"
 
-	// FIX: Removed 'override val webClient'.
-	// The base class automatically wires up the Interceptor when the interface is implemented.
-
-	// Interceptor to add Referer to ALL requests
-	override fun intercept(chain: Interceptor.Chain): Response {
-		val request = chain.request().newBuilder()
-			.addHeader("Referer", "https://$domain/")
-			.addHeader("Origin", "https://$domain")
-			.build()
-		return chain.proceed(request)
-	}
+	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
+		.add("Referer", "https://$domain/")
+		.add("Origin", "https://$domain")
+		.build()
 
 	private val nsfwGenreIds = listOf("87264", "8", "87265", "13", "87266", "87268")
 
@@ -161,12 +154,12 @@ internal class Comix(context: MangaLoaderContext) :
 
 		val response = try {
 			detailsDeferred.await()
-		} catch (e: Exception) {
+		} catch (_: Exception) {
 			JSONObject()
 		}
 		val chapters = try {
 			chaptersDeferred.await()
-		} catch (e: Exception) {
+		} catch (_: Exception) {
 			emptyList()
 		}
 
@@ -250,7 +243,7 @@ internal class Comix(context: MangaLoaderContext) :
 
 			val resp = try {
 				webClient.httpGet(url).parseJson()
-			} catch (e: Exception) {
+			} catch (_: Exception) {
 				break
 			}
 
@@ -318,14 +311,12 @@ internal class Comix(context: MangaLoaderContext) :
 
 		val response = try {
 			webClient.httpGet(chapterUrl)
-		} catch (e: Exception) {
+		} catch (_: Exception) {
 			throw ParseException("Failed to load chapter page", chapterUrl)
 		}
 
-		val body = response.body?.string()
-			?: throw ParseException("Empty response body", chapterUrl)
-
-		val regex = Regex("""["\\]*images["\\]*\s*:\s*(\[[^\]]*(?:\](?!\s*[,\]}])|[^\]]*)\])""", RegexOption.DOT_MATCHES_ALL)
+		val body = response.body.string()
+		val regex = Regex("""["\\]*images["\\]*\s*:\s*(\[[^]]*(?:](?!\s*[,\]}])|[^]]*)])""", RegexOption.DOT_MATCHES_ALL)
 
 		val match = regex.find(body)
 		if (match == null || match.groupValues.size < 2) {
@@ -337,7 +328,7 @@ internal class Comix(context: MangaLoaderContext) :
 
 		val imagesJson = try {
 			JSONArray(jsonStringClean)
-		} catch (e: Exception) {
+		} catch (_: Exception) {
 			throw ParseException("Failed to parse images JSON", chapterUrl)
 		}
 
