@@ -20,13 +20,13 @@ internal class Atsumaru(context: MangaLoaderContext) :
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
         SortOrder.POPULARITY,
-        SortOrder.UPDATED
+        SortOrder.UPDATED,
     )
 
     override val filterCapabilities: MangaListFilterCapabilities
         get() = MangaListFilterCapabilities(
             isSearchSupported = true,
-            isSearchWithFiltersSupported = true
+            isSearchWithFiltersSupported = true,
         )
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
