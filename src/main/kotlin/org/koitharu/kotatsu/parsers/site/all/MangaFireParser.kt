@@ -190,8 +190,8 @@ internal abstract class MangaFireParser(
             when {
                 // FIX: Use raw query string. Do not manually encode before passing to VrfGenerator.
                 !filter.query.isNullOrEmpty() -> {
-                    val query = filter.query!!
-                    
+                    val query = filter.query
+
                     // 1. Calculate VRF using the raw query (generator handles internal encoding)
                     val searchVrf = VrfGenerator.generate(query)
                     addQueryParameter("vrf", searchVrf)
@@ -407,7 +407,7 @@ internal abstract class MangaFireParser(
 
     override suspend fun getRelatedManga(seed: Manga): List<Manga> {
         val document = client.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
-        
+
         val mangas = document.select("section.m-related a[href*=/manga/]").mapNotNull {
             val url = it.attrAsRelativeUrl("href")
 
@@ -440,7 +440,7 @@ internal abstract class MangaFireParser(
                     state = null,
                     tags = emptySet(),
                 )
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 null
             }
         }.toMutableList()
