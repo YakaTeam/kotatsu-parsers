@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
-import org.koitharu.kotatsu.parsers.exception.ParseException // FIX: Added missing import
+import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
@@ -16,27 +16,21 @@ import java.util.*
 internal class RezoScans(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.REZOSCANS, 18) {
 
+	private val apiUrl = "https://api.$domain/api"
     override val configKeyDomain = ConfigKey.Domain("rezoscan.org")
-    
-    private val apiUrl = "https://api.rezoscan.org/api"
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
         SortOrder.UPDATED,
         SortOrder.POPULARITY,
-        SortOrder.NEWEST
+        SortOrder.NEWEST,
     )
 
     override val filterCapabilities: MangaListFilterCapabilities
         get() = MangaListFilterCapabilities(
             isSearchSupported = true,
-            isSearchWithFiltersSupported = false
         )
 
-    override suspend fun getFilterOptions() = MangaListFilterOptions(
-        availableTags = emptySet(),
-        availableStates = emptySet(),
-        availableContentTypes = emptySet()
-    )
+    override suspend fun getFilterOptions() = MangaListFilterOptions()
 
     // ---------------------------------------------------------------
     // 1. List / Search
@@ -52,8 +46,7 @@ internal class RezoScans(context: MangaLoaderContext) :
         } else {
             val tag = when (order) {
                 SortOrder.POPULARITY -> "hot"
-                SortOrder.NEWEST -> "new"
-                else -> "new" // Default to "new" for UPDATED as well
+                else -> "new"
             }
             urlBuilder.addQueryParameter("tag", tag)
         }
@@ -71,17 +64,17 @@ internal class RezoScans(context: MangaLoaderContext) :
 
     private fun parseManga(json: JSONObject): Manga {
         val slug = json.getString("slug")
-        val url = "/series/$slug"
-        
         val coverPath = json.optString("cover").takeIf { it.isNotEmpty() }
             ?: json.optString("thumbnail")
-        val coverUrl = if (coverPath.startsWith("http")) coverPath else "https://api.rezoscan.org$coverPath"
+        val coverUrl = if (coverPath.startsWith("http")) {
+			coverPath
+		} else "https://api.$domain$coverPath"
 
         return Manga(
             id = generateUid(slug),
             title = json.optString("title", "Unknown"),
-            url = url,
-            publicUrl = "https://$domain$url",
+            url = "/series/$slug",
+            publicUrl = "https://$domain/series/$slug",
             coverUrl = coverUrl,
             rating = RATING_UNKNOWN,
             source = source,
@@ -98,14 +91,13 @@ internal class RezoScans(context: MangaLoaderContext) :
     // ---------------------------------------------------------------
     override suspend fun getDetails(manga: Manga): Manga {
         val slug = manga.url.substringAfterLast("/")
-        
+
         val url = "$apiUrl/posts/slug/$slug"
         val json = webClient.httpGet(url.toHttpUrl()).parseJson()
-        
+
         val post = json.optJSONObject("post") ?: json
-        
         val description = post.optString("description")
-        
+
         val statusStr = post.optString("status", "").lowercase()
         val state = when {
             statusStr.contains("ongoing") -> MangaState.ONGOING
@@ -117,27 +109,19 @@ internal class RezoScans(context: MangaLoaderContext) :
 
         val chaptersArray = post.optJSONArray("chapters") ?: org.json.JSONArray()
         val chapters = ArrayList<MangaChapter>(chaptersArray.length())
-        
         val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
-        dateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
         for (i in 0 until chaptersArray.length()) {
             val ch = chaptersArray.getJSONObject(i)
             val chSlug = ch.getString("slug")
             val chNum = ch.optDouble("number", 0.0).toFloat()
             val chName = ch.optString("title", "")
-            
-            val dateStr = ch.optString("created_at")
-            val date = try {
-                dateFormat.parse(dateStr)?.time ?: 0L
-            } catch (e: Exception) { 0L }
-
-            val title = if (chName.isNotBlank()) "Chapter $chNum: $chName" else "Chapter $chNum"
+            val date = dateFormat.parseSafe(ch.optString("created_at"))
 
             chapters.add(
                 MangaChapter(
                     id = generateUid(chSlug),
-                    title = title,
+                    title = if (chName.isNotBlank()) "Chapter $chNum: $chName" else "Chapter $chNum",
                     number = chNum,
                     volume = 0,
                     url = "/series/$slug/$chSlug",
@@ -148,13 +132,11 @@ internal class RezoScans(context: MangaLoaderContext) :
                 )
             )
         }
-        
-        chapters.reverse()
 
         return manga.copy(
             description = description,
             state = state,
-            chapters = chapters
+            chapters = chapters.reversed(),
         )
     }
 
@@ -168,16 +150,16 @@ internal class RezoScans(context: MangaLoaderContext) :
 
         val url = "$apiUrl/posts/slug/$mangaSlug/chapter/$chapterSlug"
         val json = webClient.httpGet(url.toHttpUrl()).parseJson()
-        
+
         val chapterData = json.optJSONObject("chapter") ?: json
-        val images = chapterData.optJSONArray("images") 
+        val images = chapterData.optJSONArray("images")
             ?: throw ParseException("No images found", chapter.url)
 
         val pages = ArrayList<MangaPage>(images.length())
         for (i in 0 until images.length()) {
             val imgPath = images.getString(i)
             val imgUrl = if (imgPath.startsWith("http")) imgPath else "https://api.rezoscan.org$imgPath"
-            
+
             pages.add(
                 MangaPage(
                     id = generateUid(imgUrl),
@@ -187,7 +169,7 @@ internal class RezoScans(context: MangaLoaderContext) :
                 )
             )
         }
-        
+
         return pages
     }
 
