@@ -17,6 +17,7 @@ import java.util.*
 import java.math.BigDecimal
 import java.math.RoundingMode
 
+@Broken("Need some tests")
 @MangaSourceParser("COMIX", "Comix", "en", ContentType.MANGA)
 internal class Comix(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.COMIX, 28) {
