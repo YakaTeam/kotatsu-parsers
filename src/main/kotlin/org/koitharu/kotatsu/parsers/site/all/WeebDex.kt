@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.parsers.site.all
 
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -9,7 +10,9 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.math.ceil
 
+@Broken("Refactor + Need some tests")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WEEBDEX, pageSize = 24) {
@@ -75,8 +78,6 @@ internal class WeebDex(context: MangaLoaderContext) :
 					when (rating) {
 						ContentRating.SAFE -> append("&contentRating=safe")
 						ContentRating.SUGGESTIVE -> append("&contentRating=suggestive")
-						ContentRating.ADULT -> append("&contentRating=erotica&contentRating=pornographic")
-						// Explicitly handle NSFW if the enum exists in older versions, mapping to adult
 						else -> append("&contentRating=erotica&contentRating=pornographic")
 					}
 				}
@@ -163,7 +164,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 				if (lang.isNotEmpty()) fullTitle += " [$lang]"
 
 				val numFloat = chapNum.toFloatOrNull() ?: -1f
-				val dateStr = ch.optString("updatedAt")
+				val dateStr = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
+					.parseSafe(ch.optString("updatedAt"))
 
 				allChapters.add(
 					MangaChapter(
@@ -172,7 +174,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 						number = numFloat,
 						volume = vol.toIntOrNull() ?: 0,
 						url = "/chapter/$id",
-						uploadDate = parseDate(dateStr),
+						uploadDate = dateStr,
 						source = source,
 						scanlator = scanlator,
 						branch = null
@@ -182,7 +184,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 			val total = chResponse.optInt("total", 0)
 			val limit = chResponse.optInt("limit", 100)
-			val totalPages = Math.ceil(total.toDouble() / limit).toInt()
+			val totalPages = ceil(total.toDouble() / limit).toInt()
 
 			if (page >= totalPages) break
 			page++
@@ -284,20 +286,12 @@ internal class WeebDex(context: MangaLoaderContext) :
 		)
 	}
 
-	private suspend fun fetchTags(): Set<MangaTag> {
+	private fun fetchTags(): Set<MangaTag> {
 		val commonTags = listOf(
 			"Action", "Adventure", "Comedy", "Drama", "Fantasy", "Horror", "Mystery",
 			"Psychological", "Romance", "Sci-Fi", "Slice of Life", "Sports", "Supernatural",
 			"Thriller", "Tragedy", "Yaoi", "Yuri", "Mecha", "Isekai"
 		)
 		return commonTags.map { MangaTag(it, it, source) }.toSet()
-	}
-
-	private fun parseDate(dateStr: String): Long {
-		return try {
-			SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US).apply {
-				timeZone = TimeZone.getTimeZone("UTC")
-			}.parse(dateStr)?.time ?: 0L
-		} catch (e: Exception) { 0L }
 	}
 }
