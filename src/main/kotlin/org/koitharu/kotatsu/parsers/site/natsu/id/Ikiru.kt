@@ -1,4 +1,4 @@
-package org.koitharu.kotatsu.site.natsu.id
+package org.koitharu.kotatsu.parsers.site.natsu.id
 
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
