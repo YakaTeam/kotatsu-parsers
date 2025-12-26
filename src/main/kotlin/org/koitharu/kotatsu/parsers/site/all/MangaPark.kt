@@ -20,7 +20,22 @@ import java.util.*
 internal class MangaPark(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.MANGAPARK, 24) {
 
-	override val configKeyDomain = ConfigKey.Domain("mangapark.io")
+	override val configKeyDomain = ConfigKey.Domain(
+		"mangapark.net",
+		"mangapark.com",
+		"mangapark.org",
+		"mangapark.me",
+		"mangapark.io",
+		"mangapark.to",
+		"comicpark.org",
+		"comicpark.to",
+		"readpark.org",
+		"readpark.net",
+		"parkmanga.com",
+		"parkmanga.net",
+		"parkmanga.org",
+		"mpark.to"
+	)
 
 	private val apiUrl = "https://$domain/apo/"
 
@@ -261,15 +276,14 @@ internal class MangaPark(context: MangaLoaderContext) :
 			put("variables", variables)
 		}
 
-		// FIX 3: Converted URL string to HttpUrl and Map to Headers for correct overload
 		val responseBody = webClient.httpPost(
-			url = apiUrl.toHttpUrl(),
+			url = "https://$domain/apo/".toHttpUrl(),
 			body = payload,
 			extraHeaders = getRequestHeaders().newBuilder()
 				.add("Content-Type", "application/json")
 				.add("Referer", "https://$domain/")
-				.add("apollo-require-preflight", "true")
 				.add("x-apollo-operation-name", "kotatsu")
+				.add("apollo-require-preflight", "true")
 				.build()
 		).parseJson()
 
