@@ -26,7 +26,7 @@ internal class MangaGo(context: MangaLoaderContext) :
 
     override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
         .set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
-        .add("Cookie", "adult_confirmed=1; stay=1")
+        .add("Cookie", "adult_confirmed=1; stay=1; _m_superu=1")
         .build()
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -65,31 +65,33 @@ internal class MangaGo(context: MangaLoaderContext) :
         val url = if (!filter.query.isNullOrEmpty()) {
             "https://$domain/r/l_search/?name=${filter.query.urlEncoded()}&page=$page"
         } else {
-            val genre = filter.tags.firstOrNull()?.key ?: "All"
-            "https://$domain/genre/$genre/$page/?$sortParam"
+            val genre = filter.tags.firstOrNull()?.key ?: "all"
+            "https://$domain/genre/${genre.lowercase()}/$page/?$sortParam"
         }
 
         val response = webClient.httpGet(url)
         val doc = response.parseHtml()
-        val items = doc.select("ul#search_list > li").takeIf { it.isNotEmpty() }
+        val items = doc.select(".updatesli, .pic_list > li").takeIf { it.isNotEmpty() }
+            ?: doc.select("ul#search_list > li").takeIf { it.isNotEmpty() }
             ?: doc.select("div.listitem").takeIf { it.isNotEmpty() }
             ?: doc.select("div.row")
 
         return items.mapNotNull { element ->
-            val titleEl = element.selectFirst("h2 a")
+            val linkElement = element.selectFirst(".thm-effect")
+                ?: element.selectFirst("h2 a")
                 ?: element.selectFirst("h3 a")
                 ?: element.selectFirst("span.title a")
                 ?: element.selectFirst("span.tit a")
                 ?: element.selectFirst("a[href*=/read-manga/]:not(:has(img))")
             
-            if (titleEl == null) {
+            if (linkElement == null) {
                 return@mapNotNull null
             }
-            val title = titleEl.text()
-            println("Search result title: $title")
-            val href = titleEl.attr("href")
+            val title = linkElement.attr("title").takeIf { it.isNotEmpty() } ?: linkElement.text()
+            val href = linkElement.attr("href")
             val relativeUrl = href.toRelativeUrl(domain)
             val absoluteUrl = href.toAbsoluteUrl(domain)
+            
             val imgEl = element.selectFirst("img")
             val img = (imgEl?.attr("data-src")
                 ?: imgEl?.attr("data-original")
@@ -133,7 +135,7 @@ internal class MangaGo(context: MangaLoaderContext) :
             else -> null
         }
 
-        val chapters = doc.select("table#chapter_table tr").mapIndexedNotNull { i, tr ->
+        val chapters = doc.select("table#chapter_table tr, table.uk-table tr").mapIndexedNotNull { i, tr ->
             val a = tr.selectFirst("a.chico") ?: return@mapIndexedNotNull null
             val href = a.attr("href")
             val chapterTitle = a.text()
@@ -340,9 +342,7 @@ internal class MangaGo(context: MangaLoaderContext) :
             val ivBytes = hexStringToByteArray(hexIv)
             val inputBytes = Base64.getDecoder().decode(b64)
 
-            // Tachiyomi uses AES/CBC/ZEROBYTEPADDING via BouncyCastle usually.
-            // Standard Java 'NoPadding' works if data is aligned, or 'PKCS5Padding' if standard.
-            // Since we receive a clean string, NoPadding usually suffices for this source.
+            // Keiyoushi uses AES/CBC/ZEROBYTEPADDING
             val cipher = Cipher.getInstance("AES/CBC/NoPadding")
             val keySpec = SecretKeySpec(keyBytes, "AES")
             val ivSpec = IvParameterSpec(ivBytes)
@@ -350,7 +350,8 @@ internal class MangaGo(context: MangaLoaderContext) :
             cipher.init(Cipher.DECRYPT_MODE, keySpec, ivSpec)
             val decryptedBytes = cipher.doFinal(inputBytes)
 
-            return String(decryptedBytes, Charsets.UTF_8)
+            // ZEROBYTEPADDING means we might have trailing zeros
+            return String(decryptedBytes, Charsets.UTF_8).trim { it <= '\u0000' }
         } catch (e: Exception) {
             throw Exception("Failed to decrypt image list: ${e.message}")
         }
@@ -358,8 +359,6 @@ internal class MangaGo(context: MangaLoaderContext) :
 
     private fun unescrambleImageList(imageList: String, js: String): String {
         var imgList = imageList
-        
-        val keyLocationRegex = Regex("""str\.charAt\(\s*(\d+)\s*\)""")
         
         try {
             val keyLocations = keyLocationRegex.findAll(js).map {
@@ -372,8 +371,8 @@ internal class MangaGo(context: MangaLoaderContext) :
             }.toList()
 
             // Remove the key characters from the string
-            keyLocations.sortedDescending().forEach { it ->
-                imgList = imgList.removeRange(it, it + 1)
+            keyLocations.forEachIndexed { idx, it ->
+                imgList = imgList.removeRange(it - idx, it - idx + 1)
             }
 
             // Perform the unscramble swap
@@ -385,19 +384,17 @@ internal class MangaGo(context: MangaLoaderContext) :
     }
 
     private fun unscrambleString(str: String, keys: List<Int>): String {
-        val sb = StringBuilder(str)
+        var s = str
         keys.reversed().forEach { key ->
-            for (i in sb.length - 1 downTo key) {
+            for (i in s.length - 1 downTo key) {
                 if (i % 2 != 0) {
-                    val idxA = i - key
-                    val idxB = i
-                    val temp = sb[idxA]
-                    sb.setCharAt(idxA, sb[idxB])
-                    sb.setCharAt(idxB, temp)
+                    val temp = s[i - key]
+                    s = s.replaceRange(i - key..i - key, s[i].toString())
+                    s = s.replaceRange(i..i, temp.toString())
                 }
             }
         }
-        return sb.toString()
+        return s
     }
 
     private fun hexStringToByteArray(s: String): ByteArray {

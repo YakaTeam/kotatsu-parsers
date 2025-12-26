@@ -201,7 +201,7 @@ internal abstract class MangaFireParser(
 				!filter.query.isNullOrEmpty() -> {
 					// Keyword + vrf
 					append("&keyword=")
-					append(encodeKeyword(filter.query))
+					append(URLEncoder.encode(filter.query, "UTF-8"))
 					append("&vrf=")
 					append(VrfGenerator.generate(filter.query))
 
@@ -211,7 +211,6 @@ internal abstract class MangaFireParser(
 						SortOrder.RATING -> "scores"
 						SortOrder.NEWEST -> "release_date"
 						SortOrder.ALPHABETICAL -> "title_az"
-						// Default to relevance for search if RELEVANCE is selected
 						else -> "most_relevance"
 					})
 				}
@@ -537,20 +536,6 @@ internal abstract class MangaFireParser(
     }
 
     private fun Int.ceilDiv(other: Int) = (this + (other - 1)) / other
-
-	private	fun encodeKeyword(input: String): String {
-		val sb = StringBuilder()
-		// Separate each word, even whitespace
-		for (c in input) {
-			when {
-				c == ' ' -> sb.append('+')
-				c.isLetterOrDigit() || c.code > 0x7F -> sb.append(c)
-				else -> sb.append(String.format("%%%02X", c.code))
-			}
-		}
-		// Tested with "mẹ mày béo @@+" keyword
-		return sb.toString()
-	}
 
     @MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
     class English(context: MangaLoaderContext) : MangaFireParser(context, MangaParserSource.MANGAFIRE_EN, "en")
