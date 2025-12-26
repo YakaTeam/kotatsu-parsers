@@ -339,7 +339,7 @@ internal abstract class MangaFireParser(
         val langTypePairs = document.select(".m-list div.tab-content").flatMap {
             val type = it.attr("data-name")
 
-            it.select(".list-menu .dropdown-item").map {
+            it.select(".list-menu .dropdown-item").map { item ->
                 ChapterBranch(
                     type = type,
                     langCode = item.attr("data-code").lowercase(),
