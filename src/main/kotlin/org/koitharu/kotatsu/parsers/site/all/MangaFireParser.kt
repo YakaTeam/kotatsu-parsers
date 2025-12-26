@@ -201,10 +201,7 @@ internal abstract class MangaFireParser(
 				!filter.query.isNullOrEmpty() -> {
 					val stdQuery = filter.query.replace("\"", " ").trim()
 					append("&keyword=")
-					append(URLEncoder.encode(stdQuery, "UTF-8"))
-					
-					// Use evaluateJs to get vrf from the site's own script if possible
-					// Or stick to the current generator but ensure it's matched
+					append(URLEncoder.encode(stdQuery, "UTF-8").replace("+", "%20"))
 					append("&vrf=")
 					append(VrfGenerator.generate(stdQuery))
 
@@ -219,14 +216,14 @@ internal abstract class MangaFireParser(
 				}
 
 				else -> {
-					filter.tagsExclude.forEach { tag ->
+					filter.tagsExclude.forEach {
 						append("&genre[]=-")
-						append(tag.key)
+						append(it.key)
 					}
 
-					filter.tags.forEach { tag ->
+					filter.tags.forEach {
 						append("&genre[]=")
-						append(tag.key)
+						append(it.key)
 					}
 
 					filter.locale?.let {
@@ -234,15 +231,15 @@ internal abstract class MangaFireParser(
 						append(it.language)
 					}
 
-					filter.states.forEach { state ->
+					filter.states.forEach {
 						append("&status[]=")
-						append(when (state) {
+						append(when (it) {
 							MangaState.ONGOING -> "releasing"
 							MangaState.FINISHED -> "completed"
 							MangaState.ABANDONED -> "discontinued"
 							MangaState.PAUSED -> "on_hiatus"
 							MangaState.UPCOMING -> "info"
-							else -> throw IllegalArgumentException("$state not supported")
+							else -> throw IllegalArgumentException("$it not supported")
 						})
 					}
 
@@ -342,7 +339,7 @@ internal abstract class MangaFireParser(
         val langTypePairs = document.select(".m-list div.tab-content").flatMap {
             val type = it.attr("data-name")
 
-            it.select(".list-menu .dropdown-item").map { item ->
+            it.select(".list-menu .dropdown-item").map {
                 ChapterBranch(
                     type = type,
                     langCode = item.attr("data-code").lowercase(),
@@ -408,8 +405,8 @@ internal abstract class MangaFireParser(
                     "${branch.type.toTitleCase()} ${it.attr("data-number")}"
                 },
                 number = it.attr("data-number").toFloatOrNull() ?: -1f,
-                volume = it.attr("other-title").let { title ->
-                    volumeNumRegex.find(title)?.groupValues?.getOrNull(2)?.toInt() ?: 0
+                volume = it.attr("other-title").let {
+                    volumeNumRegex.find(it)?.groupValues?.getOrNull(2)?.toInt() ?: 0
                 },
                 url = "$mangaId/${branch.type}/${branch.langCode}/$chapterId",
                 scanlator = null,
