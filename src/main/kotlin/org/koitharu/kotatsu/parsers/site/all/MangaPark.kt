@@ -280,7 +280,6 @@ internal class MangaPark(context: MangaLoaderContext) :
 			url = "https://$domain/apo/".toHttpUrl(),
 			body = payload,
 			extraHeaders = getRequestHeaders().newBuilder()
-				.add("Content-Type", "application/json")
 				.add("Referer", "https://$domain/")
 				.add("x-apollo-operation-name", "kotatsu")
 				.add("apollo-require-preflight", "true")
