@@ -1,5 +1,8 @@
 package org.koitharu.kotatsu.parsers.site.all
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import org.jsoup.Jsoup
@@ -125,7 +128,6 @@ internal abstract class MangaFireParser(
     override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("mangafire.to")
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
-        SortOrder.UPDATED,
         SortOrder.POPULARITY,
         SortOrder.RATING,
         SortOrder.NEWEST,
@@ -169,6 +171,7 @@ internal abstract class MangaFireParser(
             isMultipleTagsSupported = true,
             isTagsExclusionSupported = true,
             isSearchSupported = true,
+            isOriginalLocaleSupported = true
         )
 
     override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -196,33 +199,31 @@ internal abstract class MangaFireParser(
 
 			when {
 				!filter.query.isNullOrEmpty() -> {
-					// Keyword + vrf
+					val stdQuery = filter.query.replace("\"", " ").trim()
 					append("&keyword=")
-					append(encodeKeyword(filter.query))
+					append(URLEncoder.encode(stdQuery, "UTF-8").replace("+", "%20"))
 					append("&vrf=")
-					append(VrfGenerator.generate(filter.query))
+					append(VrfGenerator.generate(stdQuery))
 
 					append("&sort=")
 					append(when (order) {
-						SortOrder.UPDATED -> "recently_updated"
 						SortOrder.POPULARITY -> "most_viewed"
 						SortOrder.RATING -> "scores"
 						SortOrder.NEWEST -> "release_date"
 						SortOrder.ALPHABETICAL -> "title_az"
-						SortOrder.RELEVANCE -> "most_relevance"
-						else -> ""
+						else -> "most_relevance"
 					})
 				}
 
 				else -> {
-					filter.tagsExclude.forEach { tag ->
+					filter.tagsExclude.forEach {
 						append("&genre[]=-")
-						append(tag.key)
+						append(it.key)
 					}
 
-					filter.tags.forEach { tag ->
+					filter.tags.forEach {
 						append("&genre[]=")
-						append(tag.key)
+						append(it.key)
 					}
 
 					filter.locale?.let {
@@ -230,21 +231,20 @@ internal abstract class MangaFireParser(
 						append(it.language)
 					}
 
-					filter.states.forEach { state ->
+					filter.states.forEach {
 						append("&status[]=")
-						append(when (state) {
+						append(when (it) {
 							MangaState.ONGOING -> "releasing"
 							MangaState.FINISHED -> "completed"
 							MangaState.ABANDONED -> "discontinued"
 							MangaState.PAUSED -> "on_hiatus"
 							MangaState.UPCOMING -> "info"
-							else -> throw IllegalArgumentException("$state not supported")
+							else -> throw IllegalArgumentException("$it not supported")
 						})
 					}
 
 					append("&sort=")
 					append(when (order) {
-						SortOrder.UPDATED -> "recently_updated"
 						SortOrder.POPULARITY -> "most_viewed"
 						SortOrder.RATING -> "scores"
 						SortOrder.NEWEST -> "release_date"
@@ -358,34 +358,46 @@ internal abstract class MangaFireParser(
         }
     }
 
-    private suspend fun getChaptersBranch(mangaId: String, branch: ChapterBranch): List<MangaChapter> {
+    private suspend fun getChaptersBranch(mangaId: String, branch: ChapterBranch): List<MangaChapter> = coroutineScope {
         val readVrfInput = "$mangaId@${branch.type}@${branch.langCode}"
         val readVrf = VrfGenerator.generate(readVrfInput)
 
-        val response = client
-            .httpGet("https://$domain/ajax/read/$mangaId/${branch.type}/${branch.langCode}?vrf=$readVrf")
-
-        val chapterElements = response.parseJson()
-            .getJSONObject("result")
-            .getString("html")
-            .let(Jsoup::parseBodyFragment)
-            .select("ul li a")
-
-        if (branch.type == "chapter") {
-            val doc = client
-                .httpGet("https://$domain/ajax/manga/$mangaId/${branch.type}/${branch.langCode}")
-                .parseJson()
-                .getString("result")
-                .let(Jsoup::parseBodyFragment)
-
-            doc.select("ul li a").withIndex().forEach { (i, it) ->
-                val date = it.select("span").getOrNull(1)?.ownText() ?: ""
-                chapterElements[i].attr("upload-date", date)
-                chapterElements[i].attr("other-title", it.attr("title"))
+        val listDeferred = async {
+            client.httpGet("https://$domain/ajax/read/$mangaId/${branch.type}/${branch.langCode}?vrf=$readVrf").use {
+                it.parseJson()
+                    .getJSONObject("result")
+                    .getString("html")
+                    .let(Jsoup::parseBodyFragment)
+                    .select("ul li a")
             }
         }
 
-        return chapterElements.mapChapters(reversed = true) { _, it ->
+        val metaDocDeferred = if (branch.type == "chapter") {
+            async {
+                client.httpGet("https://$domain/ajax/manga/$mangaId/${branch.type}/${branch.langCode}").use {
+                    it.parseJson()
+                        .getString("result")
+                        .let(Jsoup::parseBodyFragment)
+                }
+            }
+        } else {
+            null
+        }
+
+        val chapterElements = listDeferred.await()
+        val metaDoc = metaDocDeferred?.await()
+
+        if (metaDoc != null) {
+            metaDoc.select("ul li a").withIndex().forEach { (i, it) ->
+                if (i < chapterElements.size) {
+                    val date = it.select("span").getOrNull(1)?.ownText() ?: ""
+                    chapterElements[i].attr("upload-date", date)
+                    chapterElements[i].attr("other-title", it.attr("title"))
+                }
+            }
+        }
+
+        chapterElements.mapChapters(reversed = true) { _, it ->
             val chapterId = it.attr("data-id")
             MangaChapter(
                 id = generateUid(it.attr("href")),
@@ -393,8 +405,8 @@ internal abstract class MangaFireParser(
                     "${branch.type.toTitleCase()} ${it.attr("data-number")}"
                 },
                 number = it.attr("data-number").toFloatOrNull() ?: -1f,
-                volume = it.attr("other-title").let { title ->
-                    volumeNumRegex.find(title)?.groupValues?.getOrNull(2)?.toInt() ?: 0
+                volume = it.attr("other-title").let {
+                    volumeNumRegex.find(it)?.groupValues?.getOrNull(2)?.toInt() ?: 0
                 },
                 url = "$mangaId/${branch.type}/${branch.langCode}/$chapterId",
                 scanlator = null,
@@ -524,20 +536,6 @@ internal abstract class MangaFireParser(
     }
 
     private fun Int.ceilDiv(other: Int) = (this + (other - 1)) / other
-
-	private	fun encodeKeyword(input: String): String {
-		val sb = StringBuilder()
-		// Separate each word, even whitespace
-		for (c in input) {
-			when {
-				c == ' ' -> sb.append('+')
-				c.isLetterOrDigit() || c.code > 0x7F -> sb.append(c)
-				else -> sb.append(String.format("%%%02X", c.code))
-			}
-		}
-		// Tested with "mẹ mày béo @@+" keyword
-		return sb.toString()
-	}
 
     @MangaSourceParser("MANGAFIRE_EN", "MangaFire English", "en")
     class English(context: MangaLoaderContext) : MangaFireParser(context, MangaParserSource.MANGAFIRE_EN, "en")
