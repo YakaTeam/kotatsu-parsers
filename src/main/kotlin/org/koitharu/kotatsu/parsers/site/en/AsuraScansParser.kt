@@ -160,10 +160,10 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 	}
 
 	private val regexDate = """(\d+)(st|nd|rd|th)""".toRegex()
-	private val dateFormat = SimpleDateFormat("MMMM d yyyy", Locale.US)
 
 	override suspend fun getDetails(manga: Manga): Manga {
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
+		val dateFormat = SimpleDateFormat("MMMM d yyyy", Locale.US)
 		val tagMap = getOrCreateTagMap()
 		val selectTag = doc.select("div[class^=space] > div.flex > button.text-white")
 		val tags = selectTag.mapNotNullToSet { tagMap[it.text()] }
@@ -174,18 +174,23 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 			authors = setOf(author),
 			chapters = doc.select("div.scrollbar-thumb-themecolor > div.group").mapChapters(reversed = true) { i, div ->
 				val a = div.selectLastOrThrow("a")
-				val urlRelative = "/series/" + a.attrAsRelativeUrl("href")
-				val url = urlRelative.toAbsoluteUrl(domain)
+				val urlRelative = "/series/${a.attrAsRelativeUrl("href")}"
 				val urlParts = urlRelative.split("/chapter/")
-				val slugWithHash = urlParts.firstOrNull()?.substringAfter("/series/").orEmpty()
-				val slug = slugWithHash.substringBeforeLast("-") // remove hash for consistent id
 				val chapterNum = urlParts.lastOrNull().orEmpty()
+
+				val slug = urlParts.firstOrNull()
+					?.substringAfter("/series/")?.substringBeforeLast("-")
+					.orEmpty() // should throw ParseException
+
+				val date = div.selectLast("h3")
+					?.text()?.replace(regexDate, "$1")
+					.orEmpty()
+
 				val stableUrl = "/series/$slug/chapter/$chapterNum"
-				val date = div.selectLast("h3")?.text().orEmpty()
-				val cleanDate = date.replace(regexDate, "$1")
+
 				val titleElement = div.selectFirst("h3")
 				val chapterLabel = titleElement?.ownText()?.trim()?.takeIf { it.isNotEmpty() }
-				val chapterTitle = titleElement?.selectFirst("span")?.text()?.trim()?.takeIf { it.isNotEmpty() }
+				val chapterTitle = titleElement?.selectFirst("span")?.text()?.takeIf { it.isNotEmpty() }
 				val fullTitle = when {
 					chapterLabel != null && chapterTitle != null -> "$chapterLabel - $chapterTitle"
 					chapterLabel != null -> chapterLabel
@@ -196,9 +201,9 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 					title = fullTitle,
 					number = i + 1f,
 					volume = 0,
-					url = url,
+					url = urlRelative.toAbsoluteUrl(domain),
 					scanlator = null,
-					uploadDate = synchronized(dateFormat) { dateFormat.parseSafe(cleanDate) },
+					uploadDate = dateFormat.parseSafe(date),
 					branch = null,
 					source = source,
 				)
