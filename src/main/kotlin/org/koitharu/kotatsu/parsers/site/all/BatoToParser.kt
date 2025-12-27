@@ -6,6 +6,7 @@ import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.nodes.Element
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaParserAuthProvider
 import org.koitharu.kotatsu.parsers.MangaSourceParser
@@ -22,6 +23,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
+@Broken("Need some tests")
 @MangaSourceParser("BATOTO", "Bato.To")
 internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
 	context = context,
@@ -68,39 +70,46 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
 	// Interceptor with Fallback Logic
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val request = chain.request()
-		val url = request.url.toString()
 		val response = chain.proceed(request)
-		if (response.isSuccessful ||
-			!SERVER_PATTERN.containsMatchIn(url)) {
-			return response
-		}
 
+		if (response.isSuccessful) return response
+
+		val urlString = request.url.toString()
+
+		// Close the failed response body to prevent leaks
 		response.close()
 
-		for (server in FALLBACK_SERVERS) {
-			val newUrl = url.replace(SERVER_PATTERN, "https://$server")
-			if (newUrl == url) continue
+		// Check if this is an image server URL
+		if (SERVER_PATTERN.containsMatchIn(urlString)) {
+			for (server in FALLBACK_SERVERS) {
+				val newUrl = urlString.replace(SERVER_PATTERN, "https://$server")
 
-			val newRequest = request.newBuilder()
-				.url(newUrl)
-				.build()
+				// Skip if we are about to try the exact same URL that just failed
+				if (newUrl == urlString) continue
 
-			try {
-				val fallbackResponse = chain
-					.withConnectTimeout(5, TimeUnit.SECONDS)
-					.withReadTimeout(10, TimeUnit.SECONDS)
-					.proceed(newRequest)
+				val newRequest = request.newBuilder()
+					.url(newUrl)
+					.build()
 
-				if (fallbackResponse.isSuccessful) {
-					return fallbackResponse
+				try {
+					// Force short timeouts for fallbacks to avoid long hangs
+					val newResponse = chain
+						.withConnectTimeout(5, TimeUnit.SECONDS)
+						.withReadTimeout(10, TimeUnit.SECONDS)
+						.proceed(newRequest)
+
+					if (newResponse.isSuccessful) {
+						return newResponse
+					}
+					// If this server also failed, close and loop to the next one
+					newResponse.close()
+				} catch (_: Exception) {
+					// Connection error on this mirror, ignore and loop to next
 				}
-
-				fallbackResponse.close()
-			} catch (_: Exception) {
-				// Ignore
 			}
 		}
 
+		// If everything failed, re-run original request to return the standard error
 		return chain.proceed(request)
 	}
 
@@ -307,7 +316,7 @@ internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
 				?: script.parseFailed("Cannot find batoPass")
 			val batoWord = scriptSrc.substringBetweenFirst("batoWord =", ";")?.trim(' ', '"', '\n')
 				?: script.parseFailed("Cannot find batoWord")
-			val password = context.evaluateJs("about:blank", batoPass)?.removeSurrounding('"')
+			val password = context.evaluateJs(batoPass)?.removeSurrounding('"')
 				?: script.parseFailed("Cannot evaluate batoPass")
 			val args = JSONArray(decryptAES(batoWord, password))
 			val result = ArrayList<MangaPage>(images.length())
