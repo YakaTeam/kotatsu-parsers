@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.parsers.site.madara
 import androidx.collection.scatterSetOf
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
@@ -134,7 +135,7 @@ internal abstract class MadaraParser(
 		"en curso",
 		"ongoing",
 		"on going",
-        "OnGoing",
+		"OnGoing",
 		"ativo",
 		"en cours",
 		"en cours \uD83D\uDFE2",
@@ -160,6 +161,7 @@ internal abstract class MadaraParser(
 		"en marcha",
 		"publicandose",
 		"publicando",
+		"连载중",
 		"连载中",
 		"đang làm",
 		"em postagem",
@@ -199,6 +201,7 @@ internal abstract class MadaraParser(
 		"bitmiş",
 		"end",
 		"منتهية",
+		"hoàn thành",
 		"tamamlanan",
 		"مكتمل",
 	)
@@ -573,6 +576,7 @@ internal abstract class MadaraParser(
 			"div.post-content_item:contains(状态), div.post-content_item:contains(الحالة), div.post-content_item:contains(Tình trạng)"
 	protected open val selectAlt =
 		".post-content_item:contains(Alt) .summary-content, .post-content_item:contains(Nomes alternativos: ) .summary-content"
+	protected open val seriesTypeSelector = ".post-content_item:contains(Type) .summary-content"
 
 	protected open suspend fun createMangaTag(a: Element): MangaTag? {
 		return MangaTag(
@@ -609,12 +613,18 @@ internal abstract class MadaraParser(
 		}
 
 		val alt = doc.body().select(selectAlt).firstOrNull()?.tableValue()?.textOrNull()
+		val seriesType = doc.selectFirst(seriesTypeSelector)?.ownText()?.takeIf { it.isNotBlank() && it != "-" }
+
+		val tags = doc.body().select(selectGenre).mapToSet { a -> createMangaTag(a) }.filterNotNull().toMutableSet()
+		seriesType?.let {
+			tags.add(MangaTag(it.lowercase(), it.toTitleCase(), source))
+		}
 
 		manga.copy(
 			title = doc.selectFirst("h1")?.textOrNull() ?: manga.title,
 			url = href,
 			publicUrl = href.toAbsoluteUrl(domain),
-			tags = doc.body().select(selectGenre).mapToSet { a -> createMangaTag(a) }.filterNotNull().toSet(),
+			tags = tags,
 			description = desc,
 			altTitles = setOfNotNull(alt),
 			state = state,
@@ -632,6 +642,7 @@ internal abstract class MadaraParser(
 	protected open val selectChapter = "li.wp-manga-chapter"
 
 	protected open suspend fun getChapters(manga: Manga, doc: Document): List<MangaChapter> {
+		countViews(doc)
 		val dateFormat = SimpleDateFormat(datePattern, sourceLocale)
 		return doc.body().select(selectChapter).mapChapters(reversed = true) { i, li ->
 			val a = li.selectFirstOrThrow("a")
@@ -715,6 +726,28 @@ internal abstract class MadaraParser(
 		}
 	}
 
+	protected open val sendViewCount: Boolean = true
+
+	protected open suspend fun countViews(doc: Document) {
+		if (!sendViewCount) return
+		try {
+			val wpMangaData = doc.selectFirst("script#wp-manga-js-extra")?.data() ?: return
+			val wpMangaInfo = wpMangaData.substringAfter("var manga = ").substringBeforeLast(";")
+			val wpManga = JSONObject(wpMangaInfo)
+
+			if (wpManga.optString("enable_manga_view") == "1") {
+				val payload = mutableMapOf<String, String>()
+				payload["action"] = "manga_views"
+				payload["manga"] = wpManga.getString("manga_id")
+				if (wpManga.has("chapter_slug")) {
+					payload["chapter"] = wpManga.getString("chapter_slug")
+				}
+				webClient.httpPost("https://$domain/wp-admin/admin-ajax.php", payload)
+			}
+		} catch (_: Exception) {
+		}
+	}
+
 	protected open val selectBodyPage = "div.main-col-inner div.reading-content"
 	protected open val selectPage = "div.page-break"
 	protected open val selectRequiredLogin = ".content-blocked, .login-required"
@@ -722,6 +755,7 @@ internal abstract class MadaraParser(
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val fullUrl = chapter.url.toAbsoluteUrl(domain)
 		val doc = webClient.httpGet(fullUrl).parseHtml()
+		countViews(doc)
 		val chapterProtector = doc.getElementById("chapter-protector-data")
 		if (chapterProtector == null) {
 			throw if (doc.selectFirst(selectRequiredLogin) != null) {
@@ -762,17 +796,26 @@ internal abstract class MadaraParser(
 			val ciphertext = "Salted__".toByteArray(Charsets.UTF_8) + salt + unsaltedCiphertext
 
 			val rawImgArray = CryptoAES(context).decrypt(context.encodeBase64(ciphertext), password)
-			val imgArrayString = rawImgArray.filterNot { c -> c == '[' || c == ']' || c == '\\' || c == '"' }
+			val imgArrayString = if (rawImgArray.startsWith("\"") && rawImgArray.endsWith("\"")) {
+				JSONObject("{\"data\":$rawImgArray}").getString("data")
+			} else {
+				rawImgArray
+			}
+			val imgArray = JSONArray(imgArrayString)
 
-			return imgArrayString.split(",").map { url ->
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
+			val pages = mutableListOf<MangaPage>()
+			for (i in 0 until imgArray.length()) {
+				val url = imgArray.getString(i)
+				pages.add(
+					MangaPage(
+						id = generateUid(url),
+						url = url,
+						preview = null,
+						source = source,
+					),
 				)
 			}
-
+			return pages
 		}
 	}
 
