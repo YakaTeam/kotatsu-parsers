@@ -22,10 +22,10 @@ internal class ManhwaRead(context: MangaLoaderContext) :
 
     override suspend fun fetchAvailableTags(): Set<MangaTag> {
         val doc = webClient.httpGet("https://$domain/genre-index/").parseHtml()
-        return doc.select("#mainTermsList li a").mapToSet { a ->
+        return doc.select("#mainTermsList li a").mapNotNullToSet { a ->
             MangaTag(
                 key = a.attr("href").removeSuffix("/").substringAfterLast('/'),
-                title = a.selectFirst("span")?.text()?.toTitleCase().orEmpty(),
+                title = a.selectFirst("span")?.text()?.toTitleCase() ?: return@mapNotNullToSet null,,
                 source = source
             )
         }
