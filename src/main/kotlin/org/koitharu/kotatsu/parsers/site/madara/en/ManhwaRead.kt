@@ -25,7 +25,7 @@ internal class ManhwaRead(context: MangaLoaderContext) :
         return doc.select("#mainTermsList li a").mapNotNullToSet { a ->
             MangaTag(
                 key = a.attr("href").removeSuffix("/").substringAfterLast('/'),
-                title = a.selectFirst("span")?.text()?.toTitleCase() ?: return@mapNotNullToSet null,,
+                title = a.selectFirst("span")?.text()?.toTitleCase() ?: return@mapNotNullToSet null,
                 source = source
             )
         }
@@ -84,7 +84,7 @@ internal class ManhwaRead(context: MangaLoaderContext) :
         }
 
         val authors = doc.select("a[href*='/author/'], a[href*='/artist/']").mapNotNullToSet {
-            it.text()
+            it.text().substringBeforeLast(" ").trim()
         }
 
         return manga.copy(
