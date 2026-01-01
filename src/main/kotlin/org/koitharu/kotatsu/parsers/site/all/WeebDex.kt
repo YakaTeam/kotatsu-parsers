@@ -7,6 +7,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
 import java.text.SimpleDateFormat
@@ -231,10 +232,10 @@ internal class WeebDex(context: MangaLoaderContext) :
 		return response.getJSONArray("data").mapJSON { jo ->
 			val id = jo.getString("id")
 			val title = jo.getString("title")
-			val coverId = jo.getJSONObject("relationships")
-				.getJSONObject("cover").getString("id")
+			val relationships = jo.getJSONObject("relationships")
+			val coverId = relationships.getJSONObject("cover").getString("id")
 
-			val tags = jo.optJSONArray("tags")?.mapJSONNotNullToSet {
+			val tags = relationships.optJSONArray("tags")?.mapJSONNotNullToSet {
 				if (it.getString("group") != "genre")
 					return@mapJSONNotNullToSet null
 				MangaTag(
@@ -267,7 +268,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 					"cancelled" -> MangaState.ABANDONED
 					else -> null
 				},
-				description = jo.getString("description"),
+				description = jo.getStringOrNull("description"),
 				authors = emptySet(),
 				rating = RATING_UNKNOWN,
 				source = source,
