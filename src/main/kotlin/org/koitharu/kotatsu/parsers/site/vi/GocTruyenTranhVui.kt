@@ -28,36 +28,13 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
     private var lastRequestTime = 0L
 	private var userToken: String = ""
 
-    private val apiHeaders by lazy {
-        Headers.Builder()
-            .add("Authorization", userToken)
-            .add("Referer", "https://$domain/")
-            .add("X-Requested-With", "XMLHttpRequest")
-            .build()
-    }
+	private fun apiHeaders(): Headers = Headers.Builder()
+		.add("Authorization", userToken)
+		.add("Referer", "https://$domain/")
+		.add("X-Requested-With", "XMLHttpRequest")
+		.build()
 
-	override val authUrl: String
-		get() = domain
-
-	override suspend fun isAuthorized(): Boolean = !WebViewHelper(context)
-		.getLocalStorageValue(domain, "Authorization")
-		?.removeSurrounding('"').toString().isEmpty()
-
-	override suspend fun getUsername(): String {
-		val localStorage = JSONObject(
-			WebViewHelper(context).getLocalStorageValue(domain, "user_info")
-				?.removeSurrounding('"')
-				?.trim()
-		)
-		val name = localStorage.getString("name")
-		if (name.isEmpty()) throw AuthRequiredException(
-			source,
-			IllegalStateException("No username found, please login")
-		)
-		return name
-	}
-
-    override val availableSortOrders: Set<SortOrder> = EnumSet.of(
+	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
         SortOrder.UPDATED,
         SortOrder.POPULARITY,
         SortOrder.NEWEST,
@@ -74,7 +51,52 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
         availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED)
     )
 
-    override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+	override val authUrl: String
+		get() = domain
+
+	override suspend fun isAuthorized(): Boolean {
+		val token = WebViewHelper(context)
+			.getLocalStorageValue(domain, "Authorization")
+			?.removeSurrounding('"')
+			?.trim()
+
+		return !token.isNullOrBlank()
+	}
+
+	override suspend fun getUsername(): String {
+		val raw = WebViewHelper(context)
+			.getLocalStorageValue(domain, "user_info")
+			?.removeSurrounding('"')
+			?.trim()
+
+		if (raw.isNullOrBlank()) {
+			throw AuthRequiredException(
+				source,
+				IllegalStateException("user_info not found in Local Storage")
+			)
+		}
+
+		val localStorage = try {
+			JSONObject(raw)
+		} catch (e: Exception) {
+			throw AuthRequiredException(
+				source,
+				IllegalStateException("Invalid user_info JSON", e)
+			)
+		}
+
+		val name = localStorage.optString("name")
+		if (name.isBlank()) {
+			throw AuthRequiredException(
+				source,
+				IllegalStateException("Username not found")
+			)
+		}
+
+		return name
+	}
+
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         enforceRateLimit()
         val url = buildString {
             append(apiUrl)
@@ -103,7 +125,7 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
             }
         }
 
-        val json = webClient.httpGet(url, extraHeaders = apiHeaders).parseJson()
+        val json = webClient.httpGet(url, extraHeaders = apiHeaders()).parseJson()
         val result = json.optJSONObject("result") ?: return emptyList()
         val data = result.optJSONArray("data") ?: return emptyList()
 
@@ -160,7 +182,7 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
 				)
 			}
 
-            val chapterJson = webClient.httpGet(chapterApiUrl, extraHeaders = apiHeaders).parseJson()
+            val chapterJson = webClient.httpGet(chapterApiUrl, extraHeaders = apiHeaders()).parseJson()
             val chaptersData = chapterJson.getJSONObject("result").getJSONArray("chapters")
 
             List(chaptersData.length()) { i ->
@@ -234,7 +256,7 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
                 "nameEn" to nameEn
             )
             val authApiUrl = "$apiUrl/chapter/auth".toHttpUrl()
-            val authResponse = webClient.httpPost(url = authApiUrl, form = formBody, extraHeaders = apiHeaders).parseJson()
+            val authResponse = webClient.httpPost(url = authApiUrl, form = formBody, extraHeaders = apiHeaders()).parseJson()
             val data = authResponse.getJSONObject("result").getJSONArray("data")
             imageUrls = List(data.length()) { i -> data.getString(i) }
         }
