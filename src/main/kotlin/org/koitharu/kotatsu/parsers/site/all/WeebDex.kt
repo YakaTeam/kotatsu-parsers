@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.parsers.site.all
 
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -11,9 +12,10 @@ import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.ceil
 
+@Broken("Fix Manga entity in getListPage + getDetails, fetchTags, getPages")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.WEEBDEX, 24) {
+	PagedMangaParser(context, MangaParserSource.WEEBDEX, 28) {
 
 	private val cdnDomain = "srv.notdelta.xyz"
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
@@ -24,11 +26,16 @@ internal class WeebDex(context: MangaLoaderContext) :
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
-		SortOrder.UPDATED,
-		SortOrder.NEWEST,
-		SortOrder.ALPHABETICAL,
-		SortOrder.ALPHABETICAL_DESC,
-		SortOrder.RATING,
+		SortOrder.ADDED, // no args
+		SortOrder.ADDED_ASC, // no args with asc order
+		SortOrder.RELEVANCE, // relevance
+		SortOrder.UPDATED, // updatedAt
+		SortOrder.NEWEST, // createdAt
+		SortOrder.NEWEST_ASC, // createdAt with asc
+		SortOrder.ALPHABETICAL, // title with asc
+		SortOrder.ALPHABETICAL_DESC, // title
+		SortOrder.RATING, // rating
+		SortOrder.RATING_ASC, // rating with asc
 	)
 
 	override val filterCapabilities: MangaListFilterCapabilities
@@ -36,17 +43,20 @@ internal class WeebDex(context: MangaLoaderContext) :
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
 			isMultipleTagsSupported = true,
+			isTagsExclusionSupported = true,
+			isYearRangeSupported = true,
 		)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
 			availableTags = fetchTags(),
-			availableStates = EnumSet.allOf(MangaState::class.java),
-			availableContentRating = EnumSet.of(
-				ContentRating.SAFE,
-				ContentRating.SUGGESTIVE,
-				ContentRating.ADULT,
+			availableStates = EnumSet.of(
+				MangaState.ONGOING,
+				MangaState.FINISHED,
+				MangaState.PAUSED,
+				MangaState.ABANDONED,
 			),
+			availableContentRating = EnumSet.allOf(ContentRating::class.java),
 			availableLocales = setOf(
 				Locale.ENGLISH,
 				Locale("af"), // Afrikaans
@@ -115,71 +125,100 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val url = buildString {
-			append("/manga?limit=$pageSize")
-
+		val url = urlBuilder().addPathSegment("manga")
 			// Paging
-			append("&page=")
-			append(page)
+			.addQueryParameter("limit", pageSize.toString())
+			.addQueryParameter("page", page.toString())
 
 			// SortOrder mapping
 			when (order) {
-				SortOrder.NEWEST -> append("&sort=createdAt")
+				SortOrder.ADDED_ASC -> url.addQueryParameter("order", "asc")
+				SortOrder.RELEVANCE -> url.addQueryParameter("sort", "relevance")
+				SortOrder.UPDATED -> url.addQueryParameter("sort", "updatedAt")
+				SortOrder.NEWEST -> url.addQueryParameter("sort", "createdAt")
+				SortOrder.NEWEST_ASC -> {
+					url.addQueryParameter("sort", "createdAt")
+					url.addQueryParameter("order", "asc")
+				}
 				SortOrder.ALPHABETICAL -> {
-					append("&sort=title")
-					append("&order=asc")
+					url.addQueryParameter("sort", "title")
+					url.addQueryParameter("order", "asc")
 				}
 				SortOrder.ALPHABETICAL_DESC -> {
-					append("&sort=title")
-					append("&order=desc")
+					url.addQueryParameter("sort", "title")
+					url.addQueryParameter("order", "desc")
 				}
-				SortOrder.RATING -> append("&sort=followedCount")
-				else -> append("&sort=updatedAt")
+				SortOrder.RATING -> {
+					url.addQueryParameter("sort", "followedCount")
+					url.addQueryParameter("order", "desc")
+				}
+				SortOrder.RATING_ASC -> {
+					url.addQueryParameter("sort", "followedCount")
+					url.addQueryParameter("order", "asc")
+				}
+				else -> {} // ADDED
 			}
 
 			// Keyword
 			if (!filter.query.isNullOrEmpty()) {
-				append("&title=${filter.query.urlEncoded()}")
+				url.addQueryParameter("title", filter.query.urlEncoded())
 			}
 
-			// Filters
-			filter.contentRating.forEach {
-				when (it) {
-					ContentRating.SAFE -> append("&contentRating=safe")
-					ContentRating.SUGGESTIVE -> append("&contentRating=suggestive")
-					ContentRating.ADULT -> {
-						append("&contentRating=erotica")
-						append("&contentRating=pornographic")
+			// Content rating
+			if (!filter.contentRating.isEmpty()) {
+				filter.contentRating.forEach {
+					when (it) {
+						ContentRating.SAFE -> url.addQueryParameter("contentRating", "safe")
+						ContentRating.SUGGESTIVE -> url.addQueryParameter("contentRating", "suggestive")
+						ContentRating.ADULT -> {
+							url.addQueryParameter("contentRating", "erotica")
+							url.addQueryParameter("contentRating", "pornographic")
+						}
 					}
 				}
 			}
 
 			// States
-			if (filter.states.isNotEmpty()) {
-				filter.states.forEach { state ->
-					val statusParam = when (state) {
-						MangaState.ONGOING -> "ongoing"
-						MangaState.FINISHED -> "completed"
-						MangaState.PAUSED -> "hiatus"
-						MangaState.ABANDONED -> "cancelled"
-						else -> null
-					}
-					if (statusParam != null) append("&status=$statusParam")
+			filter.states.forEach { state ->
+				when (state) {
+					MangaState.ONGOING -> url.addQueryParameter("status", "ongoing")
+					MangaState.FINISHED -> url.addQueryParameter("status", "completed")
+					MangaState.PAUSED -> url.addQueryParameter("status", "hiatus")
+					MangaState.ABANDONED -> url.addQueryParameter("status", "cancelled")
+					else -> {}
 				}
 			}
 
 			// Tags (Genres)
-			filter.tags.forEach { tag ->
-				append("&includedTags[]=${tag.key}")
+			if (!filter.tags.isEmpty()) {
+				filter.tags.forEach {
+					url.addQueryParameter("tag", it.key)
+				}
 			}
 
-			// Apply Locale Filter if selected in search
-			filter.locale?.let { locale ->
-				append("&availableTranslatedLang=${locale.language}")
+			// Exclude tags (Genres)
+			if (!filter.tagsExclude.isEmpty()) {
+				filter.tagsExclude.forEach {
+					url.addQueryParameter("tagx", it.key)
+				}
 			}
-		}
 
-		val response = webClient.httpGet(url.toAbsoluteUrl("api.$domain")).parseJson()
+			// Search by language (Translated languages)
+			filter.locale?.let {
+				url.addQueryParameter("hasChapters", "true")
+				url.addQueryParameter("availableTranslatedLang", it.language)
+			}
+
+			// Search by Year (From - To)
+			if (filter.yearFrom != YEAR_UNKNOWN) {
+				url.addQueryParameter("yearFrom", filter.yearFrom.toString())
+			}
+
+			if (filter.yearTo != YEAR_UNKNOWN) {
+				url.addQueryParameter("yearTo", filter.yearTo.toString())
+			}
+
+		val response = webClient.httpGet(url.toString().toAbsoluteUrl("api.$domain")).parseJson()
 		val data = response.optJSONArray("data") ?: return emptyList()
 
 		return (0 until data.length()).map { i ->
