@@ -126,7 +126,9 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val url = urlBuilder().addPathSegment("manga")
+		val url = urlBuilder()
+			.host("api.$domain")
+			.addPathSegment("manga")
 
 		// Paging
 		url.addQueryParameter("limit", pageSize.toString())
@@ -225,7 +227,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			url.addQueryParameter("authorOrArtist", filter.author)
 		}
 
-		val response = webClient.httpGet("https://api.$domain$url").parseJson()
+		val response = webClient.httpGet(url.build()).parseJson()
 		return response.getJSONArray("data").mapJSON { jo ->
 			val id = jo.getString("id")
 			val title = jo.getString("title")
