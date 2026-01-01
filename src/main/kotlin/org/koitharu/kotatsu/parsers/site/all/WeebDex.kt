@@ -8,7 +8,6 @@ import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
-import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
 import java.text.SimpleDateFormat
 import java.util.*
@@ -234,15 +233,15 @@ internal class WeebDex(context: MangaLoaderContext) :
 			val coverId = jo.getJSONObject("relationships")
 				.getJSONObject("cover").getString("id")
 
-			val tags = jo.optJSONArray("tags")?.mapJSONNotNull {
+			val tags = jo.optJSONArray("tags")?.mapJSONNotNullToSet {
 				if (it.getString("group") != "genre")
-					return@mapJSONNotNull null
+					return@mapJSONNotNullToSet null
 				MangaTag(
 					key = it.getString("id"),
 					title = it.getString("name"),
 					source = source,
 				)
-			}?.toSet() ?: emptySet()
+			} ?: emptySet()
 
 			Manga(
 				id = generateUid(id),
