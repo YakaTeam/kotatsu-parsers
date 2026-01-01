@@ -99,7 +99,7 @@ internal class CMangaParser(context: MangaLoaderContext) :
 						scanlator = null,
 						source = source,
 					)
-				},
+				}.reversed(),
 		)
 	}
 
