@@ -8,11 +8,13 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.math.ceil
 
-@Broken("Fix Manga entity in getListPage + getDetails, fetchTags, getPages")
+@Broken("Fix getDetails, fetchTags, getPages")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WEEBDEX, 28) {
@@ -45,6 +47,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			isMultipleTagsSupported = true,
 			isTagsExclusionSupported = true,
 			isYearRangeSupported = true,
+			isAuthorSearchSupported = true,
 		)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
@@ -130,100 +133,217 @@ internal class WeebDex(context: MangaLoaderContext) :
 			.addQueryParameter("limit", pageSize.toString())
 			.addQueryParameter("page", page.toString())
 
-			// SortOrder mapping
-			when (order) {
-				SortOrder.ADDED_ASC -> url.addQueryParameter("order", "asc")
-				SortOrder.RELEVANCE -> url.addQueryParameter("sort", "relevance")
-				SortOrder.UPDATED -> url.addQueryParameter("sort", "updatedAt")
-				SortOrder.NEWEST -> url.addQueryParameter("sort", "createdAt")
-				SortOrder.NEWEST_ASC -> {
-					url.addQueryParameter("sort", "createdAt")
-					url.addQueryParameter("order", "asc")
-				}
-				SortOrder.ALPHABETICAL -> {
-					url.addQueryParameter("sort", "title")
-					url.addQueryParameter("order", "asc")
-				}
-				SortOrder.ALPHABETICAL_DESC -> {
-					url.addQueryParameter("sort", "title")
-					url.addQueryParameter("order", "desc")
-				}
-				SortOrder.RATING -> {
-					url.addQueryParameter("sort", "followedCount")
-					url.addQueryParameter("order", "desc")
-				}
-				SortOrder.RATING_ASC -> {
-					url.addQueryParameter("sort", "followedCount")
-					url.addQueryParameter("order", "asc")
-				}
-				else -> {} // ADDED
+		// SortOrder mapping
+		when (order) {
+			SortOrder.ADDED_ASC -> url.addQueryParameter("order", "asc")
+			SortOrder.RELEVANCE -> url.addQueryParameter("sort", "relevance")
+			SortOrder.UPDATED -> url.addQueryParameter("sort", "updatedAt")
+			SortOrder.NEWEST -> url.addQueryParameter("sort", "createdAt")
+			SortOrder.NEWEST_ASC -> {
+				url.addQueryParameter("sort", "createdAt")
+				url.addQueryParameter("order", "asc")
 			}
-
-			// Keyword
-			if (!filter.query.isNullOrEmpty()) {
-				url.addQueryParameter("title", filter.query.urlEncoded())
+			SortOrder.ALPHABETICAL -> {
+				url.addQueryParameter("sort", "title")
+				url.addQueryParameter("order", "asc")
 			}
+			SortOrder.ALPHABETICAL_DESC -> {
+				url.addQueryParameter("sort", "title")
+				url.addQueryParameter("order", "desc")
+			}
+			SortOrder.RATING -> {
+				url.addQueryParameter("sort", "followedCount")
+				url.addQueryParameter("order", "desc")
+			}
+			SortOrder.RATING_ASC -> {
+				url.addQueryParameter("sort", "followedCount")
+				url.addQueryParameter("order", "asc")
+			}
+			else -> {} // ADDED
+		}
 
-			// Content rating
-			if (!filter.contentRating.isEmpty()) {
-				filter.contentRating.forEach {
-					when (it) {
-						ContentRating.SAFE -> url.addQueryParameter("contentRating", "safe")
-						ContentRating.SUGGESTIVE -> url.addQueryParameter("contentRating", "suggestive")
-						ContentRating.ADULT -> {
-							url.addQueryParameter("contentRating", "erotica")
-							url.addQueryParameter("contentRating", "pornographic")
-						}
+		// Keyword
+		if (!filter.query.isNullOrEmpty()) {
+			url.addQueryParameter("title", filter.query.urlEncoded())
+		}
+
+		// Content rating
+		if (!filter.contentRating.isEmpty()) {
+			filter.contentRating.forEach {
+				when (it) {
+					ContentRating.SAFE -> url.addQueryParameter("contentRating", "safe")
+					ContentRating.SUGGESTIVE -> url.addQueryParameter("contentRating", "suggestive")
+					ContentRating.ADULT -> {
+						url.addQueryParameter("contentRating", "erotica")
+						url.addQueryParameter("contentRating", "pornographic")
 					}
 				}
 			}
+		}
 
-			// States
-			filter.states.forEach { state ->
-				when (state) {
-					MangaState.ONGOING -> url.addQueryParameter("status", "ongoing")
-					MangaState.FINISHED -> url.addQueryParameter("status", "completed")
-					MangaState.PAUSED -> url.addQueryParameter("status", "hiatus")
-					MangaState.ABANDONED -> url.addQueryParameter("status", "cancelled")
-					else -> {}
-				}
+		// States
+		filter.states.forEach { state ->
+			when (state) {
+				MangaState.ONGOING -> url.addQueryParameter("status", "ongoing")
+				MangaState.FINISHED -> url.addQueryParameter("status", "completed")
+				MangaState.PAUSED -> url.addQueryParameter("status", "hiatus")
+				MangaState.ABANDONED -> url.addQueryParameter("status", "cancelled")
+				else -> {}
 			}
+		}
 
-			// Tags (Genres)
-			if (!filter.tags.isEmpty()) {
-				filter.tags.forEach {
-					url.addQueryParameter("tag", it.key)
-				}
+		// Tags (Genres)
+		if (!filter.tags.isEmpty()) {
+			filter.tags.forEach {
+				url.addQueryParameter("tag", it.key)
 			}
+		}
 
-			// Exclude tags (Genres)
-			if (!filter.tagsExclude.isEmpty()) {
-				filter.tagsExclude.forEach {
-					url.addQueryParameter("tagx", it.key)
-				}
+		// Exclude tags (Genres)
+		if (!filter.tagsExclude.isEmpty()) {
+			filter.tagsExclude.forEach {
+				url.addQueryParameter("tagx", it.key)
 			}
+		}
 
-			// Search by language (Translated languages)
-			filter.locale?.let {
-				url.addQueryParameter("hasChapters", "true")
-				url.addQueryParameter("availableTranslatedLang", it.language)
-			}
+		// Search by language (Translated languages)
+		filter.locale?.let {
+			url.addQueryParameter("hasChapters", "true")
+			url.addQueryParameter("availableTranslatedLang", it.language)
+		}
 
-			// Search by Year (From - To)
-			if (filter.yearFrom != YEAR_UNKNOWN) {
-				url.addQueryParameter("yearFrom", filter.yearFrom.toString())
-			}
+		// Search by Year (From - To)
+		if (filter.yearFrom != YEAR_UNKNOWN) {
+			url.addQueryParameter("yearFrom", filter.yearFrom.toString())
+		}
 
-			if (filter.yearTo != YEAR_UNKNOWN) {
-				url.addQueryParameter("yearTo", filter.yearTo.toString())
-			}
+		if (filter.yearTo != YEAR_UNKNOWN) {
+			url.addQueryParameter("yearTo", filter.yearTo.toString())
+		}
+
+		// Author search
+		if (!filter.author.isNullOrBlank()) {
+			url.addQueryParameter("authorOrArtist", filter.author)
+		}
 
 		val response = webClient.httpGet(url.toString().toAbsoluteUrl("api.$domain")).parseJson()
-		val data = response.optJSONArray("data") ?: return emptyList()
+		return response.getJSONArray("data").mapJSON { jo ->
+			val id = jo.getString("id")
+			val title = jo.getString("title")
+			val coverId = jo.getJSONObject("relationships")
+				.getJSONObject("cover").getString("id")
 
-		return (0 until data.length()).map { i ->
-			parseMangaJson(data.getJSONObject(i))
+			val tags = jo.optJSONArray("tags")?.mapJSONNotNull {
+				MangaTag(
+					key = it.getString("id"),
+					title = it.getString("name"),
+					source = source,
+				)
+			}?.toSet() ?: emptySet()
+
+			Manga(
+				id = generateUid(id),
+				title = title,
+				altTitles = emptySet(),
+				url = id,
+				publicUrl = "https://$domain/title/$id/"
+					+ title.splitByWhitespace().joinToString("-") { it },
+				coverUrl = "/covers/$id/$coverId.256.webp".toAbsoluteUrl(cdnDomain),
+				largeCoverUrl = "/covers/$id/$coverId.512.webp".toAbsoluteUrl(cdnDomain),
+				contentRating = when (jo.getString("content_rating")) {
+					"safe" -> ContentRating.SAFE
+					"suggestive" -> ContentRating.SUGGESTIVE
+					"erotica", "pornographic" -> ContentRating.ADULT
+					else -> null
+				},
+				tags = tags,
+				state = when (jo.getString("status")) {
+					"ongoing" -> MangaState.ONGOING
+					"completed" -> MangaState.FINISHED
+					"hiatus" -> MangaState.PAUSED
+					"cancelled" -> MangaState.ABANDONED
+					else -> null
+				},
+				description = jo.getString("description"),
+				authors = emptySet(),
+				rating = RATING_UNKNOWN,
+				source = source,
+			)
 		}
+	}
+
+	private fun parseMangaJson(json: JSONObject): Manga {
+		val id = json.getString("id")
+		val title = json.getString("title")
+		val desc = json.optString("description")
+		val statusStr = json.optString("status")
+
+		val relationships = json.optJSONObject("relationships")
+
+		var coverUrl: String? = null
+		var largeCoverUrl: String? = null
+		val coverObj = relationships?.optJSONObject("cover")
+		if (coverObj != null) {
+			val coverId = coverObj.getString("id")
+			coverUrl = "https://$cdnDomain/covers/$id/$coverId.256.webp"
+			largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.512.webp"
+		}
+
+		val authors = mutableSetOf<String>()
+		val authorArr = relationships?.optJSONArray("authors")
+		if (authorArr != null) {
+			for (i in 0 until authorArr.length()) {
+				authors.add(authorArr.getJSONObject(i).getString("name"))
+			}
+		}
+
+		val tags = mutableSetOf<MangaTag>()
+		val tagsArr = relationships?.optJSONArray("tags")
+		if (tagsArr != null) {
+			for (i in 0 until tagsArr.length()) {
+				val t = tagsArr.getJSONObject(i)
+				val tId = t.getString("id")
+				val tName = t.getString("name")
+				tags.add(MangaTag(key = tId, title = tName, source = source))
+			}
+		}
+
+		val demo = json.optString("demographic")
+		if (demo.isNotEmpty() && demo != "null") {
+			tags.add(MangaTag(key = demo, title = demo.replaceFirstChar { it.uppercase() }, source = source))
+		}
+
+		val state = when (statusStr) {
+			"ongoing" -> MangaState.ONGOING
+			"completed" -> MangaState.FINISHED
+			"hiatus" -> MangaState.PAUSED
+			"cancelled" -> MangaState.ABANDONED
+			else -> null
+		}
+
+		val ratingStr = json.optString("contentRating")
+		val contentRating = when(ratingStr) {
+			"erotica", "pornographic" -> ContentRating.ADULT
+			"suggestive" -> ContentRating.SUGGESTIVE
+			else -> ContentRating.SAFE
+		}
+
+		return Manga(
+			id = generateUid(id),
+			url = "/manga/$id",
+			publicUrl = "https://$domain/title/$id",
+			coverUrl = coverUrl,
+			largeCoverUrl = largeCoverUrl,
+			title = title,
+			altTitles = emptySet(),
+			rating = RATING_UNKNOWN,
+			tags = tags,
+			authors = authors,
+			state = state,
+			source = source,
+			description = desc,
+			contentRating = contentRating
+		)
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -322,80 +442,6 @@ internal class WeebDex(context: MangaLoaderContext) :
 				source = source
 			)
 		}
-	}
-
-	private fun parseMangaJson(json: JSONObject): Manga {
-		val id = json.getString("id")
-		val title = json.getString("title")
-		val desc = json.optString("description")
-		val statusStr = json.optString("status")
-
-		val relationships = json.optJSONObject("relationships")
-
-		var coverUrl: String? = null
-		var largeCoverUrl: String? = null
-		val coverObj = relationships?.optJSONObject("cover")
-		if (coverObj != null) {
-			val coverId = coverObj.getString("id")
-			coverUrl = "https://$cdnDomain/covers/$id/$coverId.256.webp"
-			largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.512.webp"
-		}
-
-		val authors = mutableSetOf<String>()
-		val authorArr = relationships?.optJSONArray("authors")
-		if (authorArr != null) {
-			for (i in 0 until authorArr.length()) {
-				authors.add(authorArr.getJSONObject(i).getString("name"))
-			}
-		}
-
-		val tags = mutableSetOf<MangaTag>()
-		val tagsArr = relationships?.optJSONArray("tags")
-		if (tagsArr != null) {
-			for (i in 0 until tagsArr.length()) {
-				val t = tagsArr.getJSONObject(i)
-				val tId = t.getString("id")
-				val tName = t.getString("name")
-				tags.add(MangaTag(key = tId, title = tName, source = source))
-			}
-		}
-
-		val demo = json.optString("demographic")
-		if (demo.isNotEmpty() && demo != "null") {
-			tags.add(MangaTag(key = demo, title = demo.replaceFirstChar { it.uppercase() }, source = source))
-		}
-
-		val state = when (statusStr) {
-			"ongoing" -> MangaState.ONGOING
-			"completed" -> MangaState.FINISHED
-			"hiatus" -> MangaState.PAUSED
-			"cancelled" -> MangaState.ABANDONED
-			else -> null
-		}
-
-		val ratingStr = json.optString("contentRating")
-		val contentRating = when(ratingStr) {
-			"erotica", "pornographic" -> ContentRating.ADULT
-			"suggestive" -> ContentRating.SUGGESTIVE
-			else -> ContentRating.SAFE
-		}
-
-		return Manga(
-			id = generateUid(id),
-			url = "/manga/$id",
-			publicUrl = "https://$domain/title/$id",
-			coverUrl = coverUrl,
-			largeCoverUrl = largeCoverUrl,
-			title = title,
-			altTitles = emptySet(),
-			rating = RATING_UNKNOWN,
-			tags = tags,
-			authors = authors,
-			state = state,
-			source = source,
-			description = desc,
-			contentRating = contentRating
-		)
 	}
 
 	private fun fetchTags(): Set<MangaTag> {
