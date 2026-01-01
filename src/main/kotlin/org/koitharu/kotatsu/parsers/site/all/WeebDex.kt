@@ -89,7 +89,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 				Locale("my"), // Burmese
 				Locale("ca"), // Catalan
 				Locale.CHINESE,
-				Locale("zh-hk"), // Chinese (Traditional)
+				Locale("zh", "HK"), // Chinese (Traditional)
 				Locale("cv"), // Chuvash
 				Locale("hr"), // Croatian
 				Locale("cs"), // Czech
@@ -122,14 +122,14 @@ internal class WeebDex(context: MangaLoaderContext) :
 				Locale("fa"), // Persian (Farsi)
 				Locale("pl"), // Polish
 				Locale("pt"), // Portuguese
-				Locale("pt-br"), // Portuguese (Brazil)
+				Locale("pt", "BR"), // Portuguese (Brazil)
 				Locale("ro"), // Romanian
 				Locale("ru"), // Russian
 				Locale("sr"), // Serbian
 				Locale("sk"), // Slovak
 				Locale("sl"), // Slovenian
 				Locale("es"), // Spanish
-				Locale("es-la"), // Spanish (LATAM)
+				Locale("es", "MX"), // Spanish (LATAM)
 				Locale("sv"), // Swedish
 				Locale("tam"), // Tamil
 				Locale("te"), // Telugu
@@ -227,8 +227,14 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 		// Search by language (Translated languages)
 		filter.locale?.let {
+			val langCode = when {
+				it.language.equals("pt", true) && it.country.equals("BR", true) -> "pt-br"
+				it.language.equals("es", true) && it.country.equals("MX", true) -> "es-la"
+				it.language.equals("zh", true) && it.country.equals("HK", true) -> "zh-hk"
+				else -> it.language
+			}
 			url.addQueryParameter("hasChapters", "true")
-			url.addQueryParameter("availableTranslatedLang", it.language)
+			url.addQueryParameter("availableTranslatedLang", langCode)
 		}
 
 		// Search by Year (From - To)
