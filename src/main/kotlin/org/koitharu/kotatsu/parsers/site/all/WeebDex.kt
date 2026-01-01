@@ -225,8 +225,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			url.addQueryParameter("authorOrArtist", filter.author)
 		}
 
-		val queryUrl = url.toString().toAbsoluteUrl("api.$domain")
-		val response = webClient.httpGet(queryUrl).parseJson()
+		val response = webClient.httpGet("https://api.$domain$url").parseJson()
 		return response.getJSONArray("data").mapJSON { jo ->
 			val id = jo.getString("id")
 			val title = jo.getString("title")
@@ -250,8 +249,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 				url = id,
 				publicUrl = "https://$domain/title/$id/"
 					+ title.splitByWhitespace().joinToString("-") { it },
-				coverUrl = "/covers/$id/$coverId.256.webp".toAbsoluteUrl(cdnDomain),
-				largeCoverUrl = "/covers/$id/$coverId.512.webp".toAbsoluteUrl(cdnDomain),
+				coverUrl = "https://$cdnDomain/covers/$id/$coverId.256.webp",
+				largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.512.webp",
 				contentRating = when (jo.getString("content_rating")) {
 					"safe" -> ContentRating.SAFE
 					"suggestive" -> ContentRating.SUGGESTIVE
