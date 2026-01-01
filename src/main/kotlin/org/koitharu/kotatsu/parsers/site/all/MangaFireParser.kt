@@ -24,6 +24,7 @@ import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.WebClient
+import org.koitharu.kotatsu.parsers.network.rateLimit
 import org.koitharu.kotatsu.parsers.util.attrAsAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
@@ -53,6 +54,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 import kotlin.math.min
+import kotlin.time.Duration.Companion.seconds
 
 private const val PIECE_SIZE = 200
 private const val MIN_SPLIT_COUNT = 5
@@ -68,6 +70,7 @@ internal abstract class MangaFireParser(
         val newHttpClient = context.httpClient.newBuilder()
             .sslSocketFactory(SSLUtils.sslSocketFactory!!, SSLUtils.trustManager)
             .hostnameVerifier { _, _ -> true }
+            .rateLimit(permits = 2, period = 1.seconds)
             .addInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(
