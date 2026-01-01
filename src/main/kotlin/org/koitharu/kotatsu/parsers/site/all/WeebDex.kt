@@ -13,6 +13,9 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
 import java.text.SimpleDateFormat
 import java.util.*
 
+private const val SERVER_DATA = "512"
+private const val SERVER_DATA_SAVER = "256"
+
 @Broken("TODO: Handle all tags, fix getDetails, getPages")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
@@ -20,6 +23,20 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 	private val cdnDomain = "srv.notdelta.xyz"
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
+
+	private val preferredServerKey = ConfigKey.PreferredImageServer(
+		presetValues = mapOf(
+			SERVER_DATA to "High quality cover",
+			SERVER_DATA_SAVER to "Compressed quality cover",
+		),
+		defaultValue = SERVER_DATA,
+	)
+
+	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
+		super.onCreateConfig(keys)
+		keys.add(userAgentKey)
+		keys.add(preferredServerKey)
+	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
 		.add("Origin", "https://$domain")
@@ -234,7 +251,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			val title = jo.getString("title")
 			val relationships = jo.getJSONObject("relationships")
 			val coverId = relationships.getJSONObject("cover").getString("id")
-
+			val quality = config[preferredServerKey] ?: SERVER_DATA
 			val tags = relationships.optJSONArray("tags")?.mapJSONNotNullToSet {
 				if (it.getString("group") != "genre")
 					return@mapJSONNotNullToSet null
@@ -252,8 +269,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 				url = id,
 				publicUrl = "https://$domain/title/$id/"
 					+ title.splitByWhitespace().joinToString("-") { it },
-				coverUrl = "https://$cdnDomain/covers/$id/$coverId.256.webp",
-				largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.512.webp",
+				coverUrl = "https://$cdnDomain/covers/$id/$coverId.$quality.webp",
+				largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.webp",
 				contentRating = when (jo.getString("content_rating")) {
 					"safe" -> ContentRating.SAFE
 					"suggestive" -> ContentRating.SUGGESTIVE
