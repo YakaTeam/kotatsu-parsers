@@ -19,13 +19,16 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @MangaSourceParser("BATOTOV4", "Bato.To v4")
-internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
-	context = context,
-	source = MangaParserSource.BATOTOV4,
-	pageSize = 36,
-) {
+internal class BatoToV4Parser(context: MangaLoaderContext) :
+	PagedMangaParser(context, MangaParserSource.BATOTOV4, 36) {
 
-	override val configKeyDomain = ConfigKey.Domain("bato.si", "battwo.com", "bato.to", "bato.ing")
+	override val configKeyDomain = ConfigKey.Domain(
+		"bato.si",
+		"battwo.com",
+		"bato.to",
+		"bato.ing"
+	)
+
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.CHROME_DESKTOP)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
@@ -56,7 +59,12 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
 			availableTags = GENRE_OPTIONS.mapToSet { (title, key) -> MangaTag(title, key, source) },
-			availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED, MangaState.PAUSED, MangaState.ABANDONED),
+			availableStates = EnumSet.of(
+				MangaState.ONGOING,
+				MangaState.FINISHED,
+				MangaState.PAUSED,
+				MangaState.ABANDONED
+			),
 			availableLocales = LANGUAGES.values.toSet(),
 		)
 	}
@@ -68,8 +76,6 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 				put("size", pageSize)
 				put("word", filter.query ?: "")
 				put("sortby", when (order) {
-					SortOrder.POPULARITY -> "field_score"
-					SortOrder.RATING -> "field_score"
 					SortOrder.UPDATED -> "field_upload"
 					SortOrder.NEWEST -> "field_public"
 					SortOrder.ALPHABETICAL -> "field_name"
