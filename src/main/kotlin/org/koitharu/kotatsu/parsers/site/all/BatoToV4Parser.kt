@@ -18,10 +18,10 @@ import org.koitharu.kotatsu.parsers.util.json.*
 import java.util.*
 import java.util.concurrent.TimeUnit
 
-@MangaSourceParser("BATOTO_V4", "Bato.To V4")
+@MangaSourceParser("BATOTOV4", "Bato.To v4")
 internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 	context = context,
-	source = MangaParserSource.BATOTO_V4,
+	source = MangaParserSource.BATOTOV4,
 	pageSize = 36,
 ) {
 
@@ -516,21 +516,21 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 		)
 
 		private const val COMIC_NODE = """
-data {
-	id
-	name
-	altNames
-	authors
-	artists
-	originalStatus
-	uploadStatus
-	genres
-	summary
-	extraInfo
-	urlPath
-	urlCoverOri
-}
-"""
+			data {
+				id
+				name
+				altNames
+				authors
+				artists
+				originalStatus
+				uploadStatus
+				genres
+				summary
+				extraInfo
+				urlPath
+				urlCoverOri
+			}
+		"""
 
 		val COMIC_SEARCH_QUERY = $$"""
 			query ($select: Comic_Browse_Select) {
