@@ -70,7 +70,7 @@ internal abstract class MangaFireParser(
         val newHttpClient = context.httpClient.newBuilder()
             .sslSocketFactory(SSLUtils.sslSocketFactory!!, SSLUtils.trustManager)
             .hostnameVerifier { _, _ -> true }
-            .rateLimit(permits = 2, period = 1.seconds)
+            .rateLimit(url = "https://$domain", permits = 2, period = 1.seconds)
             .addInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(
