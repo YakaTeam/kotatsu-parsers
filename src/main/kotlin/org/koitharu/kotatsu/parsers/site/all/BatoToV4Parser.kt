@@ -170,7 +170,8 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 				scanlator = groups,
 				branch = groups
 			)
-		}.asReversed()
+		} 
+		// .asReversed()
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
