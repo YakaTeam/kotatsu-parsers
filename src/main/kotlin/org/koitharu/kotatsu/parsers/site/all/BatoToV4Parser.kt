@@ -1,12 +1,8 @@
 package org.koitharu.kotatsu.parsers.site.all
 
-import androidx.collection.ArraySet
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
@@ -170,7 +166,7 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 				scanlator = groups,
 				branch = groups
 			)
-		} 
+		}
 		// .asReversed()
 	}
 
@@ -187,7 +183,7 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 			val urlString = urls.getString(i)
 			MangaPage(
 				id = generateUid(urlString),
-				url = urlString + "#page",
+				url = "$urlString#page",
 				preview = null,
 				source = source
 			)
@@ -536,30 +532,30 @@ data {
 }
 """
 
-		val COMIC_SEARCH_QUERY = """
-			query (${'$'}select: Comic_Browse_Select) {
-				get_comic_browse(select: ${'$'}select) {
+		val COMIC_SEARCH_QUERY = $$"""
+			query ($select: Comic_Browse_Select) {
+				get_comic_browse(select: $select) {
 					paging {
 						next
 					}
 					items {
-						$COMIC_NODE
+						$$COMIC_NODE
 					}
 				}
 			}
 		""".trimIndent()
 
-		val COMIC_NODE_QUERY = """
-			query get_comicNode(${'$'}id: ID!) {
-				get_comicNode(id: ${'$'}id) {
-					$COMIC_NODE
+		val COMIC_NODE_QUERY = $$"""
+			query get_comicNode($id: ID!) {
+				get_comicNode(id: $id) {
+					$$COMIC_NODE
 				}
 			}
 		""".trimIndent()
 
-		val CHAPTER_LIST_QUERY = """
-			query get_comic_chapterList(${'$'}comicId: ID!, ${'$'}start: Int) {
-				get_comic_chapterList(comicId: ${'$'}comicId, start: ${'$'}start) {
+		val CHAPTER_LIST_QUERY = $$"""
+			query get_comic_chapterList($comicId: ID!, $start: Int) {
+				get_comic_chapterList(comicId: $comicId, start: $start) {
 					data {
 						comicId
 						id
@@ -583,9 +579,9 @@ data {
 			}
 		""".trimIndent()
 
-		val CHAPTER_NODE_QUERY = """
-			query get_chapterNode(${'$'}id: ID!) {
-				get_chapterNode(id: ${'$'}id) {
+		val CHAPTER_NODE_QUERY = $$"""
+			query get_chapterNode($id: ID!) {
+				get_chapterNode(id: $id) {
 					data {
 						id
 						comicId
