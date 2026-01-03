@@ -2,9 +2,6 @@ package org.koitharu.kotatsu.parsers.site.all
 
 import okhttp3.Interceptor
 import okhttp3.Response
-import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -282,29 +279,13 @@ internal class MangaPark(context: MangaLoaderContext) :
     }
 
     private suspend fun graphqlRequest(query: String, variables: JSONObject): JSONObject {
-        val payload = JSONObject().apply {
-            put("query", query)
-            put("variables", variables)
-        }
-
-        val request = okhttp3.Request.Builder()
-            .url("https://$domain/apo/")
-            .post(payload.toString().toRequestBody("application/json".toMediaType()))
-            .addHeader("Content-Type", "application/json")
-            .addHeader("Referer", "https://$domain/")
-            .addHeader("Origin", "https://$domain")
-            .addHeader("x-apollo-operation-name", "kotatsu")
-            .addHeader("apollo-require-preflight", "true")
+        val headers = okhttp3.Headers.Builder()
+            .add("Referer", "https://$domain/")
+            .add("Origin", "https://$domain")
+            .add("x-apollo-operation-name", "kotatsu")
             .build()
 
-        val responseBody = context.httpClient.newCall(request).await().parseJsonSafe()
-
-        val errors = responseBody.optJSONArray("errors")
-        if (errors != null && errors.length() > 0) {
-            throw Exception("GraphQL Error: ${errors.getJSONObject(0).optString("message")}")
-        }
-
-        return responseBody
+        return webClient.graphQLQuery("https://$domain/apo/", query, variables, headers)
     }
 
     private fun buildUrl(path: String): String {
