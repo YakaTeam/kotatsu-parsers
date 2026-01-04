@@ -10,5 +10,4 @@ import org.koitharu.kotatsu.parsers.site.natsu.NatsuParser
 internal class Kiryuu(context: MangaLoaderContext) :
     NatsuParser(context, MangaParserSource.KIRYUU, pageSize = 24) {
     override val configKeyDomain = ConfigKey.Domain("kiryuu03.com")
-	override val hxTrigger = "getChapterList"
 }

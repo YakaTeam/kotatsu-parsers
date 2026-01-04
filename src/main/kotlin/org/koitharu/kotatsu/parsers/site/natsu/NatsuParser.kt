@@ -299,7 +299,7 @@ internal abstract class NatsuParser(
         )
     }
 
-	protected open val hxTrigger = "chapter-list"
+	protected open val hxHeader = "chapter-list"
 
     protected open suspend fun loadChapters(
         mangaId: String,
@@ -309,9 +309,10 @@ internal abstract class NatsuParser(
         var page = 1
 
         val headers = Headers.headersOf(
-            "hx-request", "true",
-            "hx-target", "chapter-list",
-            "hx-trigger", hxTrigger,
+            "HX-Request", "true",
+            "HX-Target", hxHeader,
+            "HX-Trigger", hxHeader,
+			"HX-Current-URL", mangaAbsoluteUrl,
             "Referer", mangaAbsoluteUrl,
         )
 
