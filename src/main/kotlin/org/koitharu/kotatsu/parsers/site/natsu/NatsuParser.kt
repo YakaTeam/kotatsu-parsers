@@ -34,6 +34,7 @@ import org.koitharu.kotatsu.parsers.util.src
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.toRelativeUrl
 import org.koitharu.kotatsu.parsers.util.toTitleCase
+import org.koitharu.kotatsu.parsers.util.urlBuilder
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.EnumSet
@@ -314,11 +315,16 @@ internal abstract class NatsuParser(
 
 		return buildList {
 			for (page in 1..50) {
-				val url = "https://${domain}/wp-admin/admin-ajax.php?manga_id=$mangaId&page=$page&action=chapter_list"
+				val url = urlBuilder()
+					.addPathSegment("wp-admin")
+					.addPathSegment("admin-ajax.php")
+					.addQueryParameter("manga_id", mangaId)
+					.addQueryParameter("page", page.toString())
+					.addQueryParameter("action", "chapter_list")
 
 				// Trying to force stop when chapterElements not exist
 				val chapterElements = try {
-					webClient.httpGet(url, headers).parseHtml()
+					webClient.httpGet(url.build(), headers).parseHtml()
 				} catch (e: HttpStatusException) {
 					if (e.statusCode == 520) {
 						break
@@ -337,7 +343,7 @@ internal abstract class NatsuParser(
 
 					MangaChapter(
 						id = generateUid(href),
-						title = element.selectFirst("div.font-medium span")?.text()?.trim() ?: "",
+						title = element.selectFirst("div.font-medium span")?.text() ?: "",
 						url = href,
 						number = element.attr("data-chapter-number").toFloatOrNull() ?: -1f,
 						volume = 0,
@@ -423,7 +429,7 @@ internal abstract class NatsuParser(
     }
 
     protected open fun parseDate(dateStr: String?): Long {
-        if (dateStr.isNullOrEmpty()) return 0
+        if (dateStr.isNullOrEmpty()) return 0L
 
         return try {
             when {
@@ -452,7 +458,7 @@ internal abstract class NatsuParser(
                 }
             }
         } catch (_: Exception) {
-            0
+            0L
         }
     }
 
