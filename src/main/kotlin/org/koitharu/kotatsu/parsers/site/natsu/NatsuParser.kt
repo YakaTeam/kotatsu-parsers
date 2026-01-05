@@ -5,6 +5,7 @@ import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import org.json.JSONArray
+import org.jsoup.HttpStatusException
 import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -314,13 +315,22 @@ internal abstract class NatsuParser(
 		return buildList {
 			for (page in 1..50) {
 				val url = "https://${domain}/wp-admin/admin-ajax.php?manga_id=$mangaId&page=$page&action=chapter_list"
-				val chapterElements = webClient.httpGet(url, headers)
-					.parseHtml()
-					.select("div#chapter-list > div[data-chapter-number]")
 
 				// Trying to force stop when chapterElements not exist
-				if (chapterElements.isEmpty()) break
+				val chapterElements = try {
+					webClient.httpGet(url, headers).parseHtml()
+				} catch (e: HttpStatusException) {
+					if (e.statusCode == 520) {
+						break
+					} else {
+						throw e
+					}
+				}
 
+				val response = chapterElements.select("div#chapter-list > div[data-chapter-number]")
+				if (response.isEmpty()) break
+
+				// Mapping
 				chapterElements.mapNotNullTo(this) { element ->
 					val a = element.selectFirst("a") ?: return@mapNotNullTo null
 					val href = a.attrAsRelativeUrl("href").takeIf { it.isNotBlank() } ?: return@mapNotNullTo null
