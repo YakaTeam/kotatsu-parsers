@@ -38,22 +38,10 @@ internal class WeebDex(context: MangaLoaderContext) :
 		defaultValue = SERVER_DATA,
 	)
 
-	private val preferredImageServerKey = ConfigKey.PreferredImageServer(
-		presetValues = mapOf(
-			"original" to "Original",
-			"600" to "Downscale to 600x",
-			"800" to "Downscale to 800x",
-			"1200" to "Downscale to 1200x",
-			"1600" to "Downscale to 1600x",
-		),
-		defaultValue = "original",
-	)
-
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
 		keys.remove(userAgentKey)
 		keys.add(preferredCoverServerKey)
-		keys.add(preferredImageServerKey)
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
@@ -427,20 +415,12 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 		val response = webClient.httpGet(url).parseJson()
 		val node = response.getString("node")
-		val server = config[preferredImageServerKey] ?: "original"
 
 		return response.getJSONArray("data").mapJSON { data ->
 			val filename = data.getString("name")
-			val imageUrl = "$node/data/${chapter.url}/$filename"
-			val cleanUrl = imageUrl.removePrefix("http://")
-				.removePrefix("https://")
-			val finalUrl = when (server) {
-				"original" -> cleanUrl
-				else -> "https://i0.wp.com/$cleanUrl?w=$server"
-			}
 			MangaPage(
 				id = generateUid(filename),
-				url = finalUrl,
+				url = "$node/data/${chapter.url}/$filename",
 				preview = null,
 				source = source
 			)
