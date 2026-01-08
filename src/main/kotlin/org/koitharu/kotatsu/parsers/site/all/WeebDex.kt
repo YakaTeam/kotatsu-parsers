@@ -3,7 +3,6 @@ package org.koitharu.kotatsu.parsers.site.all
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.json.JSONObject
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -14,7 +13,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
-import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
+import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -23,7 +22,6 @@ private const val SERVER_DATA = "512"
 private const val SERVER_DATA_SAVER = "256"
 private const val LOCALE_FALLBACK = "en"
 
-@Broken("TODO: Handle all tags")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WEEBDEX, 42) {
@@ -53,7 +51,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
-		keys.add(userAgentKey)
+		keys.remove(userAgentKey)
 		keys.add(preferredCoverServerKey)
 		keys.add(preferredImageServerKey)
 	}
@@ -231,14 +229,14 @@ internal class WeebDex(context: MangaLoaderContext) :
 			}
 		}
 
-		// Tags (Genres)
+		// Include tags (Handle all groups)
 		if (!filter.tags.isEmpty()) {
 			filter.tags.forEach {
 				url.addQueryParameter("tag", it.key)
 			}
 		}
 
-		// Exclude tags (Genres)
+		// Exclude tags (Handle all groups)
 		if (!filter.tagsExclude.isEmpty()) {
 			filter.tagsExclude.forEach {
 				url.addQueryParameter("tagx", it.key)
@@ -280,9 +278,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			val relationships = jo.getJSONObject("relationships")
 			val coverId = relationships.getJSONObject("cover").getString("id")
 			val quality = config[preferredCoverServerKey] ?: SERVER_DATA
-			val tags = relationships.optJSONArray("tags")?.mapJSONNotNullToSet {
-				if (it.getString("group") != "genre")
-					return@mapJSONNotNullToSet null
+			val tags = relationships.optJSONArray("tags")?.mapJSONToSet {
 				MangaTag(
 					key = it.getString("id"),
 					title = it.getString("name"),
@@ -454,10 +450,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 	private suspend fun fetchTags(): Set<MangaTag> {
 		val url = "https://api.$domain/manga/tag"
 		val response = webClient.httpGet(url).parseJson()
-		val data = response.getJSONArray("data")
-		return data.mapJSONNotNullToSet {
-			if (it.getString("group") != "genre")
-				return@mapJSONNotNullToSet null
+		return response.getJSONArray("data").mapJSONToSet {
 			MangaTag(
 				key = it.getString("id"),
 				title = it.getString("name"),
