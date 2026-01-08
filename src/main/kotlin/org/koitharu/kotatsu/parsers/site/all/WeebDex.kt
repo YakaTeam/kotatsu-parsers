@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -22,15 +23,16 @@ private const val SERVER_DATA = "512"
 private const val SERVER_DATA_SAVER = "256"
 private const val LOCALE_FALLBACK = "en"
 
-@Broken("TODO: Handle all tags, getPages")
+@Broken("TODO: Handle all tags")
 @MangaSourceParser("WEEBDEX", "WeebDex")
 internal class WeebDex(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WEEBDEX, 42) {
 
 	private val cdnDomain = "srv.notdelta.xyz"
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
+	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
 
-	private val preferredServerKey = ConfigKey.PreferredImageServer(
+	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
 			SERVER_DATA to "High quality cover",
 			SERVER_DATA_SAVER to "Compressed quality cover",
@@ -38,10 +40,22 @@ internal class WeebDex(context: MangaLoaderContext) :
 		defaultValue = SERVER_DATA,
 	)
 
+	private val preferredImageServerKey = ConfigKey.PreferredImageServer(
+		presetValues = mapOf(
+			"original" to "Original",
+			"600" to "Downscale to 600x",
+			"800" to "Downscale to 800x",
+			"1200" to "Downscale to 1200x",
+			"1600" to "Downscale to 1600x",
+		),
+		defaultValue = "original",
+	)
+
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
 		keys.add(userAgentKey)
-		keys.add(preferredServerKey)
+		keys.add(preferredCoverServerKey)
+		keys.add(preferredImageServerKey)
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
@@ -252,9 +266,9 @@ internal class WeebDex(context: MangaLoaderContext) :
 			url.addQueryParameter("yearTo", filter.yearTo.toString())
 		}
 
-		// Author search
+		// Author + Artist search
 		if (!filter.author.isNullOrBlank()) {
-			url.addQueryParameter("authorOrArtist", filter.author)
+			url.addQueryParameter("authorOrArtist", filter.author.substringAfter("-").trim())
 		}
 
 		val js = webClient.httpGet(url.build()).parseJson()
@@ -265,7 +279,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			val title = jo.getString("title")
 			val relationships = jo.getJSONObject("relationships")
 			val coverId = relationships.getJSONObject("cover").getString("id")
-			val quality = config[preferredServerKey] ?: SERVER_DATA
+			val quality = config[preferredCoverServerKey] ?: SERVER_DATA
 			val tags = relationships.optJSONArray("tags")?.mapJSONNotNullToSet {
 				if (it.getString("group") != "genre")
 					return@mapJSONNotNullToSet null
@@ -364,7 +378,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 			timeZone = TimeZone.getTimeZone("UTC")
 		}
 
-		val chaptersMap = mutableMapOf<String, MutableMap<Pair<Int, Float>, MangaChapter>>()
+		val preferredLocales = context.getPreferredLocales()
+		val chaptersMap = mutableMapOf<Pair<Int, Float>, MutableList<Pair<MangaChapter, String>>>()
 
 		for (jo in allChapters) {
 			val id = jo.getString("id")
@@ -378,8 +393,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 				?.joinToString(", ")
 
 			val locale = Locale.forLanguageTag(language)
-			val langName = locale.getDisplayLanguage(Locale.ENGLISH).ifEmpty { language.uppercase() }
-				.replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.ENGLISH) else it.toString() }
+			val langName = locale.getDisplayLanguage(locale).ifEmpty { language.uppercase() }
+				.replaceFirstChar { if (it.isLowerCase()) it.titlecase(locale) else it.toString() }
 
 			val branch = if (!scanlator.isNullOrBlank()) "$langName ($scanlator)" else langName
 			val chapterKey = Pair(volume, chapterNum)
@@ -395,27 +410,41 @@ internal class WeebDex(context: MangaLoaderContext) :
 				branch = branch,
 				source = source,
 			)
-			chaptersMap.getOrPut(branch) { mutableMapOf() }[chapterKey] = chapter
+			chaptersMap.getOrPut(chapterKey) { mutableListOf() }.add(Pair(chapter, language))
 		}
-		return chaptersMap.values.flatMap { it.values }
+
+		return chaptersMap.values.map { chapterList ->
+			chapterList.minByOrNull { (_, language) ->
+				val chapterLocale = Locale.forLanguageTag(language)
+				preferredLocales.indexOfFirst { preferred ->
+					preferred.language.equals(chapterLocale.language, ignoreCase = true)
+				}.let { if (it == -1) Int.MAX_VALUE else it }
+			}?.first ?: chapterList.first().first
+		}
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val chapterId = chapter.url.substringAfterLast("/")
-		val url = "api.$domain/chapter/$chapterId"
+		val url = urlBuilder().host("api.$domain")
+			.addPathSegment("chapter")
+			.addPathSegment(chapter.url)
+			.build()
 
 		val response = webClient.httpGet(url).parseJson()
 		val node = response.getString("node")
-		val data = response.getJSONArray("data")
+		val server = config[preferredImageServerKey] ?: "original"
 
-		return (0 until data.length()).map { i ->
-			val pageObj = data.getJSONObject(i)
-			val filename = pageObj.getString("name")
-			val imageUrl = "$node/data/$chapterId/$filename"
-
+		return response.getJSONArray("data").mapJSON { data ->
+			val filename = data.getString("name")
+			val imageUrl = "$node/data/${chapter.url}/$filename"
+			val cleanUrl = imageUrl.removePrefix("http://")
+				.removePrefix("https://")
+			val finalUrl = when (server) {
+				"original" -> cleanUrl
+				else -> "https://i0.wp.com/$cleanUrl?w=$server"
+			}
 			MangaPage(
-				id = generateUid(imageUrl),
-				url = imageUrl,
+				id = generateUid(filename),
+				url = finalUrl,
 				preview = null,
 				source = source
 			)
