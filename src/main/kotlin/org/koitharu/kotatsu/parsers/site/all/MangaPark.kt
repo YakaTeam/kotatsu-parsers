@@ -1,9 +1,10 @@
 package org.koitharu.kotatsu.parsers.site.all
 
-import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -12,7 +13,6 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken("Need some tests")
 @MangaSourceParser("MANGAPARK", "MangaPark", "en")
 internal class MangaPark(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.MANGAPARK, 24) {
@@ -219,22 +219,41 @@ internal class MangaPark(context: MangaLoaderContext) :
 			put("variables", variables)
 		}
 
-		// FIX 3: Converted URL string to HttpUrl and Map to Headers for correct overload
-		val responseBody = webClient.httpPost(
-			url = apiUrl.toHttpUrl(),
-			payload = payload.toString(),
-			extraHeaders = Headers.Builder()
-				.add("Content-Type", "application/json")
-				.add("Referer", "https://$domain/")
-				.build()
-		).parseJson()
+		val customClient = context.httpClient.newBuilder()
+			.apply {
+				interceptors().clear()
+			}.build()
 
-		val errors = responseBody.optJSONArray("errors")
+		val bodyString = payload.toString()
+		val mediaType = "application/json; charset=utf-8".toMediaType()
+		val responseBody = bodyString.toRequestBody(mediaType)
+		val headers = getRequestHeaders().newBuilder()
+			.set("Content-Type", "application/json; charset=utf-8")
+			.removeAll("Content-Encoding")
+			.removeAll("Accept-Encoding")
+			.build()
+
+		val request = Request.Builder()
+			.post(responseBody)
+			.url(apiUrl.toHttpUrl())
+			.headers(headers)
+			.tag(MangaParserSource::class.java, source)
+			.build()
+
+		val response = customClient.newCall(request).await()
+		if (!response.isSuccessful) {
+			val body = response.body.string()
+			response.close()
+			throw IllegalStateException("HTTP ${response.code}: $body")
+		}
+
+		val json = response.parseJson()
+		val errors = json.optJSONArray("errors")
 		if (errors != null && errors.length() > 0) {
 			throw Exception("GraphQL Error: ${errors.getJSONObject(0).optString("message")}")
 		}
 
-		return responseBody
+		return json
 	}
 
 	private fun buildUrl(path: String): String {

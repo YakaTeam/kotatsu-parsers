@@ -1,11 +1,11 @@
 package org.koitharu.kotatsu.parsers.site.all
 
-import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
@@ -246,8 +246,7 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 		val customClient = context.httpClient.newBuilder()
 			.apply {
 				interceptors().clear()
-			}
-			.build()
+			}.build()
 
 		val bodyString = payload.toString()
 		val mediaType = "application/json; charset=utf-8".toMediaType()
