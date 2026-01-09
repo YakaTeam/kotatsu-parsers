@@ -269,7 +269,7 @@ internal class Comix(context: MangaLoaderContext) :
 			}
 			deferreds.awaitAll().filterNotNull().forEach {
 				for (i in 0 until it.length()) {
-					it.optJSONObject(i)?.let { allItems.add(it) }
+					it.optJSONObject(i)?.let { a -> allItems.add(a) }
 				}
 			}
 		}
