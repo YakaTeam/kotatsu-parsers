@@ -294,7 +294,9 @@ internal abstract class YuriGardenParser(
 	}
 
 	private suspend fun fetchTags(): Set<MangaTag> {
-		val json = webClient.httpGet("https://$apiSuffix/resources/systems_vi.json").parseJson()
+		val url = urlBuilder().host("api.$domain")
+			.addPathSegment("resources").addPathSegment("systems_vi.json")
+		val json = webClient.httpGet(url.build()).parseJson()
 		val genres = json.getJSONObject("genres")
 		return genres.keys().asSequence().mapTo(arraySetOf()) { key ->
 			val genre = genres.getJSONObject(key)
