@@ -1,5 +1,3 @@
-@file:Suppress("NOTHING_TO_INLINE")
-
 package org.koitharu.kotatsu.parsers.network
 
 import okhttp3.HttpUrl
@@ -65,6 +63,7 @@ private class RateLimiter(val permits: Int, val periodMillis: Long) {
     private val requestQueue = ArrayDeque<Long>(permits)
     private val fairLock = Semaphore(1, true)
 
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun acquire(call: okhttp3.Call): Long {
         try {
             fairLock.acquire()
@@ -104,6 +103,7 @@ private class RateLimiter(val permits: Int, val periodMillis: Long) {
         return timestamp
     }
 
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     fun release(timestamp: Long) {
         synchronized(requestQueue) {
             if (requestQueue.isEmpty() || timestamp < requestQueue.first) return
@@ -175,7 +175,6 @@ public fun OkHttpClient.Builder.rateLimit(
  * @param period [Duration] The limiting duration. Defaults to 1.seconds.
  * @param shouldLimit       A predicate to determine whether the rate limit should apply to a given request.
  */
-@Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
 public fun OkHttpClient.Builder.rateLimit(
     permits: Int,
     period: Duration = 1.seconds,
