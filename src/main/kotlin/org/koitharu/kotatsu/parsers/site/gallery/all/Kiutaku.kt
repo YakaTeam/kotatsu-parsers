@@ -1,11 +1,7 @@
 package org.koitharu.kotatsu.parsers.site.gallery.all
 
-import okhttp3.Interceptor
-import okhttp3.Request
-import okhttp3.Response
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import org.koitharu.kotatsu.parsers.*
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
