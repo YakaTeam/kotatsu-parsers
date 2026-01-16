@@ -3,6 +3,9 @@ package org.koitharu.kotatsu.parsers.site.all
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
@@ -19,13 +22,16 @@ import java.util.*
 import java.util.concurrent.TimeUnit
 
 @MangaSourceParser("BATOTOV4", "Bato.To v4")
-internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
-	context = context,
-	source = MangaParserSource.BATOTOV4,
-	pageSize = 36,
-) {
+internal class BatoToV4Parser(context: MangaLoaderContext) :
+	PagedMangaParser(context, MangaParserSource.BATOTOV4, 36) {
 
-	override val configKeyDomain = ConfigKey.Domain("bato.si", "battwo.com", "bato.to", "bato.ing")
+	override val configKeyDomain = ConfigKey.Domain(
+		"bato.si",
+		"battwo.com",
+		"bato.to",
+		"bato.ing"
+	)
+
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.CHROME_DESKTOP)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
@@ -56,7 +62,12 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
 			availableTags = GENRE_OPTIONS.mapToSet { (title, key) -> MangaTag(title, key, source) },
-			availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED, MangaState.PAUSED, MangaState.ABANDONED),
+			availableStates = EnumSet.of(
+				MangaState.ONGOING,
+				MangaState.FINISHED,
+				MangaState.PAUSED,
+				MangaState.ABANDONED
+			),
 			availableLocales = LANGUAGES.values.toSet(),
 		)
 	}
@@ -68,8 +79,6 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 				put("size", pageSize)
 				put("word", filter.query ?: "")
 				put("sortby", when (order) {
-					SortOrder.POPULARITY -> "field_score"
-					SortOrder.RATING -> "field_score"
 					SortOrder.UPDATED -> "field_upload"
 					SortOrder.NEWEST -> "field_public"
 					SortOrder.ALPHABETICAL -> "field_name"
@@ -227,12 +236,41 @@ internal class BatoToV4Parser(context: MangaLoaderContext) : PagedMangaParser(
 		return chain.proceed(request)
 	}
 
+	// Custom httpPost & graphQLQuery function for requests
 	private suspend fun graphQLQuery(endpoint: String, query: String, variables: JSONObject): JSONObject {
 		val payload = JSONObject().apply {
 			put("query", query)
 			put("variables", variables)
 		}
-		val response = webClient.httpPost(endpoint.toHttpUrl(), payload, getRequestHeaders())
+
+		val customClient = context.httpClient.newBuilder()
+			.apply {
+				interceptors().clear()
+			}.build()
+
+		val bodyString = payload.toString()
+		val mediaType = "application/json; charset=utf-8".toMediaType()
+		val requestBody = bodyString.toRequestBody(mediaType)
+		val headers = getRequestHeaders().newBuilder()
+			.set("Content-Type", "application/json; charset=utf-8")
+			.removeAll("Content-Encoding")
+			.removeAll("Accept-Encoding")
+			.build()
+
+		val request = Request.Builder()
+			.post(requestBody)
+			.url(endpoint.toHttpUrl())
+			.headers(headers)
+			.tag(MangaParserSource::class.java, source)
+			.build()
+
+		val response = customClient.newCall(request).await()
+		if (!response.isSuccessful) {
+			val body = response.body.string()
+			response.close()
+			throw IllegalStateException("HTTP ${response.code}: $body")
+		}
+
 		val json = response.parseJson()
 		json.optJSONArray("errors")?.let {
 			if (it.length() != 0) {

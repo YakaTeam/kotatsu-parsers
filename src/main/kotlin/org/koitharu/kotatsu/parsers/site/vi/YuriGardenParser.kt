@@ -35,10 +35,12 @@ internal abstract class YuriGardenParser(
 	private val availableTags = suspendLazy(initializer = ::fetchTags)
 
 	override val configKeyDomain = ConfigKey.Domain(domain)
-	private val apiSuffix = "api.$domain"
+	private val apiSuffix = "api.$domain/api"
 	private val cdnSuffix = "db.$domain/storage/v1/object/public/yuri-garden-store"
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
+		.add("Referer", "https://$domain/")
+		.add("Origin", "https://$domain")
 		.add("x-app-origin", "https://$domain")
 		.add("User-Agent", UserAgents.KOTATSU)
 		.build()
@@ -294,7 +296,9 @@ internal abstract class YuriGardenParser(
 	}
 
 	private suspend fun fetchTags(): Set<MangaTag> {
-		val json = webClient.httpGet("https://$apiSuffix/resources/systems_vi.json").parseJson()
+		val url = urlBuilder().host("api.$domain")
+			.addPathSegment("resources").addPathSegment("systems_vi.json")
+		val json = webClient.httpGet(url.build()).parseJson()
 		val genres = json.getJSONObject("genres")
 		return genres.keys().asSequence().mapTo(arraySetOf()) { key ->
 			val genre = genres.getJSONObject(key)
