@@ -8,7 +8,11 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import org.koitharu.kotatsu.parsers.*
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
+import org.koitharu.kotatsu.parsers.network.WebClient
+import org.koitharu.kotatsu.parsers.network.rateLimit
 import org.koitharu.kotatsu.parsers.site.gallery.GalleryParser
+import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("KIUTAKU", "Kiutaku", type = ContentType.OTHER)
 internal class Kiutaku(context: MangaLoaderContext) :
@@ -20,23 +24,11 @@ internal class Kiutaku(context: MangaLoaderContext) :
         private val IMAGE_EXTENSIONS = listOf(".jpg", ".jpeg", ".png", ".webp")
     }
 
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        val url = request.url.toString()
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(permits = 3, period = 1.seconds)
+			.build()
 
-        if (IMAGE_EXTENSIONS.any { url.endsWith(it, ignoreCase = true) }) {
-            runBlocking {
-                mutex.withLock {
-                    val now = System.currentTimeMillis()
-                    val wait = 500L - (now - lastImageRequestTime)
-                    if (wait > 0) {
-                        delay(wait)
-                    }
-                    lastImageRequestTime = System.currentTimeMillis()
-                }
-            }
-        }
-
-        return chain.proceed(request)
-    }
+		OkHttpWebClient(newHttpClient, source)
+	}
 }
