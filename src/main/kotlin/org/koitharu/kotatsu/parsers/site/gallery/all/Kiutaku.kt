@@ -1,12 +1,11 @@
 package org.koitharu.kotatsu.parsers.site.gallery.all
 
-import kotlinx.coroutines.*
 import org.koitharu.kotatsu.parsers.*
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.WebClient
-import org.koitharu.kotatsu.parsers.network.rateLimit
 import org.koitharu.kotatsu.parsers.site.gallery.GalleryParser
+import org.koitharu.kotatsu.parsers.util.rateLimit
 import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("KIUTAKU", "Kiutaku", type = ContentType.OTHER)

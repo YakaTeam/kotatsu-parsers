@@ -10,7 +10,6 @@ import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.WebClient
-import org.koitharu.kotatsu.parsers.network.rateLimit
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
