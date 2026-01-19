@@ -42,6 +42,14 @@ internal abstract class YuriGardenParser(
 	private val apiSuffix = "api.$domain/api"
 	private val cdnSuffix = "db.$domain/storage/v1/object/public/yuri-garden-store"
 
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(20, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
+
 	override fun getRequestHeaders(): Headers = Headers.Builder()
 		.add("Referer", "https://$domain/")
 		.add("Origin", "https://$domain")
@@ -322,16 +330,3 @@ internal class YuriGarden(context: MangaLoaderContext) :
 @MangaSourceParser("YURIGARDEN_R18", "Yuri Garden (18+)", "vi", type = ContentType.HENTAI)
 internal class YuriGardenR18(context: MangaLoaderContext) :
     YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18, "yurigarden.com", true)
-
-@MangaSourceParser("YURIGARDEN_R18TEST", "Yuri Garden - Test", "vi", type = ContentType.HENTAI)
-internal class YuriGardenR18Test(context: MangaLoaderContext) :
-	YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18TEST, "yurigarden.moe", true) {
-
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(5, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
-}
