@@ -96,9 +96,3 @@ It is recommended that unit tests be run before submitting a PR.
 
 If you need help or have some questions, ask a community in our [Telegram chat](https://t.me/kotatsuapp)
 or [Discord server](https://discord.gg/NNJ5RgVBC5).
-
-## Best Practices
-
-*   **Start Conservative:** If you are getting banned, start with `1 request / 1 second` or `1 request / 2 seconds`.
-*   **APIs vs. HTML:** APIs often have stricter limits than loading standard HTML pages.
-*   **Image Servers:** You usually don't need to rate limit image servers (CDNs) as strictly, or at all, unless the site proxies images through their main server.
