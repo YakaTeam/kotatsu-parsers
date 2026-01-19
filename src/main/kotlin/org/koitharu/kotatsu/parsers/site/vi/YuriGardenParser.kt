@@ -20,10 +20,14 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
+import org.koitharu.kotatsu.parsers.network.WebClient
+import org.koitharu.kotatsu.parsers.network.rateLimit
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 internal abstract class YuriGardenParser(
 	context: MangaLoaderContext,
@@ -318,3 +322,16 @@ internal class YuriGarden(context: MangaLoaderContext) :
 @MangaSourceParser("YURIGARDEN_R18", "Yuri Garden (18+)", "vi", type = ContentType.HENTAI)
 internal class YuriGardenR18(context: MangaLoaderContext) :
     YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18, "yurigarden.com", true)
+
+@MangaSourceParser("YURIGARDEN_R18TEST", "Yuri Garden - Test", "vi", type = ContentType.HENTAI)
+internal class YuriGardenR18Test(context: MangaLoaderContext) :
+	YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18TEST, "yurigarden.moe", true) {
+
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(5, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
+}
