@@ -6,7 +6,6 @@ import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.FlexiblePagedMangaParser
-import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.model.search.MangaSearchQuery
 import org.koitharu.kotatsu.parsers.model.search.MangaSearchQueryCapabilities
@@ -23,7 +22,7 @@ internal abstract class MangaboxParser(
 	context: MangaLoaderContext,
 	source: MangaParserSource,
 	pageSize: Int = 24,
-) : PagedMangaParser(context, source, pageSize) {
+) : FlexiblePagedMangaParser(context, source, pageSize) {
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -37,10 +36,29 @@ internal abstract class MangaboxParser(
 		SortOrder.ALPHABETICAL,
 	)
 
-	override val filterCapabilities: MangaListFilterCapabilities
-		get() = MangaListFilterCapabilities(
-			isSearchSupported = true,
-			isSearchWithFiltersSupported = true,
+	override val searchQueryCapabilities: MangaSearchQueryCapabilities
+		get() = MangaSearchQueryCapabilities(
+			SearchCapability(
+				field = TAG,
+				criteriaTypes = setOf(Include::class, Exclude::class),
+				isMultiple = true,
+			),
+			SearchCapability(
+				field = TITLE_NAME,
+				criteriaTypes = setOf(Match::class),
+				isMultiple = false,
+			),
+			SearchCapability(
+				field = STATE,
+				criteriaTypes = setOf(Include::class),
+				isMultiple = true,
+			),
+			SearchCapability(
+				field = AUTHOR,
+				criteriaTypes = setOf(Include::class),
+				isMultiple = false,
+				isExclusive = true,
+			),
 		)
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -102,18 +120,46 @@ internal abstract class MangaboxParser(
 		}
 	}
 
-	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+	override suspend fun getListPage(query: MangaSearchQuery, page: Int): List<Manga> {
+		var authorSearchUrl: String? = null
 		val url = buildString {
-			// Tags
-			append("/genre/")
-			if (filter.tags.isEmpty()) {
-				append("all")
-			} else {
+			val pageQueryParameter = "page=$page"
+			append("https://${domain}${listUrl}/?s=all")
 
+			query.criteria.forEach { criterion ->
+				when (criterion) {
+					is Include<*> -> {
+						if (criterion.field == AUTHOR) {
+							criterion.values.firstOrNull()?.toQueryParam()?.takeIf { it.isNotBlank() }
+								?.let { authorKey ->
+									authorSearchUrl = "https://${domain}${authorUrl}/${authorKey}/?$pageQueryParameter"
+								}
+						}
+
+						criterion.field.toParamName().takeIf { it.isNotBlank() }?.let { param ->
+							append("&$param=${criterion.values.joinToString("_") { it.toQueryParam() }}")
+						}
+					}
+
+					is Exclude<*> -> {
+						append("&g_e=${criterion.values.joinToString("_") { it.toQueryParam() }}")
+					}
+
+					is Match<*> -> {
+						appendCriterion(criterion.field, criterion.value)
+					}
+
+					else -> {
+						// Not supported
+					}
+				}
 			}
+
+			append("&${pageQueryParameter}")
+			append("&orby=${(query.order ?: defaultSortOrder).toQueryParam()}")
 		}
 
-		val doc = webClient.httpGet(url).parseHtml()
+		val doc = webClient.httpGet(authorSearchUrl ?: url).parseHtml()
 
 		return doc.select("div.content-genres-item, div.list-story-item, div.story_item_right").ifEmpty {
 			doc.select("div.search-story-item")
