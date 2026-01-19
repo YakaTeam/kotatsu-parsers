@@ -109,7 +109,7 @@ internal abstract class MangaboxParser(
 			if (filter.tags.isEmpty()) {
 				append("all")
 			} else {
-				append(filter.tags.)
+
 			}
 		}
 
