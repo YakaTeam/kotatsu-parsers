@@ -65,6 +65,8 @@ All members of the `MangaParser` class are documented. Pay attention to some pec
   to find issues during unit testing.
 - Your parser may also implement the `Interceptor` interface for additional manipulation of all network requests and
   responses, including image loading.
+- If the website has strict rate limits, use the `rateLimit` extension on the HTTP client. See [Rate Limiting util](./src/main/kotlin/org/koitharu/kotatsu/parsers/util/RateLimit.kt) for
+details and see [Yuri Garden parsers](./src/main/kotlin/org/koitharu/kotatsu/parsers/site/vi/YuriGardenParser.kt) for example.
 - If your source website (or its API) uses pages for pagination instead of offset you should extend `PagedMangaParser`
   instead of `MangaParser`.
 - If your source website (or its API) does not provide pagination (has only one page of content) you should extend

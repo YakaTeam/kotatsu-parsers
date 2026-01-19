@@ -8,7 +8,9 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
+import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -16,6 +18,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import java.text.SimpleDateFormat
 import java.util.*
+import kotlin.time.Duration.Companion.seconds
 
 private const val CHAPTERS_PER_PAGE = 500
 private const val SERVER_DATA = "512"
@@ -29,6 +32,14 @@ internal class WeebDex(context: MangaLoaderContext) :
 	private val cdnDomain = "srv.notdelta.xyz"
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
+
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(15, 60.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
 
 	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
