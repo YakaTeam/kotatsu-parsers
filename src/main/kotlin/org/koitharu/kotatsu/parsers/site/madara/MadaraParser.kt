@@ -489,6 +489,8 @@ internal abstract class MadaraParser(
 	protected open fun parseMangaList(doc: Document): List<Manga> {
 		val elements = doc.select("div.row.c-tabs-item__content").ifEmpty {
 			doc.select("div.page-item-detail")
+		}.ifEmpty {
+			doc.select("div.manga__thumb_item")
 		}
 
 		// Avoid "Content not found or removed" errors
