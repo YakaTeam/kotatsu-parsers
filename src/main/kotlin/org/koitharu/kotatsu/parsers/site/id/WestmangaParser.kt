@@ -4,43 +4,41 @@ import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
-
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.core.AbstractMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.asTypedList
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import java.text.SimpleDateFormat
 import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-
-import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
-
+@Broken("Need some tests + debugging")
 @MangaSourceParser("WESTMANGA", "WestManga", "id")
 internal class WestmangaParser(context: MangaLoaderContext) :
     AbstractMangaParser(context, MangaParserSource.WESTMANGA) {
 
     override val configKeyDomain = ConfigKey.Domain("westmanga.me")
+	private val apiUrl = "https://data.$domain"
 
     override val availableSortOrders: Set<SortOrder> = setOf(
         SortOrder.UPDATED,
         SortOrder.POPULARITY,
         SortOrder.NEWEST,
-        SortOrder.ALPHABETICAL
+        SortOrder.ALPHABETICAL,
     )
 
-    override val filterCapabilities: MangaListFilterCapabilities = MangaListFilterCapabilities(
-        isSearchSupported = true
-    )
-
-    private val apiUrl = "https://data.westmanga.me"
-    private val accessKey = "WM_WEB_FRONT_END"
-    private val secretKey = "xxxoidj"
-
-    private var cachedTags: Set<MangaTag>? = null
+	override val filterCapabilities: MangaListFilterCapabilities
+		get() = MangaListFilterCapabilities(
+			isSearchSupported = true,
+			isSearchWithFiltersSupported = true,
+		)
 
     override suspend fun getFilterOptions(): MangaListFilterOptions = MangaListFilterOptions(
         availableTags = fetchTags()
@@ -48,15 +46,14 @@ internal class WestmangaParser(context: MangaLoaderContext) :
 
     override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
         val page = (offset / 20) + 1
-        val query = filter.query ?: ""
 
         val urlBuilder = "$apiUrl/api/contents".toHttpUrl().newBuilder()
             .addQueryParameter("page", page.toString())
-            .addQueryParameter("per_page", "20")
+            .addQueryParameter("per_page", 20.toString())
             .addQueryParameter("type", "Comic")
 
-        if (query.isNotEmpty()) {
-            urlBuilder.addQueryParameter("q", query)
+        if (!filter.query.isNullOrBlank()) {
+            urlBuilder.addQueryParameter("q", filter.query)
         } else {
             val orderBy = when (order) {
                 SortOrder.POPULARITY -> "Popular"
@@ -71,19 +68,14 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         }
 
         if (filter.tags.isNotEmpty()) {
-            for (tag in filter.tags) {
-                urlBuilder.addQueryParameter("genre[]", tag.key)
-            }
+			filter.tags.forEach {
+				urlBuilder.addQueryParameter("genre[]", it.key)
+			}
         }
 
         val json = apiRequest(urlBuilder.build().toString())
         val data = json.getJSONArray("data")
-        val mangaList = mutableListOf<Manga>()
-        for (i in 0 until data.length()) {
-            val item = data.getJSONObject(i)
-            mangaList.add(parseManga(item))
-        }
-        return mangaList
+		return data.mapJSON { parseManga(it) }
     }
 
     override suspend fun getDetails(manga: Manga): Manga {
@@ -105,12 +97,14 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         val slug = chapter.url.removeSuffix("/").substringAfterLast("/")
         val url = "$apiUrl/api/v/$slug"
         val json = apiRequest(url).getJSONObject("data")
-        val images = json.getJSONArray("images")
-        val pages = mutableListOf<MangaPage>()
-        for (i in 0 until images.length()) {
-            pages.add(MangaPage(i.toLong(), images.getString(i), null, source))
-        }
-        return pages
+        return json.getJSONArray("images").asTypedList<String>().map {
+			MangaPage(
+				id = it.toLong(),
+				url = it,
+				preview = null,
+				source = source
+			)
+		}
     }
 
     private fun parseManga(json: JSONObject): Manga {
@@ -118,15 +112,15 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         return Manga(
             id = slug.longHashCode(),
             title = json.getString("title"),
-            altTitles = emptySet<String>(),
+            altTitles = emptySet(),
             url = "/manga/$slug",
             publicUrl = "$domain/manga/$slug",
             rating = RATING_UNKNOWN,
             contentRating = sourceContentRating,
             coverUrl = json.getString("cover"),
-            tags = emptySet<MangaTag>(),
+            tags = emptySet(),
             state = null,
-            authors = emptySet<String>(),
+            authors = emptySet(),
             source = source
         )
     }
@@ -162,38 +156,35 @@ internal class WestmangaParser(context: MangaLoaderContext) :
     private fun parseDate(dateStr: String): Long {
         // Try parsing as timestamp (long/string)
         dateStr.toLongOrNull()?.let { return it * 1000 }
-        
+
         // Try parsing as ISO string
         try {
             val format = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.US)
             format.timeZone = TimeZone.getTimeZone("UTC") // API often returns UTC or server time.
-            return format.parse(dateStr)?.time ?: 0L
-        } catch (e: Exception) {
+            return format.parseSafe(dateStr)
+        } catch (_: Exception) {
             return 0L
         }
     }
 
     private suspend fun fetchTags(): Set<MangaTag> {
-        cachedTags?.let { return it }
         val json = apiRequest("$apiUrl/api/contents/genres")
         val data = json.getJSONArray("data")
-        val tags = mutableSetOf<MangaTag>()
-        for (i in 0 until data.length()) {
-            val item = data.getJSONObject(i)
-            tags.add(MangaTag(
-                key = item.getInt("id").toString(),
-                title = item.getString("name"),
-                source = source
-            ))
-        }
-        return tags.also { cachedTags = it }
+		return data.mapJSONToSet {
+			MangaTag(
+				key = it.getInt("id").toString(),
+				title = it.getString("name"),
+				source = source,
+			)
+		}
     }
 
+	// I have no idea about it ¯\_(ツ)_/¯
     private suspend fun apiRequest(url: String): JSONObject {
         val timestamp = (System.currentTimeMillis() / 1000).toString()
         val message = "wm-api-request"
         val httpUrl = url.toHttpUrl()
-        val key = timestamp + "GET" + httpUrl.encodedPath + accessKey + secretKey
+        val key = timestamp + "GET" + httpUrl.encodedPath + ACCESS_KEY + SECRET_KEY
 
         val mac = Mac.getInstance("HmacSHA256")
         val secretKeySpec = SecretKeySpec(key.toByteArray(Charsets.UTF_8), "HmacSHA256")
@@ -204,12 +195,17 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         val headers = Headers.Builder()
             .add("Referer", "$domain/")
             .add("x-wm-request-time", timestamp)
-            .add("x-wm-accses-key", accessKey)
+            .add("x-wm-accses-key", ACCESS_KEY)
             .add("x-wm-request-signature", signature)
             .build()
 
         val response = webClient.httpGet(httpUrl, headers)
         if (!response.isSuccessful) throw Exception("HTTP ${response.code}")
-        return JSONObject(response.body?.string() ?: "{}")
+        return JSONObject(response.body.string())
     }
+
+	companion object {
+		private const val ACCESS_KEY = "WM_WEB_FRONT_END"
+		private const val SECRET_KEY = "xxxoidj"
+	}
 }
