@@ -165,15 +165,16 @@ internal abstract class NineMangaParser(
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-		return doc.body().requireElementById("page").select("option").map { option ->
-			val url = option.attr("value")
+		val pageSelect = doc.body().getElementById("page") ?: doc.body().selectFirst("select#page, select.page-select")
+		return pageSelect?.select("option")?.mapNotNull { option ->
+			val url = option.attr("value").takeIf { it.isNotBlank() } ?: return@mapNotNull null
 			MangaPage(
 				id = generateUid(url),
 				url = url,
 				preview = null,
 				source = source,
 			)
-		}
+		}.orEmpty()
 	}
 
 	override suspend fun getPageUrl(page: MangaPage): String {
@@ -270,7 +271,7 @@ internal abstract class NineMangaParser(
 	class English(context: MangaLoaderContext) : NineMangaParser(
 		context,
 		MangaParserSource.NINEMANGA_EN,
-		"www.ninemanga.com",
+		"ninemanga.com",
 	)
 
 	@MangaSourceParser("NINEMANGA_ES", "NineManga Español", "es")

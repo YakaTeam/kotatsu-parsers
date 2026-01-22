@@ -135,13 +135,16 @@ internal class MangaGeko(context: MangaLoaderContext) :
 		val urlChapter = mangaUrl + "all-chapters/"
 		val doc = webClient.httpGet(urlChapter.toAbsoluteUrl(domain)).parseHtml()
 		val dateFormat = SimpleDateFormat("MMM dd, yyyy", sourceLocale)
-		return doc.requireElementById("chapters").select("ul.chapter-list li")
+		return doc.select("#chapters ul.chapter-list li")
 			.mapChapters(reversed = true) { i, li ->
 				val a = li.selectFirstOrThrow("a")
 				val url = a.attrAsRelativeUrl("href")
 				val name = li.selectFirstOrThrow(".chapter-title").text()
-				val dateText = li.select(".chapter-update").attr("datetime").substringBeforeLast(',')
-					.replace(".", "").replace("Sept", "Sep")
+				val dateText = li.select(".chapter-update").attr("datetime")
+					.substringBeforeLast(",")
+					.replace(".", "")
+					.replace("Sept", "Sep")
+					.trim()
 				MangaChapter(
 					id = generateUid(url),
 					title = name,
