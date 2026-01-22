@@ -1,4 +1,4 @@
-package org.koitharu.kotatsu.parsers.site.all
+package org.koitharu.kotatsu.parsers.site.all.bato
 
 import androidx.collection.ArraySet
 import okhttp3.Interceptor
@@ -24,6 +24,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.SecretKeySpec
 
 @Broken("Original site closed")
+@Deprecated("This parser is using old structure of Bato.To site. Use BatoParser instead.")
 @MangaSourceParser("BATOTO", "Bato.To")
 internal class BatoToParser(context: MangaLoaderContext) : PagedMangaParser(
 	context = context,

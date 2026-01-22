@@ -1,0 +1,11 @@
+package org.koitharu.kotatsu.parsers.site.vi.yurigarden
+
+import org.koitharu.kotatsu.parsers.MangaLoaderContext
+import org.koitharu.kotatsu.parsers.MangaSourceParser
+import org.koitharu.kotatsu.parsers.model.ContentType
+import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.site.vi.YuriGardenParser
+
+@MangaSourceParser("YURIGARDEN_R18", "Yuri Garden (18+)", "vi", type = ContentType.HENTAI)
+internal class YuriGardenR18(context: MangaLoaderContext) :
+	YuriGardenParser(context, MangaParserSource.YURIGARDEN_R18, "yurigarden.com", true)

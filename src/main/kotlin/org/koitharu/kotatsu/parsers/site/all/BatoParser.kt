@@ -9,30 +9,41 @@ import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
 import org.json.JSONArray
 import org.json.JSONObject
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
-import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.GraphQLException
-import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.model.Manga
+import org.koitharu.kotatsu.parsers.model.MangaChapter
+import org.koitharu.kotatsu.parsers.model.MangaListFilter
+import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
+import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
+import org.koitharu.kotatsu.parsers.model.MangaPage
+import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.model.MangaState
+import org.koitharu.kotatsu.parsers.model.MangaTag
+import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
+import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.network.UserAgents
-import org.koitharu.kotatsu.parsers.util.*
-import org.koitharu.kotatsu.parsers.util.json.*
-import java.util.*
+import org.koitharu.kotatsu.parsers.util.await
+import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.asTypedList
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.mapToSet
+import org.koitharu.kotatsu.parsers.util.parseJson
+import org.koitharu.kotatsu.parsers.util.toTitleCase
+import java.util.EnumSet
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
-@Broken("Original site closed")
-@MangaSourceParser("BATOTOV4", "Bato.To v4")
-internal class BatoToV4Parser(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.BATOTOV4, 36) {
+internal abstract class BatoParser(
+    context: MangaLoaderContext,
+    source: MangaParserSource,
+    domain: String,
+    pageSize: Int = 36,
+) : PagedMangaParser(context, source, pageSize) {
 
-	override val configKeyDomain = ConfigKey.Domain(
-		"bato.si",
-		"battwo.com",
-		"bato.to",
-		"bato.ing"
-	)
+	override val configKeyDomain = ConfigKey.Domain(domain)
 
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.CHROME_DESKTOP)
 
@@ -55,23 +66,23 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isSearchSupported = true,
-			isMultipleTagsSupported = true,
-			isTagsExclusionSupported = true,
-			isOriginalLocaleSupported = true,
-		)
+            isSearchSupported = true,
+            isMultipleTagsSupported = true,
+            isTagsExclusionSupported = true,
+            isOriginalLocaleSupported = true,
+        )
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
-			availableTags = GENRE_OPTIONS.mapToSet { (title, key) -> MangaTag(title, key, source) },
-			availableStates = EnumSet.of(
-				MangaState.ONGOING,
-				MangaState.FINISHED,
-				MangaState.PAUSED,
-				MangaState.ABANDONED
-			),
-			availableLocales = LANGUAGES.values.toSet(),
-		)
+            availableTags = GENRE_OPTIONS.mapToSet { (title, key) -> MangaTag(title, key, source) },
+            availableStates = EnumSet.of(
+                MangaState.ONGOING,
+                MangaState.FINISHED,
+                MangaState.PAUSED,
+                MangaState.ABANDONED
+            ),
+            availableLocales = LANGUAGES.values.toSet(),
+        )
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
@@ -90,7 +101,8 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 				put("incGenres", JSONArray(filter.tags.map { it.key }))
 				put("excGenres", JSONArray(filter.tagsExclude.map { it.key }))
 				put("incOLangs", JSONArray())
-				put("incTLangs", JSONArray(filter.locale?.let { listOf(it.language) } ?: emptyList<String>()))
+				put("incTLangs",
+                    JSONArray(filter.locale?.let { listOf(it.language) } ?: emptyList<String>()))
 				put("origStatus", filter.states.firstOrNull()?.let {
 					when (it) {
 						MangaState.ONGOING -> "ongoing"
@@ -125,7 +137,7 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 		val authors = comic.optJSONArray("authors")?.asTypedList<String>()?.toSet() ?: emptySet()
 		val genres = comic.optJSONArray("genres")?.asTypedList<String>()?.mapToSet { key ->
 			val title = GENRE_OPTIONS.find { it.second == key }?.first ?: key.toTitleCase()
-			MangaTag(title, key, source)
+            MangaTag(title, key, source)
 		} ?: emptySet()
 
 		return manga.copy(
@@ -161,22 +173,22 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 				?: chapter.optJSONObject("userNode")?.optJSONObject("data")?.optString("name")
 					?.takeIf { it != "null" }
 
-			MangaChapter(
-				id = generateUid(id),
-				title = when {
-					name != null && title != null -> "$name: $title"
-					name != null -> name
-					title != null -> title
-					else -> null
-				},
-				number = serial.toFloat(),
-				volume = 0,
-				url = "$comicId/$id",
-				uploadDate = chapter.optLong("dateModify", chapter.optLong("dateCreate", 0)),
-				source = source,
-				scanlator = groups,
-				branch = groups
-			)
+            MangaChapter(
+                id = generateUid(id),
+                title = when {
+                    name != null && title != null -> "$name: $title"
+                    name != null -> name
+                    title != null -> title
+                    else -> null
+                },
+                number = serial.toFloat(),
+                volume = 0,
+                url = "$comicId/$id",
+                uploadDate = chapter.optLong("dateModify", chapter.optLong("dateCreate", 0)),
+                source = source,
+                scanlator = groups,
+                branch = groups
+            )
 		}
 		// .asReversed()
 	}
@@ -192,12 +204,12 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 
 		return (0 until urls.length()).map { i ->
 			val urlString = urls.getString(i)
-			MangaPage(
-				id = generateUid(urlString),
-				url = "$urlString#page",
-				preview = null,
-				source = source
-			)
+            MangaPage(
+                id = generateUid(urlString),
+                url = "$urlString#page",
+                preview = null,
+                source = source
+            )
 		}
 	}
 
@@ -287,19 +299,19 @@ internal class BatoToV4Parser(context: MangaLoaderContext) :
 		val name = json.getString("name")
 		val cover = json.optString("urlCoverOri")
 		return Manga(
-			id = generateUid(id),
-			title = name,
-			altTitles = emptySet(),
-			url = id,
-			publicUrl = "https://$domain/title/$id",
-			rating = RATING_UNKNOWN,
-			contentRating = null,
-			coverUrl = if (cover.isNullOrEmpty()) null else "https://$domain$cover",
-			tags = emptySet(),
-			state = null,
-			authors = emptySet(),
-			source = source
-		)
+            id = generateUid(id),
+            title = name,
+            altTitles = emptySet(),
+            url = id,
+            publicUrl = "https://$domain/title/$id",
+            rating = RATING_UNKNOWN,
+            contentRating = null,
+            coverUrl = if (cover.isNullOrEmpty()) null else "https://$domain$cover",
+            tags = emptySet(),
+            state = null,
+            authors = emptySet(),
+            source = source
+        )
 	}
 
 	private fun parseStatus(status: String): MangaState? = when {
