@@ -8,7 +8,6 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
-import java.text.SimpleDateFormat
 import java.util.*
 
 @MangaSourceParser("MANGAGEKO", "MangaGeko", "en")
@@ -50,7 +49,6 @@ internal class MangaGeko(context: MangaLoaderContext) :
 				}
 
 				else -> {
-
 					append("/browse-comics/?results=")
 					append(page)
 
@@ -69,7 +67,6 @@ internal class MangaGeko(context: MangaLoaderContext) :
 						SortOrder.POPULARITY -> append("views")
 						SortOrder.UPDATED -> append("Updated")
 						SortOrder.NEWEST -> append("New")
-						// SortOrder.RANDOM -> append("Random")
 						else -> append("Updated")
 					}
 				}
@@ -78,7 +75,7 @@ internal class MangaGeko(context: MangaLoaderContext) :
 		val doc = webClient.httpGet(url).parseHtml()
 		return doc.select("li.novel-item").map { div ->
 			val href = div.selectFirstOrThrow("a").attrAsRelativeUrl("href")
-			val author = div.selectFirstOrThrow("h6").text().removePrefix("Author(S): ").nullIfEmpty()
+			val author = div.selectFirst("h6")?.text()?.removePrefix("Author(S): ")?.nullIfEmpty()
 			Manga(
 				id = generateUid(href),
 				title = div.selectFirstOrThrow("h4").text(),
@@ -98,10 +95,10 @@ internal class MangaGeko(context: MangaLoaderContext) :
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
 		val doc = webClient.httpGet("https://$domain/browse-comics/").parseHtml()
-		return doc.selectFirstOrThrow("div.genre-select-i").select("label").mapToSet { label ->
+		return doc.select("div.chip[data-group='include_genres']").mapToSet { chip ->
 			MangaTag(
-				key = label.selectFirstOrThrow("input").attr("value"),
-				title = label.text(),
+				key = chip.attr("data-value"),
+				title = chip.text(),
 				source = source,
 			)
 		}
@@ -110,23 +107,24 @@ internal class MangaGeko(context: MangaLoaderContext) :
 	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
 		val chaptersDeferred = async { loadChapters(manga.url) }
-		val author = doc.selectFirstOrThrow(".author").textOrNull()
+		val author = doc.selectFirst(".author span[itemprop='author']")?.text()
+			?: doc.selectFirst(".author")?.text()?.substringAfter("Author:")?.trim()
 		manga.copy(
-			altTitles = setOfNotNull(doc.selectFirstOrThrow(".alternative-title").textOrNull()),
-			state = when (doc.selectFirstOrThrow(".header-stats span:contains(Status) strong").text()) {
-				"Ongoing" -> MangaState.ONGOING
-				"Completed" -> MangaState.FINISHED
+			altTitles = setOfNotNull(doc.selectFirst(".alternative-title")?.textOrNull()),
+			state = when {
+				doc.selectFirst("strong.ongoing") != null -> MangaState.ONGOING
+				doc.selectFirst("strong.completed") != null -> MangaState.FINISHED
 				else -> null
 			},
 			tags = doc.select(".categories ul li a").mapToSet { a ->
 				MangaTag(
 					key = a.attr("href").substringAfterLast('='),
-					title = a.text(),
+					title = a.text().trim(),
 					source = source,
 				)
 			},
 			authors = setOfNotNull(author),
-			description = doc.selectFirstOrThrow(".description").html(),
+			description = doc.selectFirst(".description")?.html(),
 			chapters = chaptersDeferred.await(),
 		)
 	}
@@ -134,14 +132,13 @@ internal class MangaGeko(context: MangaLoaderContext) :
 	private suspend fun loadChapters(mangaUrl: String): List<MangaChapter> {
 		val urlChapter = mangaUrl + "all-chapters/"
 		val doc = webClient.httpGet(urlChapter.toAbsoluteUrl(domain)).parseHtml()
-		val dateFormat = SimpleDateFormat("MMM dd, yyyy", sourceLocale)
-		return doc.requireElementById("chapters").select("ul.chapter-list li")
+		return doc.select("ul.chapter-list li.chapter-list-item")
 			.mapChapters(reversed = true) { i, li ->
 				val a = li.selectFirstOrThrow("a")
 				val url = a.attrAsRelativeUrl("href")
-				val name = li.selectFirstOrThrow(".chapter-title").text()
-				val dateText = li.select(".chapter-update").attr("datetime").substringBeforeLast(',')
-					.replace(".", "").replace("Sept", "Sep")
+				val name = li.selectFirst(".chapter-number")?.ownText()?.trim()
+					?: li.selectFirst(".chapter-li-data")?.text()?.trim()
+					?: "Chapter ${i + 1}"
 				MangaChapter(
 					id = generateUid(url),
 					title = name,
@@ -149,28 +146,28 @@ internal class MangaGeko(context: MangaLoaderContext) :
 					volume = 0,
 					url = url,
 					scanlator = null,
-					uploadDate = dateFormat.parseSafe(dateText),
+					uploadDate = 0L,
 					branch = null,
 					source = source,
 				)
 			}
 	}
 
-    override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-        val fullUrl = chapter.url.toAbsoluteUrl(domain)
-        val doc = webClient.httpGet(fullUrl).parseHtml()
-        return doc.select("center img")
-            .mapNotNull { it.attr("src").takeIf { src -> src.isNotBlank() } }
-            // remove all invaild images + credits
-            .filterNot { it.startsWith("data:image") || it.contains("credits-mgeko.png") }
-            .distinct().map { url ->
-                val finalUrl = url.toRelativeUrl(domain)
-                MangaPage(
-                    id = generateUid(finalUrl),
-                    url = finalUrl,
-                    preview = null,
-                    source = source,
-                )
-            }
-    }
+	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		val fullUrl = chapter.url.toAbsoluteUrl(domain)
+		val doc = webClient.httpGet(fullUrl).parseHtml()
+		return doc.select("img[id^='image-']")
+			.mapNotNull { it.attr("src").takeIf { src -> src.isNotBlank() } }
+			.filterNot { it.startsWith("data:image") || it.contains("credits-mgeko.png") }
+			.distinct()
+			.map { url ->
+				val finalUrl = url.toRelativeUrl(domain)
+				MangaPage(
+					id = generateUid(finalUrl),
+					url = finalUrl,
+					preview = null,
+					source = source,
+				)
+			}
+	}
 }
