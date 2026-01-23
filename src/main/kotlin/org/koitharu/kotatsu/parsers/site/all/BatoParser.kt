@@ -29,6 +29,7 @@ import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.toTitleCase
@@ -119,11 +120,29 @@ internal abstract class BatoParser(
 		}
 
 		val response = graphQLQuery("https://$domain/ap2/", COMIC_SEARCH_QUERY, variables)
-		val data = response.getJSONObject("data").getJSONObject("get_comic_browse")
-		val items = data.getJSONArray("items")
+		val dataObj = response.opt("data")
+		if (dataObj == null || dataObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance or experiencing issues. Try again later or switch domain in source settings.",
+				"https://$domain/",
+			)
+		}
+		val browseObj = dataObj.opt("get_comic_browse")
+		if (browseObj == null || browseObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance or experiencing issues. Try again later or switch domain in source settings.",
+				"https://$domain/",
+			)
+		}
+		val items = browseObj.getJSONArray("items")
 
-		return items.mapJSON { item ->
-			parseManga(item.getJSONObject("data"))
+		return items.mapJSONNotNull { item ->
+			val dataField = item.opt("data")
+			if (dataField is JSONObject) {
+				parseManga(dataField)
+			} else {
+				null // Skip items with invalid data (e.g., "Under" status)
+			}
 		}
 	}
 
@@ -132,7 +151,28 @@ internal abstract class BatoParser(
 			put("id", manga.url)
 		}
 		val response = graphQLQuery("https://$domain/ap2/", COMIC_NODE_QUERY, variables)
-		val comic = response.getJSONObject("data").getJSONObject("get_comicNode").getJSONObject("data")
+		val dataObj = response.opt("data")
+		if (dataObj == null || dataObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				manga.publicUrl,
+			)
+		}
+		val comicNodeObj = dataObj.opt("get_comicNode")
+		if (comicNodeObj == null || comicNodeObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				manga.publicUrl,
+			)
+		}
+		val comicData = comicNodeObj.opt("data")
+		if (comicData !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Manga data is unavailable (possibly under review or removed).",
+				manga.publicUrl,
+			)
+		}
+		val comic = comicData
 
 		val authors = comic.optJSONArray("authors")?.asTypedList<String>()?.toSet() ?: emptySet()
 		val genres = comic.optJSONArray("genres")?.asTypedList<String>()?.mapToSet { key ->
@@ -156,10 +196,28 @@ internal abstract class BatoParser(
 			put("start", -1)
 		}
 		val response = graphQLQuery("https://$domain/ap2/", CHAPTER_LIST_QUERY, variables)
-		val data = response.getJSONObject("data").getJSONArray("get_comic_chapterList")
+		val dataObj = response.opt("data")
+		if (dataObj == null || dataObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				"https://$domain/title/$comicId",
+			)
+		}
+		val chapterListObj = dataObj.opt("get_comic_chapterList")
+		if (chapterListObj == null || chapterListObj !is JSONArray) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				"https://$domain/title/$comicId",
+			)
+		}
+		val data = chapterListObj
 
-		return data.mapJSON { item ->
-			val chapter = item.getJSONObject("data")
+		return data.mapJSONNotNull { item ->
+			val chapterData = item.opt("data")
+			if (chapterData !is JSONObject) {
+				return@mapJSONNotNull null // Skip chapters with invalid data
+			}
+			val chapter = chapterData
 			val id = chapter.getString("id")
 			val name = chapter.optString("dname").takeIf { it.isNotBlank() && it != "null" }
 			val title = chapter.optString("title").takeIf { it.isNotBlank() && it != "null" }
@@ -199,7 +257,28 @@ internal abstract class BatoParser(
 			put("id", chapterId)
 		}
 		val response = graphQLQuery("https://$domain/ap2/", CHAPTER_NODE_QUERY, variables)
-		val data = response.getJSONObject("data").getJSONObject("get_chapterNode").getJSONObject("data")
+		val dataObj = response.opt("data")
+		if (dataObj == null || dataObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				"https://$domain/chapter/$chapterId",
+			)
+		}
+		val chapterNodeObj = dataObj.opt("get_chapterNode")
+		if (chapterNodeObj == null || chapterNodeObj !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Server returned invalid response. The site may be under maintenance.",
+				"https://$domain/chapter/$chapterId",
+			)
+		}
+		val chapterData = chapterNodeObj.opt("data")
+		if (chapterData !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Chapter data is unavailable (possibly under review or removed).",
+				"https://$domain/chapter/$chapterId",
+			)
+		}
+		val data = chapterData
 		val urls = data.getJSONObject("imageFile").getJSONArray("urlList")
 
 		return (0 until urls.length()).map { i ->
