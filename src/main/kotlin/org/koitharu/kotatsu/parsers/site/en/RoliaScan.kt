@@ -107,8 +107,7 @@ internal class RoliaScan(context: MangaLoaderContext) : PagedMangaParser(context
     override suspend fun getDetails(manga: Manga): Manga {
         val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
         val statusText = doc.selectFirst("tr:has(th:contains(Status)) > td")?.text().orEmpty()
-        val chapterListUrl = manga.url.toAbsoluteUrl(domain).removeSuffix("/") + "/chapterlist/"
-        val chapterDoc = webClient.httpGet(chapterListUrl).parseHtml()
+        val chapters = loadAllChapters(manga.url)
         return manga.copy(
             tags = doc.select("a[href*=genres]").mapToSet {
                 MangaTag(
@@ -125,21 +124,52 @@ internal class RoliaScan(context: MangaLoaderContext) : PagedMangaParser(context
                 statusText.contains("completed", true) -> MangaState.FINISHED
                 else -> null
             },
-            chapters = chapterDoc.select("a.seenchapter").mapChapters(reversed = true) { i, el ->
+            chapters = chapters
+        )
+    }
+
+    private suspend fun loadAllChapters(mangaUrl: String): List<MangaChapter> {
+        val chapters = mutableListOf<MangaChapter>()
+        var page = 1
+        val baseChapterListUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/chapterlist/"
+        
+        while (true) {
+            val url = if (page == 1) baseChapterListUrl else "$baseChapterListUrl?chap_page=$page"
+            val chapterDoc = webClient.httpGet(url).parseHtml()
+            val pageChapters = chapterDoc.select("a.seenchapter")
+            
+            if (pageChapters.isEmpty()) break
+            
+            pageChapters.forEach { el ->
                 val href = el.attrAsRelativeUrl("href")
-                MangaChapter(
-                    id = generateUid(href),
-                    title = el.text(),
-                    number = i + 1f,
-                    volume = 0,
-                    url = href,
-                    scanlator = null,
-                    uploadDate = 0L,
-                    branch = null,
-                    source = source
+                chapters.add(
+                    MangaChapter(
+                        id = generateUid(href),
+                        title = el.text(),
+                        number = 0f, // Will be set after all chapters are loaded
+                        volume = 0,
+                        url = href,
+                        scanlator = null,
+                        uploadDate = 0L,
+                        branch = null,
+                        source = source
+                    )
                 )
             }
-        )
+            
+            // Check if there's a next page - look for pagination links
+            val hasNextPage = chapterDoc.selectFirst("a.page-link:contains(Next), a[rel=next], a[href*='chap_page=${page + 1}']") != null
+            if (!hasNextPage) break
+            
+            page++
+            // Safety limit to prevent infinite loops
+            if (page > 50) break
+        }
+        
+        // Assign chapter numbers in reverse order
+        return chapters.mapIndexed { index, chapter ->
+            chapter.copy(number = (chapters.size - index).toFloat())
+        }
     }
 
     override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
