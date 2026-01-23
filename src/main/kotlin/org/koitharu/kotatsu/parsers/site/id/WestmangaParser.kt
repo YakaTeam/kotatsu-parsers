@@ -4,6 +4,7 @@ import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
 import org.jsoup.Jsoup
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.core.AbstractMangaParser
@@ -18,6 +19,7 @@ import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
+@Broken("Need some tests + debugging")
 @MangaSourceParser("WESTMANGA", "WestManga", "id")
 internal class WestmangaParser(context: MangaLoaderContext) :
     AbstractMangaParser(context, MangaParserSource.WESTMANGA) {
