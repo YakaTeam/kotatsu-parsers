@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.parsers.site.ar
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import okhttp3.Headers
 import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
@@ -25,6 +26,10 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 		super.onCreateConfig(keys)
 		keys.add(userAgentKey)
 	}
+
+	override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
+		.add("Referer", "https://$domain/")
+		.build()
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
