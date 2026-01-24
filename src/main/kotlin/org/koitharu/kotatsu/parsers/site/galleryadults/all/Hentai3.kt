@@ -22,6 +22,7 @@ internal class Hentai3(context: MangaLoaderContext) :
 	override val selectLanguageChapter = "div.tag-container:contains(Languages) a"
 	override val selectUrlChapter = "#main-cover a"
 	override val idImg = ".js-main-img"
+	override val selectTotalPage = ".js-num-pages, .num-pages"
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = super.filterCapabilities.copy(
