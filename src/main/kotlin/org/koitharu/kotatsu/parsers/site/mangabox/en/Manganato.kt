@@ -1,20 +1,196 @@
 package org.koitharu.kotatsu.parsers.site.mangabox.en
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
-import org.koitharu.kotatsu.parsers.model.MangaParserSource
-import org.koitharu.kotatsu.parsers.site.mangabox.MangaboxParser
+import org.koitharu.kotatsu.parsers.core.PagedMangaParser
+import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
+import org.koitharu.kotatsu.parsers.util.json.mapJSONIndexed
+import java.text.SimpleDateFormat
+import java.util.*
 
 @MangaSourceParser("MANGANATO", "Manganato", "en")
 internal class Manganato(context: MangaLoaderContext) :
-	MangaboxParser(context, MangaParserSource.MANGANATO) {
-	override val configKeyDomain = ConfigKey.Domain(
-		"www.natomanga.com",
-		"www.manganato.gg",
-	)
-	override val otherDomain = "www.manganato.gg"
+	PagedMangaParser(context, MangaParserSource.MANGANATO, 48) {
 
-	override val authorUrl = "/author/story"
-	override val selectPage = ".container-chapter-reader > img"
+	override val configKeyDomain = ConfigKey.Domain("manganato.gg")
+
+	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
+		SortOrder.UPDATED,
+		SortOrder.POPULARITY,
+		SortOrder.NEWEST,
+	)
+
+	override val filterCapabilities = MangaListFilterCapabilities(
+		isSearchSupported = true,
+		isMultipleTagsSupported = false,
+	)
+
+	override suspend fun getFilterOptions() = MangaListFilterOptions(
+		availableTags = fetchAvailableTags(),
+		availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED),
+	)
+
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val url: String
+		val itemSelector: String
+
+		if (!filter.query.isNullOrEmpty()) {
+			// Search mode
+			val query = filter.query.replace(" ", "_")
+			url = "https://$domain/search/story/$query?page=$page"
+			itemSelector = "div.search-story-item"
+		} else {
+			// Browse mode
+			val tag = filter.tags.oneOrThrowIfMany()
+			val state = filter.states.oneOrThrowIfMany()
+
+			val sortParam = when (order) {
+				SortOrder.POPULARITY -> "topview"
+				SortOrder.NEWEST -> "newest"
+				else -> "latest"
+			}
+
+			val stateParam = when (state) {
+				MangaState.ONGOING -> "ongoing"
+				MangaState.FINISHED -> "completed"
+				else -> "all"
+			}
+
+			val tagSlug = tag?.key ?: "all"
+			url = "https://$domain/genre/$tagSlug?type=$sortParam&state=$stateParam&page=$page"
+			itemSelector = "a.list-story-item"
+		}
+
+		val doc = webClient.httpGet(url).parseHtml()
+
+		return doc.select(itemSelector).map { el ->
+			val a = if (el.tagName() == "a") el else el.selectFirstOrThrow("a")
+			val href = a.attrAsRelativeUrl("href")
+			Manga(
+				id = generateUid(href),
+				url = href,
+				publicUrl = a.absUrl("href"),
+				coverUrl = el.selectFirst("img")?.src(),
+				title = a.attr("title").ifEmpty { el.selectFirst("h3")?.text().orEmpty() },
+				altTitles = emptySet(),
+				rating = RATING_UNKNOWN,
+				tags = emptySet(),
+				authors = emptySet(),
+				state = null,
+				source = source,
+				contentRating = null,
+			)
+		}
+	}
+
+	private suspend fun fetchAvailableTags(): Set<MangaTag> {
+		val doc = webClient.httpGet("https://$domain/").parseHtml()
+		return doc.select("a[href*='/genre/']").mapNotNullToSet { a ->
+			val href = a.attr("href")
+			val key = href.substringAfterLast("/genre/").substringBefore("?").substringBefore("/")
+			if (key.isEmpty() || key == "all") return@mapNotNullToSet null
+			MangaTag(
+				key = key,
+				title = a.text().trim().toTitleCase(),
+				source = source,
+			)
+		}
+	}
+
+	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
+		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
+
+		val slug = manga.url.removeSuffix("/").substringAfterLast("/")
+		val chaptersDeferred = async { fetchChapters(slug) }
+
+		// Description is in #contentBox
+		val desc = doc.selectFirst("#contentBox")?.html()
+			?.replace(Regex("<[^>]*>"), "")
+			?.replace("&amp;", "&")
+			?.substringAfter("summary:")
+			?.trim()
+
+		// Try to get state from page if available
+		val stateText = doc.selectFirst(".info-status")?.text()?.lowercase()
+		val state = when {
+			stateText?.contains("ongoing") == true -> MangaState.ONGOING
+			stateText?.contains("completed") == true -> MangaState.FINISHED
+			else -> null
+		}
+
+		// Get tags from page
+		val tags = doc.select("a[href*='/genre/']").mapNotNullToSet { a ->
+			val href = a.attr("href")
+			if (!href.contains("/genre/")) return@mapNotNullToSet null
+			val key = href.substringAfterLast("/genre/").substringBefore("?").substringBefore("/")
+			if (key.isEmpty() || key == "all") return@mapNotNullToSet null
+			MangaTag(
+				key = key,
+				title = a.text().trim().toTitleCase(),
+				source = source,
+			)
+		}
+
+		// Get authors
+		val authors = doc.select("a[href*='/author/']").mapToSet { it.text().trim() }
+
+		manga.copy(
+			description = desc,
+			state = state ?: manga.state,
+			tags = tags,
+			authors = authors,
+			chapters = chaptersDeferred.await(),
+		)
+	}
+
+	private suspend fun fetchChapters(slug: String): List<MangaChapter> {
+		val url = "https://$domain/api/manga/$slug/chapters"
+		val json = webClient.httpGet(url).parseJson()
+
+		if (!json.optBoolean("success", false)) {
+			return emptyList()
+		}
+
+		val data = json.getJSONObject("data")
+		val chaptersArray = data.getJSONArray("chapters")
+		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSSSS'Z'", Locale.US)
+		dateFormat.timeZone = TimeZone.getTimeZone("UTC")
+
+		return chaptersArray.mapJSONIndexed { i, item ->
+			val chapterSlug = item.getString("chapter_slug")
+			val chapterNum = item.optDouble("chapter_num", (i + 1).toDouble()).toFloat()
+			val chapterName = item.getStringOrNull("chapter_name") ?: "Chapter $chapterNum"
+			val updatedAt = item.getStringOrNull("updated_at") ?: ""
+
+			MangaChapter(
+				id = generateUid(chapterSlug),
+				title = chapterName,
+				number = chapterNum,
+				volume = 0,
+				url = "/manga/$slug/$chapterSlug",
+				uploadDate = dateFormat.parseSafe(updatedAt),
+				source = source,
+				scanlator = null,
+				branch = null,
+			)
+		}.reversed() // API returns newest first, we want oldest first
+	}
+
+	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
+		return doc.select(".container-chapter-reader img").map { img ->
+			val url = img.requireSrc().toRelativeUrl(domain)
+			MangaPage(
+				id = generateUid(url),
+				url = url,
+				preview = null,
+				source = source,
+			)
+		}
+	}
 }
