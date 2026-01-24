@@ -29,6 +29,7 @@ import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.toTitleCase
@@ -122,8 +123,13 @@ internal abstract class BatoParser(
 		val data = response.getJSONObject("data").getJSONObject("get_comic_browse")
 		val items = data.getJSONArray("items")
 
-		return items.mapJSON { item ->
-			parseManga(item.getJSONObject("data"))
+		return items.mapJSONNotNull { item ->
+			val dataField = item.opt("data")
+			if (dataField is JSONObject) {
+				parseManga(dataField)
+			} else {
+				null // Skip items with invalid data (e.g., "Under" status)
+			}
 		}
 	}
 
@@ -132,7 +138,15 @@ internal abstract class BatoParser(
 			put("id", manga.url)
 		}
 		val response = graphQLQuery("https://$domain/ap2/", COMIC_NODE_QUERY, variables)
-		val comic = response.getJSONObject("data").getJSONObject("get_comicNode").getJSONObject("data")
+		val comicNode = response.getJSONObject("data").getJSONObject("get_comicNode")
+		val comicData = comicNode.opt("data")
+		if (comicData !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Manga data is unavailable (possibly under review or removed).",
+				manga.publicUrl,
+			)
+		}
+		val comic = comicData
 
 		val authors = comic.optJSONArray("authors")?.asTypedList<String>()?.toSet() ?: emptySet()
 		val genres = comic.optJSONArray("genres")?.asTypedList<String>()?.mapToSet { key ->
@@ -158,8 +172,12 @@ internal abstract class BatoParser(
 		val response = graphQLQuery("https://$domain/ap2/", CHAPTER_LIST_QUERY, variables)
 		val data = response.getJSONObject("data").getJSONArray("get_comic_chapterList")
 
-		return data.mapJSON { item ->
-			val chapter = item.getJSONObject("data")
+		return data.mapJSONNotNull { item ->
+			val chapterData = item.opt("data")
+			if (chapterData !is JSONObject) {
+				return@mapJSONNotNull null // Skip chapters with invalid data
+			}
+			val chapter = chapterData
 			val id = chapter.getString("id")
 			val name = chapter.optString("dname").takeIf { it.isNotBlank() && it != "null" }
 			val title = chapter.optString("title").takeIf { it.isNotBlank() && it != "null" }
@@ -199,7 +217,15 @@ internal abstract class BatoParser(
 			put("id", chapterId)
 		}
 		val response = graphQLQuery("https://$domain/ap2/", CHAPTER_NODE_QUERY, variables)
-		val data = response.getJSONObject("data").getJSONObject("get_chapterNode").getJSONObject("data")
+		val chapterNode = response.getJSONObject("data").getJSONObject("get_chapterNode")
+		val chapterData = chapterNode.opt("data")
+		if (chapterData !is JSONObject) {
+			throw org.koitharu.kotatsu.parsers.exception.ParseException(
+				"Chapter data is unavailable (possibly under review or removed).",
+				"https://$domain/chapter/$chapterId",
+			)
+		}
+		val data = chapterData
 		val urls = data.getJSONObject("imageFile").getJSONArray("urlList")
 
 		return (0 until urls.length()).map { i ->
