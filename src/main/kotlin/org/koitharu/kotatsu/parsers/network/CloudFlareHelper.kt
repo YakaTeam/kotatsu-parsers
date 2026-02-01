@@ -30,8 +30,18 @@ public object CloudFlareHelper {
             content.selectFirst("h2[data-translate=\"blocked_why_headline\"]") != null -> PROTECTION_BLOCKED
 			content.getElementById("challenge-error-title") != null ||
 				content.getElementById("challenge-error-text") != null ||
-				content.selectFirst("form#challenge-form") != null -> PROTECTION_CAPTCHA
-            else -> PROTECTION_NOT_DETECTED
+				content.selectFirst("form#challenge-form") != null ||
+				content.selectFirst("iframe[src*='challenges.cloudflare.com']") != null ||
+				content.selectFirst("div#turnstile-wrapper") != null ||
+				content.selectFirst("div.cf-turnstile") != null ||
+				content.getElementById("cf-wrapper") != null ||
+				content.title() == "Just a moment..." ||
+				content.title() == "Attention Required! | Cloudflare" ||
+				content.body().text().let { text ->
+					text.contains("Verify you are human") ||
+					text.contains("needs to review the security of your connection")
+				} -> PROTECTION_CAPTCHA
+			else -> PROTECTION_NOT_DETECTED
         }
     }
 
