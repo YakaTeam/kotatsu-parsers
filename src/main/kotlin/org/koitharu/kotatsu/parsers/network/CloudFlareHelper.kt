@@ -34,13 +34,14 @@ public object CloudFlareHelper {
 				content.selectFirst("iframe[src*='challenges.cloudflare.com']") != null ||
 				content.selectFirst("div#turnstile-wrapper") != null ||
 				content.selectFirst("div.cf-turnstile") != null ||
-				                               content.getElementById("cf-wrapper") != null ||
-				                               content.title() == "Just a moment..." ||
-				                               content.title() == "Attention Required! | Cloudflare" ||
-				                               content.body().text().let { text ->
-				                                   text.contains("Verify you are human") ||
-				                                           text.contains("needs to review the security of your connection")
-				                               } -> PROTECTION_CAPTCHA            else -> PROTECTION_NOT_DETECTED
+				content.getElementById("cf-wrapper") != null ||
+				content.title() == "Just a moment..." ||
+				content.title() == "Attention Required! | Cloudflare" ||
+				content.body().text().let { text ->
+					text.contains("Verify you are human") ||
+					text.contains("needs to review the security of your connection")
+				} -> PROTECTION_CAPTCHA
+			else -> PROTECTION_NOT_DETECTED
         }
     }
 
