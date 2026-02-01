@@ -1,5 +1,6 @@
 package org.koitharu.kotatsu.parsers.site.mangareader.id
 
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -18,19 +19,22 @@ import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.asTypedList
+import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.util.EnumSet
 
+@Broken("Missing some filters")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.KOMIKCAST, 10) {
 
-	override val configKeyDomain = ConfigKey.Domain("v1.komikcast.fit")
-
 	private val apiDomain = "be.komikcast.fit"
+	override val configKeyDomain = ConfigKey.Domain("v1.komikcast.fit")
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.UPDATED,
@@ -40,14 +44,15 @@ internal class Komikcast(context: MangaLoaderContext) :
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
 			isSearchSupported = true,
-			isMultipleTagsSupported = false,
-			isTagsExclusionSupported = false,
 		)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
 			availableTags = fetchTags(),
-			availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED),
+			availableStates = EnumSet.of(
+				MangaState.ONGOING,
+				MangaState.FINISHED,
+			),
 			availableContentTypes = EnumSet.of(
 				ContentType.MANGA,
 				ContentType.MANHWA,
@@ -89,7 +94,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 				title = seriesData.getString("title"),
 				altTitles = setOfNotNull(seriesData.getStringOrNull("nativeTitle")),
 				coverUrl = coverUrl,
-				rating = seriesData.optDouble("rating", RATING_UNKNOWN.toDouble()).toFloat() / 10f,
+				rating = seriesData.getFloatOrDefault("rating", RATING_UNKNOWN) / 10f,
 				contentRating = ContentRating.SAFE,
 				authors = setOfNotNull(seriesData.getStringOrNull("author")),
 				state = when (seriesData.getStringOrNull("status")?.lowercase()) {
@@ -111,16 +116,22 @@ internal class Komikcast(context: MangaLoaderContext) :
 		val data = response.getJSONObject("data")
 		val seriesData = data.getJSONObject("data")
 
+		val tags = seriesData.getJSONArray("genres").mapJSONNotNull {
+			val genreData = it.getJSONObject("data")
+			MangaTag(
+				key = it.getInt("id").toString(),
+				title = genreData.getString("name"),
+				source = source,
+			)
+		}.toSet()
+
 		// Get chapters
 		val chaptersUrl = "https://$apiDomain/series/$slug/chapters"
 		val chaptersResponse = webClient.httpGet(chaptersUrl).parseJson()
-		val chaptersData = chaptersResponse.getJSONArray("data")
-
-		val chapters = chaptersData.mapJSON { jo ->
+		val chapters = chaptersResponse.getJSONArray("data").mapJSON { jo ->
 			val chapterData = jo.getJSONObject("data")
 			val index = chapterData.getInt("index")
 			val chapterUrl = "/series/$slug/chapters/$index"
-
 			MangaChapter(
 				id = generateUid(chapterUrl),
 				url = chapterUrl,
@@ -132,22 +143,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 				branch = null,
 				source = source,
 			)
-		}.sortedBy { it.number }
-
-		// Parse genres
-		val genresArray = seriesData.optJSONArray("genres")
-		val tags = if (genresArray != null) {
-			genresArray.mapJSON { genreObj ->
-				val genreData = genreObj.getJSONObject("data")
-				MangaTag(
-					key = genreObj.getInt("id").toString(),
-					title = genreData.getString("name"),
-					source = source,
-				)
-			}.toSet()
-		} else {
-			emptySet()
-		}
+		}.sortedBy { it.number } // ?
 
 		return manga.copy(
 			title = seriesData.getString("title"),
@@ -168,22 +164,13 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		// URL format: /series/{slug}/chapters/{index}
-		val parts = chapter.url.split("/")
-		val slug = parts[2]
-		val index = parts[4]
-
-		val url = "https://$apiDomain/series/$slug/chapters/$index"
+		val url = "https://$apiDomain$chapter.url"
 		val response = webClient.httpGet(url).parseJson()
-		val data = response.getJSONObject("data")
-		val chapterData = data.getJSONObject("data")
-		val imagesArray = chapterData.getJSONArray("images")
-
-		return (0 until imagesArray.length()).map { i ->
-			val imageUrl = imagesArray.getString(i)
+		val data = response.getJSONObject("data").getJSONObject("data")
+		return data.getJSONArray("images").asTypedList<String>().map {
 			MangaPage(
-				id = generateUid(imageUrl),
-				url = imageUrl,
+				id = generateUid(it),
+				url = it,
 				preview = null,
 				source = source,
 			)
@@ -191,21 +178,15 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	private suspend fun fetchTags(): Set<MangaTag> {
-		val url = "https://$apiDomain/genres"
-		return try {
-			val response = webClient.httpGet(url).parseJson()
-			val data = response.getJSONArray("data")
-			data.mapJSON { jo ->
-				val genreData = jo.getJSONObject("data")
-				MangaTag(
-					key = jo.getInt("id").toString(),
-					title = genreData.getString("name"),
-					source = source,
-				)
-			}.toSet()
-		} catch (e: Exception) {
-			emptySet()
-		}
+		val response = webClient.httpGet("https://$apiDomain/genres").parseJson()
+		return response.getJSONArray("data").mapJSON { jo ->
+			val genreData = jo.getJSONObject("data")
+			MangaTag(
+				key = jo.getInt("id").toString(),
+				title = genreData.getString("name"),
+				source = source,
+			)
+		}.toSet()
 	}
 
 	private fun parseDate(dateString: String?): Long {
@@ -213,8 +194,8 @@ internal class Komikcast(context: MangaLoaderContext) :
 		return try {
 			// Format: 2026-02-01T01:23:15.843+07:00
 			java.time.OffsetDateTime.parse(dateString).toInstant().toEpochMilli()
-		} catch (e: Exception) {
-			0
+		} catch (_: Exception) {
+			0L
 		}
 	}
 }
