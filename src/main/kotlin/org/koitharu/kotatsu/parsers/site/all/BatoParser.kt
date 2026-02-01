@@ -119,7 +119,14 @@ internal abstract class BatoParser(
 		}
 
 		val response = graphQLQuery("https://$domain/ap2/", COMIC_SEARCH_QUERY, variables)
-		val data = response.getJSONObject("data").getJSONObject("get_comic_browse")
+
+		// prevent e
+		val data = try {
+			response.getJSONObject("data").getJSONObject("get_comic_browse")
+		} catch (_: Exception) {
+			return emptyList()
+		}
+
 		val items = data.getJSONArray("items")
 
 		return items.mapJSON { item ->

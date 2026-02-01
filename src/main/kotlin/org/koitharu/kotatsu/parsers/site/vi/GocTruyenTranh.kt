@@ -115,7 +115,13 @@ internal class GocTruyenTranh(context: MangaLoaderContext) :
 		}
 
 		val json = webClient.httpGet(url).parseJson()
-		val data = json.getJSONObject("comics").getJSONArray("data")
+
+		// prevent e
+		val data = try {
+			json.getJSONObject("comics").getJSONArray("data")
+		} catch (_: Exception) {
+			return emptyList()
+		}
 
 		return List(data.length()) { i ->
 			val item = data.getJSONObject(i)

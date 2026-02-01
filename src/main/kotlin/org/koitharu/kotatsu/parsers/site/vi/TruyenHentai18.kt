@@ -57,7 +57,7 @@ internal class TruyenHentai18(context: MangaLoaderContext):
 				buildString {
 					append("$apiSuffix/posts")
 					append("?language=vi")
-					
+
 					append("&order=")
 					append(
 						when (order) {
@@ -176,7 +176,7 @@ internal class TruyenHentai18(context: MangaLoaderContext):
 		return manga.copy(
 			chapters = doc.select("div.grid.grid-cols-1.md\\:grid-cols-2.gap-4 a.block")
 				.mapChapters(reversed = false) { i, e ->
-					val name = e.selectFirst("span.truncate")?.text() ?: e.attr("title") ?: ""
+					val name = e.selectFirst("span.truncate")?.text() ?: e.attr("title")
 					val href = e.selectFirst("a")?.attrAsRelativeUrl("href") ?: ""
 					val dateText = e.selectFirst("div.text-xs.text-gray-500")?.text()
 					MangaChapter(

@@ -19,7 +19,7 @@ import java.util.*
 internal class DamCoNuong(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.DAMCONUONG, 30) {
 
-	override val configKeyDomain = ConfigKey.Domain("damconuong.onl")
+	override val configKeyDomain = ConfigKey.Domain("damconuong.app")
 
 	private val availableTags = suspendLazy(initializer = ::fetchTags)
 
@@ -196,22 +196,6 @@ internal class DamCoNuong(context: MangaLoaderContext) :
         }
     }
 
-    private fun resolveImageUrl(img: Element, chapter: MangaChapter): String {
-        val attrs = listOf("src", "data-src", "data-original-src")
-        for (attr in attrs) {
-            val value = img.attr(attr)
-            if (value.isNotBlank()) {
-                val url = value.trim()
-                if (!url.endsWith(".gif", ignoreCase = true)) {
-                    return url
-                }
-            }
-        }
-
-        // throw e
-        throw ParseException("Image src not found (or only .gif found)!", chapter.url)
-    }
-
     private fun parseChapterDate(date: String?): Long {
 		if (date == null) return 0
 		return when {
@@ -252,5 +236,19 @@ internal class DamCoNuong(context: MangaLoaderContext) :
 					source = source,
 				)
 			}
+	}
+
+	private fun resolveImageUrl(img: Element, chapter: MangaChapter): String {
+		val src = img.requireSrc()
+		if (isValidImage(src)) return src
+
+		// throw e if null
+		throw ParseException("Image src not found (or only .gif found)!", chapter.url)
+	}
+
+	private fun isValidImage(url: String): Boolean {
+		return url.isNotBlank()
+			&& !url.endsWith(".gif", ignoreCase = true)
+			&& url.startsWith("https")
 	}
 }

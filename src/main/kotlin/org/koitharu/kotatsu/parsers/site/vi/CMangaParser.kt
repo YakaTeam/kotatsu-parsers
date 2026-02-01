@@ -22,7 +22,7 @@ private const val PAGE_SIZE = 20
 internal class CMangaParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.CMANGA, PAGE_SIZE), MangaParserAuthProvider {
 
-	override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("cmangax9.com")
+	override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("cmangax12.com")
 
 	override val availableSortOrders: Set<SortOrder>
 		get() = EnumSet.of(
@@ -191,11 +191,21 @@ internal class CMangaParser(context: MangaLoaderContext) :
 		val pageResponse = webClient
 			.httpGet("/api/chapter_image?chapter=${chapter.url.substringAfterLast('-')}".toAbsoluteUrl(domain))
 			.parseJson()
+
 		if (pageResponse.isLocked()) {
 			throw IllegalStateException("This chapter is locked, you would need to buy it from website")
 		}
 
-		return pageResponse.getJSONObject("data").getJSONArray("image").asTypedList<String>().map {
+		// trying to block ads page
+		return pageResponse.getJSONObject("data")
+			.getJSONArray("image").asTypedList<String>()
+			.filterNot {
+				it.contains("img.cmangapi.com") &&
+				it.contains("index.php") &&
+				it.contains("ciphertext") &&
+				it.contains("salt") &&
+				it.contains("iv") && it.contains("?v=12")
+			}.map {
 			MangaPage(
 				id = generateUid(it),
 				url = it,
