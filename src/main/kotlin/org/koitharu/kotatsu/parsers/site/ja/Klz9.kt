@@ -165,7 +165,7 @@ internal class Klz9(context: MangaLoaderContext) :
     private fun parseChapters(json: JSONObject): List<MangaChapter> {
 		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
         	dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-		return json.getJSONArray("chapters").mapChapters(reversed = true) { i, item ->
+		return json.getJSONArray("chapters").mapChapters { i, item ->
 			val id = item.getLong("id")
 			val chapterNum = item.optDouble("chapter", (i + 1).toDouble()).toFloat()
 			val title = item.optString("name").takeIf { !it.isNullOrEmpty() && it != "null" }
