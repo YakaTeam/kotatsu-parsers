@@ -5,6 +5,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONObject
+import org.jsoup.Jsoup
 import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -187,32 +188,8 @@ internal abstract class LikeMangaParser(
 				"https://$domain/?act=ajax&code=load_list_chapter&manga_id=$mangaId&page_num=$page&chap_id=0&keyword=",
 			)
 				.parseJson().getString("list_chap")
-		val chapters = json.split("wp-manga-chapter").drop(1)
-		return chapters.map { chapter ->
-			val url = chapter.substringAfter("href=\"").substringBefore("\">")
-			val name = chapter.substringAfter("/\">").substringBefore("</a>")
-			val chapNum = url.substringAfter("chapter-").substringBefore("-")
-			val d = chapter.substringAfter("<i>").substringBefore("</i>")
-			val dateText = if (d.contains("New")) {
-				"today"
-			} else {
-				d
-			}
-			MangaChapter(
-				id = generateUid(url),
-				title = name,
-				number = chapNum.toFloatOrNull() ?: 0f,
-				volume = 0,
-				url = url,
-				scanlator = null,
-				uploadDate = parseChapterDate(
-					dateFormat,
-					dateText,
-				),
-				branch = null,
-				source = source,
-			)
-		}
+		val doc = Jsoup.parse(json)
+		return parseChapters(doc)
 	}
 
 	private val dateFormat = SimpleDateFormat("MMMM d, yyyy", Locale.ENGLISH)
@@ -230,7 +207,7 @@ internal abstract class LikeMangaParser(
 				MangaChapter(
 					id = generateUid(url),
 					title = li.selectFirstOrThrow("a").text(),
-					number = chapNum.toFloat(),
+					number = chapNum.toFloatOrNull() ?: 0f,
 					volume = 0,
 					url = url,
 					scanlator = null,

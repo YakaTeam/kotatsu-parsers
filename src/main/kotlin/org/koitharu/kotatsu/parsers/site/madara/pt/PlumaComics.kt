@@ -7,6 +7,6 @@ import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
 @MangaSourceParser("PLUMACOMICS", "PlumaComics", "pt")
 internal class PlumaComics(context: MangaLoaderContext) :
-	MadaraParser(context, MangaParserSource.PLUMACOMICS, "plumacomics.cloud") {
+	MadaraParser(context, MangaParserSource.PLUMACOMICS, "plumacomics.com") {
 	override val datePattern: String = "dd 'de' MMMMM 'de' yyyy"
 }

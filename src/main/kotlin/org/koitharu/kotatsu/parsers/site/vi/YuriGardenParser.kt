@@ -218,6 +218,7 @@ internal abstract class YuriGardenParser(
 			altTitles = altTitles,
 			authors = authors,
             description = description,
+			// Fix issue with manga id 855
 			chapters = chaptersDeferred.await().mapChapters { _, jo ->
 				val chapId = jo.getLong("id")
 				MangaChapter(
@@ -231,7 +232,7 @@ internal abstract class YuriGardenParser(
 					branch = null,
 					source = source,
 				)
-			},
+			}.sortedBy { it.number },
 		)
 	}
 
