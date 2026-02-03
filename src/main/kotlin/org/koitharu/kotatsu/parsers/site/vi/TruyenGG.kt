@@ -12,7 +12,7 @@ import java.util.*
 @MangaSourceParser("TRUYENGG", "FoxTruyen", "vi")
 internal class TruyenGG(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.TRUYENGG, 42) {
 
-	override val configKeyDomain = ConfigKey.Domain("foxtruyen.com")
+	override val configKeyDomain = ConfigKey.Domain("foxtruyen2.com")
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.NEWEST,
@@ -201,4 +201,4 @@ internal class TruyenGG(context: MangaLoaderContext) : PagedMangaParser(context,
 			)
 		}
 	}
-} 
+}
