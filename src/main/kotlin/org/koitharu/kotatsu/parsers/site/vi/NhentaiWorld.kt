@@ -22,7 +22,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.NHENTAIWORLD, 24) {
 
     private val apiDomain = "nhentaiclub.cyou"
-    override val configKeyDomain = ConfigKey.Domain("nhentaiclub.icu")
+    override val configKeyDomain = ConfigKey.Domain("nhentaiclub.space")
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)

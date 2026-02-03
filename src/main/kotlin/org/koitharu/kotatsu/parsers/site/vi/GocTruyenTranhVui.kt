@@ -1,9 +1,6 @@
 package org.koitharu.kotatsu.parsers.site.vi
 
 import androidx.collection.arraySetOf
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -15,22 +12,30 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaParserAuthProvider
 import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
+import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import java.util.*
 import kotlin.collections.map
+import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("GOCTRUYENTRANHVUI", "Góc Truyện Tranh Vui", "vi")
 internal class GocTruyenTranhVui(context: MangaLoaderContext):
     PagedMangaParser(context, MangaParserSource.GOCTRUYENTRANHVUI, 50), MangaParserAuthProvider {
 
-    override val configKeyDomain = ConfigKey.Domain("goctruyentranhvui17.com")
+	override val webClient: WebClient by lazy {
+		val newHttpClient = context.httpClient.newBuilder()
+			.rateLimit(3, 1.seconds)
+			.build()
+
+		OkHttpWebClient(newHttpClient, source)
+	}
+
+    override val configKeyDomain = ConfigKey.Domain("goctruyentranhvui19.com")
 	override val userAgentKey = ConfigKey.UserAgent(
 		"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.46 Mobile Safari/537.36",
 	)
     private val apiUrl by lazy { "https://$domain/api/v2" }
-
-    private val requestMutex = Mutex()
-    private var lastRequestTime = 0L
 	private var userToken: String = ""
 
 	private fun apiHeaders(): Headers = Headers.Builder()
@@ -107,7 +112,6 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        enforceRateLimit()
         val url = buildString {
             append(apiUrl)
             append("/search?p=${page - 1}")
@@ -179,7 +183,6 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
         val slug = manga.url.substringAfter(':')
 
         val chapters = try {
-            enforceRateLimit()
             val chapterApiUrl = "https://$domain/api/comic/$comicId/chapter?limit=-1"
 
 			// Auth before send request for chapters
@@ -214,9 +217,7 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
             emptyList()
         }.reversed()
 
-        enforceRateLimit()
         val doc = webClient.httpGet(manga.publicUrl).parseHtml()
-
         val detailTags = doc.select(".group-content > .v-chip-link").mapNotNullTo(mutableSetOf()) { el ->
             availableTags().find { it.title.equals(el.text(), ignoreCase = true) }?.let {
                 MangaTag(key = it.key, title = it.title, source = source)
@@ -268,17 +269,6 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
 			)
 		}
 	}
-
-    private suspend fun enforceRateLimit() {
-        requestMutex.withLock {
-            val currentTime = System.currentTimeMillis()
-            val timeSinceLastRequest = currentTime - lastRequestTime
-            if (timeSinceLastRequest < REQUEST_DELAY_MS) { // Vẫn truy cập được REQUEST_DELAY_MS
-                delay(REQUEST_DELAY_MS - timeSinceLastRequest)
-            }
-            lastRequestTime = System.currentTimeMillis()
-        }
-    }
 
 	private suspend fun loadAuthToken(domain: String): String {
 		return WebViewHelper(context)
@@ -336,8 +326,4 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
         MangaTag("Leo Tháp", "LTT", source),
         MangaTag("Nấu Ăn", "COO", source)
     )
-
-    companion object {
-        private const val REQUEST_DELAY_MS = 350L
-    }
 }
