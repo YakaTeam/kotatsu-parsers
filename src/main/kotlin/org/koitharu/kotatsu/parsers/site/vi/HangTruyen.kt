@@ -14,7 +14,7 @@ import java.util.*
 @MangaSourceParser("HANGTRUYEN", "Hang Truyện", "vi")
 internal class HangTruyen(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.HANGTRUYEN, 10) {
 
-	override val configKeyDomain = ConfigKey.Domain("hangtruyen.page")
+	override val configKeyDomain = ConfigKey.Domain("hangtruyen.app")
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
         SortOrder.UPDATED,
@@ -92,7 +92,7 @@ internal class HangTruyen(context: MangaLoaderContext) : PagedMangaParser(contex
             val ratingText = div.selectFirst("span")?.text()?.toFloatOrNull() ?: 0f
             val rating = (ratingText / 5f) * 5f
             val img = div.selectFirst("img.lzl")?.let { img ->
-                img.attr("data-src").takeUnless { it.isNullOrEmpty() } ?: img.attr("data-original")
+                img.attr("data-src").takeUnless { it.isEmpty() } ?: img.attr("data-original")
             }
             val title = div.selectFirst("h3.m-name a")?.text().orEmpty()
             Manga(

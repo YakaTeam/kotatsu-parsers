@@ -4,6 +4,7 @@ import androidx.collection.scatterSetOf
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import org.json.JSONObject
+import org.jsoup.HttpStatusException
 import org.jsoup.nodes.Document
 import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -14,6 +15,7 @@ import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import java.net.HttpURLConnection
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
@@ -329,7 +331,16 @@ internal abstract class MadaraParser(
 					else -> {}
 				}
 			}
-			return parseMangaList(webClient.httpGet(url).parseHtml())
+			val html = try {
+				webClient.httpGet(url).parseHtml()
+			} catch (e: HttpStatusException) {
+				if (e.statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+					return emptyList()
+				} else {
+					throw ParseException("Can't fetch data from source!", url)
+				}
+			}
+			return parseMangaList(html)
 		} else {
 
 			val payload = createRequestTemplate()
@@ -477,12 +488,19 @@ internal abstract class MadaraParser(
 					}
 			}
 
-			return parseMangaList(
+			val html = try {
 				webClient.httpPost(
 					"https://$domain/wp-admin/admin-ajax.php",
 					payload,
-				).parseHtml(),
-			)
+				).parseHtml()
+			} catch (e: HttpStatusException) {
+				if (e.statusCode == HttpURLConnection.HTTP_INTERNAL_ERROR) {
+					return emptyList()
+				} else {
+					throw ParseException("Can't fetch data from source!", domain)
+				}
+			}
+			return parseMangaList(html)
 		}
 	}
 
