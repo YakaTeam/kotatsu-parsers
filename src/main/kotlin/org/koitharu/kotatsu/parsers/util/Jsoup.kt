@@ -167,6 +167,7 @@ public fun Element.src(
 		"data-src",
 		"data-cfsrc",
 		"data-original",
+		"data-original-src",
 		"data-cdn",
 		"data-sizes",
 		"data-lazy-src",
