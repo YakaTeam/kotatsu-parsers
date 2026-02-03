@@ -33,7 +33,7 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 
 	override val webClient: WebClient by lazy {
 		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(50, 60.seconds)
+			.rateLimit(30, 60.seconds)
 			.build()
 
 		OkHttpWebClient(newHttpClient, source)
