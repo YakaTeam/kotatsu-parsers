@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.parsers.network.utils
 
 import okhttp3.Call
+import org.koitharu.kotatsu.parsers.exception.TooManyRequestExceptions
 import java.io.IOException
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
@@ -12,20 +13,20 @@ public class RateLimiter(
 	private val timestamps = ArrayDeque<Long>(permits)
 	private val lock = ReentrantLock(true) // fair lock
 
-	public fun acquire(call: Call): Long = lock.withLock {
+	public fun acquire(call: Call, url: String = ""): Long = lock.withLock {
 		val now = System.currentTimeMillis()
 
 		while (timestamps.isNotEmpty() && now - timestamps.first() >= periodMs) {
 			timestamps.removeFirst()
 		}
 
-		while (timestamps.size >= permits) {
+		if (timestamps.size >= permits) {
 			if (call.isCanceled()) throw IOException("Canceled")
 			val oldestRequest = timestamps.first()
 			val waitTime = periodMs - (now - oldestRequest)
 
 			if (waitTime > 0) {
-				Thread.sleep(waitTime)
+				throw TooManyRequestExceptions(url, waitTime)
 			}
 
 			val current = System.currentTimeMillis()

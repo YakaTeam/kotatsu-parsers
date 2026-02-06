@@ -4,6 +4,7 @@ import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import org.koitharu.kotatsu.parsers.network.RateLimitHelper
+import org.koitharu.kotatsu.parsers.exception.TooManyRequestExceptions
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.seconds
 
@@ -16,6 +17,7 @@ import kotlin.time.Duration.Companion.seconds
  *
  * @param permits [Int]     Number of requests allowed within a period of units.
  * @param period [Duration] The limiting duration. Defaults to 1.seconds.
+ * @throws TooManyRequestExceptions when rate limit is exceeded with retry delay information
  */
 public fun OkHttpClient.Builder.rateLimit(
 	permits: Int,
@@ -32,6 +34,7 @@ public fun OkHttpClient.Builder.rateLimit(
  * @param url [String]      The url host that this interceptor should handle. Will get url's host by using HttpUrl.host()
  * @param permits [Int]     Number of requests allowed within a period of units.
  * @param period [Duration] The limiting duration. Defaults to 1.seconds.
+ * @throws TooManyRequestExceptions when rate limit is exceeded with retry delay information
  */
 public fun OkHttpClient.Builder.rateLimit(
 	url: String,
@@ -49,6 +52,7 @@ public fun OkHttpClient.Builder.rateLimit(
  * @param httpUrl [HttpUrl] The url host that this interceptor should handle. Will get url's host by using HttpUrl.host()
  * @param permits [Int]     Number of requests allowed within a period of units.
  * @param period [Duration] The limiting duration. Defaults to 1.seconds.
+ * @throws TooManyRequestExceptions when rate limit is exceeded with retry delay information
  */
 public fun OkHttpClient.Builder.rateLimit(
 	httpUrl: HttpUrl,
@@ -66,6 +70,7 @@ public fun OkHttpClient.Builder.rateLimit(
  * @param permits [Int]     Number of requests allowed within a period of units.
  * @param period [Duration] The limiting duration. Defaults to 1.seconds.
  * @param shouldLimit       A predicate to determine whether the rate limit should apply to a given request.
+ * @throws TooManyRequestExceptions when rate limit is exceeded with retry delay information
  */
 public fun OkHttpClient.Builder.rateLimit(
 	permits: Int,

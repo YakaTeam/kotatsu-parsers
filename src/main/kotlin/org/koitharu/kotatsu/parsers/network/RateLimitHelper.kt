@@ -26,7 +26,10 @@ public class RateLimitHelper(
 			RateLimiter(permits, period.inWholeMilliseconds)
 		}
 
-		val timestamp = limiter.acquire(chain.call())
+		val timestamp = limiter.acquire(
+			call = chain.call(),
+			url = request.url.toString(),
+		)
 		val response = chain.proceed(request)
 
 		if (response.networkResponse == null) {

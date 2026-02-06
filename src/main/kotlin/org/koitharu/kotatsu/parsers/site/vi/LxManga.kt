@@ -1,6 +1,9 @@
 package org.koitharu.kotatsu.parsers.site.vi
 
 import okhttp3.Headers
+import okhttp3.HttpUrl.Companion.toHttpUrl
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -211,14 +214,32 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 				) {
 					MangaPage(
 						id = generateUid(url),
-						url = url,
+						url = CHAPTER_FRAGMENT + url,
 						preview = null,
 						source = source,
 					)
 				} else {
-					throw Exception("Bạn cần phải nạp LXCoin mua code VIP để xem nội dung này trên trang Web!")
+					throw IllegalArgumentException("Bạn cần nạp LXCoin để xem nội dung này trên trang Web!")
 				}
 			}
+	}
+
+	override fun intercept(chain: Interceptor.Chain): Response {
+		val request = chain.request()
+		val url = request.url.toString()
+
+		return if (url.startsWith(CHAPTER_FRAGMENT)) {
+			val realUrl = url.removePrefix(CHAPTER_FRAGMENT).toHttpUrl()
+			val newRequest = request.newBuilder()
+				.url(realUrl)
+				.header("Origin", "https://$domain")
+				.header("Token", TOKEN_KEY)
+				.build()
+
+			chain.proceed(newRequest)
+		} else {
+			chain.proceed(request)
+		}
 	}
 
 	private suspend fun availableTags(): Set<MangaTag> {
@@ -233,5 +254,10 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 				source = source,
 			)
 		}.toSet()
+	}
+
+	private companion object {
+		const val CHAPTER_FRAGMENT = "image://"
+		const val TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
 	}
 }

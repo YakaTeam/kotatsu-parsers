@@ -35,7 +35,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 	override val webClient: WebClient by lazy {
 		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(15, 60.seconds)
+			.rateLimit(5, 1.seconds)
 			.build()
 
 		OkHttpWebClient(newHttpClient, source)
