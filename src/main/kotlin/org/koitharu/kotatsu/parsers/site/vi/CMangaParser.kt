@@ -63,7 +63,6 @@ internal class CMangaParser(context: MangaLoaderContext) :
 		}
 
 		val info = JSONObject(rawCookie).getJSONObject("info")
-
 		if (info.isEmpty) {
 			throw AuthRequiredException(source, IllegalStateException("No user found!"))
 		}
@@ -188,12 +187,27 @@ internal class CMangaParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val pageResponse = webClient
-			.httpGet("/api/chapter_image?chapter=${chapter.url.substringAfterLast('-')}".toAbsoluteUrl(domain))
-			.parseJson()
+		val cookie = JSONObject(
+			context.cookieJar.getCookies(domain).any {
+				it.name.equals("user_security", true)
+			}
+		)
+
+		val userID = cookie.optString("id", "0")
+		val token = cookie.optString("token", "0")
+		val currentTimestamp = System.currentTimeMillis()
+		val url = urlBuilder().addPathSegment("api").addPathSegment("chapter_image")
+			.addQueryParameter("chapter", chapter.url.substringAfterLast('-'))
+			.addQueryParameter("v", 0.toString())
+			.addQueryParameter("time", currentTimestamp.toString())
+			.addQueryParameter("user_id", userID)
+			.addQueryParameter("user_token", token)
+			.build()
+
+		val pageResponse = webClient.httpGet(url).parseJson()
 
 		if (pageResponse.isLocked()) {
-			throw IllegalStateException("This chapter is locked, you would need to buy it from website")
+			throw IllegalStateException("This chapter is locked, you would need to buy it and login!")
 		}
 
 		// trying to block ads page
