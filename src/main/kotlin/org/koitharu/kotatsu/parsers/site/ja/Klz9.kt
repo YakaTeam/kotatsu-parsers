@@ -181,7 +181,7 @@ internal class Klz9(context: MangaLoaderContext) :
                 branch = null,
                 source = source,
             )
-		}
+		}.sortedBy { it.number }
     }
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {

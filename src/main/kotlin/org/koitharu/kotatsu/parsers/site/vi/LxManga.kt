@@ -1,7 +1,6 @@
 package org.koitharu.kotatsu.parsers.site.vi
 
 import okhttp3.Headers
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -214,7 +213,7 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 				) {
 					MangaPage(
 						id = generateUid(url),
-						url = CHAPTER_FRAGMENT + url,
+						url = url,
 						preview = null,
 						source = source,
 					)
@@ -228,18 +227,21 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 		val request = chain.request()
 		val url = request.url.toString()
 
-		return if (url.startsWith(CHAPTER_FRAGMENT)) {
-			val realUrl = url.removePrefix(CHAPTER_FRAGMENT).toHttpUrl()
-			val newRequest = request.newBuilder()
-				.url(realUrl)
-				.header("Origin", "https://$domain")
-				.header("Token", TOKEN_KEY)
+		val headers = if (!url.contains("covers")) {
+			request.headers.newBuilder()
+				.add("Referer", "https://$domain/")
+				.add("Origin", "https://$domain")
+				.add("Token", TOKEN_KEY)
 				.build()
-
-			chain.proceed(newRequest)
 		} else {
-			chain.proceed(request)
+			request.headers
 		}
+
+		val newRequest = request.newBuilder()
+			.headers(headers)
+			.build()
+
+		return chain.proceed(newRequest)
 	}
 
 	private suspend fun availableTags(): Set<MangaTag> {
@@ -257,7 +259,6 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 	}
 
 	private companion object {
-		const val CHAPTER_FRAGMENT = "image://"
 		const val TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
 	}
 }
