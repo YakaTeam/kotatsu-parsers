@@ -20,13 +20,13 @@ public class RateLimiter(
 			timestamps.removeFirst()
 		}
 
-		if (timestamps.size >= permits) {
+		while (timestamps.size >= permits) {
 			if (call.isCanceled()) throw IOException("Canceled")
 			val oldestRequest = timestamps.first()
 			val waitTime = periodMs - (now - oldestRequest)
 
 			if (waitTime > 0) {
-				throw TooManyRequestExceptions(url, waitTime)
+				Thread.sleep(waitTime)
 			}
 
 			val current = System.currentTimeMillis()
