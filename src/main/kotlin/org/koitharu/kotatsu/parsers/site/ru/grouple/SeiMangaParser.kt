@@ -20,7 +20,6 @@ internal class SeiMangaParser(
 
 		val domains = arrayOf(
 			"1.seimanga.me",
-			"seimanga.me",
 		)
 	}
 }
