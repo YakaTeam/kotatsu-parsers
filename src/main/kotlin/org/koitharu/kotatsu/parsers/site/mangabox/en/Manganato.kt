@@ -9,5 +9,5 @@ import org.koitharu.kotatsu.parsers.site.mangabox.MangaboxParser
 @MangaSourceParser("MANGANATO", "Manganato", "en")
 internal class Manganato(context: MangaLoaderContext) :
 	MangaboxParser(context, MangaParserSource.MANGANATO) {
-	override val configKeyDomain = ConfigKey.Domain("manganato.gg")
+	override val configKeyDomain = ConfigKey.Domain("www.manganato.gg")
 }
