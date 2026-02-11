@@ -10,16 +10,9 @@ internal class SeiMangaParser(
 	context: MangaLoaderContext,
 ) : GroupleParser(context, MangaParserSource.SEIMANGA, 21) {
 
-	override val configKeyDomain = ConfigKey.Domain(*domains)
-
+	override val configKeyDomain = ConfigKey.Domain("1.seimanga.me")
+	
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
 		.add("referer", "https://$domain/")
 		.build()
-
-	companion object {
-
-		val domains = arrayOf(
-			"1.seimanga.me",
-		)
-	}
 }
