@@ -1,8 +1,8 @@
 package org.koitharu.kotatsu.parsers.network.utils
 
 import okhttp3.Call
-import org.koitharu.kotatsu.parsers.exception.TooManyRequestExceptions
 import java.io.IOException
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import kotlin.concurrent.withLock
 
@@ -12,27 +12,26 @@ public class RateLimiter(
 ) {
 	private val timestamps = ArrayDeque<Long>(permits)
 	private val lock = ReentrantLock(true) // fair lock
+	private val condition = lock.newCondition()
 
 	public fun acquire(call: Call, url: String = ""): Long = lock.withLock {
-		val now = System.currentTimeMillis()
+		var now = System.currentTimeMillis()
 
-		while (timestamps.isNotEmpty() && now - timestamps.first() >= periodMs) {
-			timestamps.removeFirst()
-		}
+		while (true) {
+			while (timestamps.isNotEmpty() && now - timestamps.first() >= periodMs) {
+				timestamps.removeFirst()
+			}
 
-		while (timestamps.size >= permits) {
+			if (timestamps.size < permits) break
+
 			if (call.isCanceled()) throw IOException("Canceled")
 			val oldestRequest = timestamps.first()
 			val waitTime = periodMs - (now - oldestRequest)
 
 			if (waitTime > 0) {
-				Thread.sleep(waitTime)
+				condition.await(waitTime, TimeUnit.MILLISECONDS)
 			}
-
-			val current = System.currentTimeMillis()
-			while (timestamps.isNotEmpty() && current - timestamps.first() >= periodMs) {
-				timestamps.removeFirst()
-			}
+			now = System.currentTimeMillis()
 		}
 
 		val timestamp = System.currentTimeMillis()
@@ -41,6 +40,10 @@ public class RateLimiter(
 	}
 
 	public fun release(timestamp: Long): Boolean = lock.withLock {
-		timestamps.remove(timestamp)
+		val removed = timestamps.remove(timestamp)
+		if (removed) {
+			condition.signalAll()
+		}
+		removed
 	}
 }
