@@ -165,7 +165,7 @@ internal abstract class MangaboxParser(
 	protected open val selectDesc = "#contentBox, div#noidungm, div#panel-story-info-description"
 	protected open val selectState = ".info-status, li:contains(status), td:containsOwn(status) + td"
 	protected open val selectAut = "a[href*='/author/'], li:contains(author) a, td:contains(author) + td a"
-	protected open val selectTag = "a[href*='/genre/']"
+	protected open val selectTag = ".manga-info-content ul.manga-info-text li.genres a"
 	protected open val selectRating = ".comic-info-wrap .info-wrap .rating"
 
 	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
@@ -191,9 +191,10 @@ internal abstract class MangaboxParser(
 		// Tags
 		val tags = doc.select(selectTag).mapNotNullToSet { a ->
 			val href = a.attr("href")
-			if (!href.contains("/genre/")) return@mapNotNullToSet null
-			val key = href.substringAfterLast("/genre/").substringBefore("?").substringBefore("/")
-			if (key.isEmpty() || key == "all") return@mapNotNullToSet null
+			val key = href.substringAfterLast("/genre/")
+				.substringBefore("?")
+				.substringBefore("/")
+			if (key.isEmpty()) return@mapNotNullToSet null
 			MangaTag(
 				key = key,
 				title = a.text().toTitleCase(),
