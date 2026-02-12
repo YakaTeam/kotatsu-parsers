@@ -1,38 +1,60 @@
 package org.koitharu.kotatsu.parsers.site.pt
 
-import okhttp3.Headers
-import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
+import org.jsoup.nodes.Document
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
-import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.model.Manga
+import org.koitharu.kotatsu.parsers.model.MangaChapter
+import org.koitharu.kotatsu.parsers.model.MangaListFilter
+import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
+import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
+import org.koitharu.kotatsu.parsers.model.MangaPage
+import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.model.MangaState
+import org.koitharu.kotatsu.parsers.model.MangaTag
+import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
+import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.util.await
+import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.parseHtml
+import org.koitharu.kotatsu.parsers.util.parseJson
+import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
+import org.koitharu.kotatsu.parsers.util.toTitleCase
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.EnumSet
+import java.util.Locale
+import java.util.TimeZone
 import java.util.regex.Pattern
 
+@Broken("Refactor code")
 @MangaSourceParser("TAIYO", "Taiyō", "pt")
 internal class TaiyoParser(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.TAIYO, pageSize = 20) {
+	PagedMangaParser(context, MangaParserSource.TAIYO, 20) {
 
 	override val configKeyDomain = ConfigKey.Domain("taiyo.moe")
 
-	private val cdnDomain = "cdn.taiyo.moe"
-	private val meiliDomain = "meilisearch.taiyo.moe"
-	private val meiliKey = "48aa86f73de09a7705a2938a1a35e5a12cff6519695fcad395161315182286e5"
+	private val cdnDomain = "cdn.$domain"
+	private val meiliDomain = "meilisearch.$domain"
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
 		keys.add(userAgentKey)
 	}
 
-	override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.UPDATED, SortOrder.POPULARITY)
+	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
+		SortOrder.UPDATED,
+		SortOrder.POPULARITY
+	)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
@@ -78,9 +100,9 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 	 * Each script tag contains: self.__next_f.push([1,"content"])
 	 * We extract just the string content from type-1 pushes and concatenate them.
 	 */
-	private fun extractFlightData(html: org.jsoup.nodes.Document): String {
+	private fun extractFlightData(html: Document): String {
 		val result = StringBuilder()
-		val pushContentPattern = Pattern.compile("""self\.__next_f\.push\(\[1,"(.*?)"\]\)""", Pattern.DOTALL)
+		val pushContentPattern = Pattern.compile("""self\.__next_f\.push\(\[1,"(.*?)"]\)""", Pattern.DOTALL)
 		for (script in html.select("script")) {
 			val data = script.data()
 			if (data.contains("self.__next_f.push")) {
@@ -104,7 +126,7 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		val request = Request.Builder()
 			.url("https://$meiliDomain/multi-search")
 			.post(requestBody)
-			.addHeader("Authorization", "Bearer $meiliKey")
+			.addHeader("Authorization", "Bearer $MEILIKEY")
 			.addHeader("Origin", "https://$domain")
 			.addHeader("Referer", "https://$domain/")
 			.addHeader("Accept", "application/json")
@@ -148,122 +170,92 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		if (results.length() == 0) return emptyList()
 
 		val hits = results.getJSONObject(0).getJSONArray("hits")
-		val mangaList = mutableListOf<Manga>()
-
-		for (i in 0 until hits.length()) {
-			val hit = hits.getJSONObject(i)
+		return hits.mapJSON { hit ->
 			val mediaId = hit.getString("id")
 			val coverId = hit.optString("mainCoverId", "")
-
-			// Get main title (prefer pt_br, then isMainTitle)
-			val titles = hit.optJSONArray("titles")
-			var mainTitle = ""
-			var ptBrTitle: String? = null
-			if (titles != null) {
-				for (t in 0 until titles.length()) {
-					val titleObj = titles.getJSONObject(t)
-					if (titleObj.optString("language") == "pt_br") {
-						ptBrTitle = titleObj.optString("title")
-					}
-					if (titleObj.optBoolean("isMainTitle", false)) {
-						mainTitle = titleObj.optString("title", "")
-					}
-				}
-			}
-			val title = ptBrTitle ?: mainTitle
-			if (title.isEmpty()) continue
-
-			val coverUrl = if (coverId.isNotEmpty()) {
-				"https://$cdnDomain/medias/$mediaId/covers/$coverId.jpg"
-			} else {
-				""
-			}
 			val url = "/media/$mediaId"
 
-			mangaList.add(
-				Manga(
-					id = generateUid(url),
-					url = url,
-					publicUrl = "https://$domain$url",
-					title = title,
-					coverUrl = coverUrl,
-					altTitles = emptySet(),
-					rating = RATING_UNKNOWN,
-					tags = emptySet(),
-					description = null,
-					state = null,
-					authors = emptySet(),
-					contentRating = null,
-					source = source,
-				),
+			val title = hit.optJSONArray("titles")
+				?.mapJSON { obj ->
+					obj.optString("language") to
+						(obj.optString("title") to obj.optBoolean("isMainTitle", false))
+				}?.let { list ->
+					val ptBr = list.firstOrNull { it.first == "pt_br" }?.second?.first
+					val main = list.firstOrNull { it.second.second }?.second?.first.orEmpty()
+					ptBr ?: main
+				}.orEmpty()
+
+			Manga(
+				id = generateUid(url),
+				url = url,
+				publicUrl = "https://$domain$url",
+				title = title,
+				coverUrl = "https://$cdnDomain/medias/$mediaId/covers/$coverId.jpg",
+				altTitles = emptySet(),
+				rating = RATING_UNKNOWN,
+				tags = emptySet(),
+				description = null,
+				state = null,
+				authors = emptySet(),
+				contentRating = null,
+				source = source,
 			)
 		}
-
-		return mangaList
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
 		val mediaId = manga.url.substringAfter("/media/")
 
-		// Use MeiliSearch to get media details (synopsis, status, genres, etc.)
-		val queryObj = JSONObject().apply {
-			put("indexUid", "medias")
-			put("q", "")
-			put("filter", JSONArray().put("id = '$mediaId'").put("deletedAt IS NULL"))
-			put("limit", 1)
-		}
 		val body = JSONObject().apply {
-			put("queries", JSONArray().put(queryObj))
+			put("queries", JSONArray().put(
+				JSONObject().apply {
+					put("indexUid", "medias")
+					put("q", "")
+					put("filter", JSONArray()
+						.put("id = '$mediaId'")
+						.put("deletedAt IS NULL")
+					)
+					put("limit", 1)
+				}
+			))
 		}
 
-		val response = meiliPost(body)
-
-		val hits = response.getJSONArray("results")
+		val hits = meiliPost(body).getJSONArray("results")
 			.getJSONObject(0)
-			.getJSONArray("hits")
+			.optJSONArray("hits")
+			?: JSONArray()
 
-		var synopsis: String? = null
-		var status: String? = null
-		var mainTitle = manga.title
-		var coverId: String? = null
-		val genres = mutableSetOf<MangaTag>()
+		val hit = hits.optJSONObject(0)
+		val status = hit?.optString("status", "")
+		val synopsis = hit?.optString("synopsis", "")
+			?.ifEmpty { null }
 
-		if (hits.length() > 0) {
-			val hit = hits.getJSONObject(0)
-			synopsis = hit.optString("synopsis", "").ifEmpty { null }
-			status = hit.optString("status", "")
-			coverId = hit.optString("mainCoverId", "")
+		val coverId = hit?.optString("mainCoverId", "")
+			?.ifEmpty { null }
 
-			// Get best title
-			val titles = hit.optJSONArray("titles")
-			if (titles != null) {
-				for (t in 0 until titles.length()) {
-					val titleObj = titles.getJSONObject(t)
-					if (titleObj.optString("language") == "pt_br") {
-						mainTitle = titleObj.optString("title", mainTitle)
-						break
-					}
-					if (titleObj.optBoolean("isMainTitle", false)) {
-						mainTitle = titleObj.optString("title", mainTitle)
-					}
-				}
-			}
+		val titles = hit?.optJSONArray("titles")
+			?.mapJSON { it }
+			.orEmpty()
 
-			// Parse genres
-			val genresArray = hit.optJSONArray("genres")
-			if (genresArray != null) {
-				for (g in 0 until genresArray.length()) {
-					val genre = genresArray.getString(g)
-					genres.add(
-						MangaTag(
-							key = genre.lowercase(),
-							title = genre.lowercase().replace('_', ' ').toTitleCase(sourceLocale),
-							source = source,
-						),
+		val mainTitle = titles
+			.firstOrNull { it.optString("language") == "pt_br" }
+			?.optString("title")
+			?: titles.firstOrNull { it.optBoolean("isMainTitle", false) }
+				?.optString("title")
+			?: manga.title
+
+		val genres = hit?.optJSONArray("genres")?.let { array ->
+			(0 until array.length()).map { array.getString(it) }
+				.mapTo(mutableSetOf()) { genre ->
+					MangaTag(
+						key = genre.lowercase(),
+						title = genre.lowercase()
+							.replace('_', ' ')
+							.toTitleCase(sourceLocale),
+						source = source,
 					)
 				}
-			}
-		}
+			} ?: emptySet()
 
 		// Fetch chapters via tRPC API
 		val chapters = fetchChaptersViaTrpc(mediaId)
@@ -301,14 +293,14 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		val chapters = mutableListOf<MangaChapter>()
 		val perPage = 100
 		var page = 1
-		var totalPages = 1
+		var totalPages: Int
 
 		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.US)
 		dateFormat.timeZone = TimeZone.getTimeZone("UTC")
 
 		do {
 			val input = "{\"json\":{\"mediaId\":\"$mediaId\",\"page\":$page,\"perPage\":$perPage}}"
-			val encodedInput = java.net.URLEncoder.encode(input, "UTF-8")
+			val encodedInput = URLEncoder.encode(input, "UTF-8")
 			val apiUrl = "https://$domain/api/trpc/chapters.getByMediaId?input=$encodedInput"
 
 			val response = webClient.httpGet(apiUrl).parseJson()
@@ -393,7 +385,7 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 
 		// Extract pages array from flight data
 		// Format: "pages":[{"id":"uuid","extension":"jpg"},{"id":"uuid","extension":"png"}, ...]
-		val pagesPattern = Pattern.compile("\"pages\":\\[(.+?)](?:,\"previous)")
+		val pagesPattern = Pattern.compile("\"pages\":\\[(.+?)],\"previous")
 		val pagesMatcher = pagesPattern.matcher(flightStr)
 
 		if (!pagesMatcher.find()) {
@@ -420,5 +412,9 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		}
 
 		return pages
+	}
+
+	companion object {
+		private const val MEILIKEY = "48aa86f73de09a7705a2938a1a35e5a12cff6519695fcad395161315182286e5"
 	}
 }
