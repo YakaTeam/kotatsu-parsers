@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.parsers.site.mangabox
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
+import okhttp3.Headers
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
@@ -16,6 +17,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
@@ -44,6 +46,8 @@ internal abstract class MangaboxParser(
 	source: MangaParserSource,
 	pageSize: Int = 48,
 ) : PagedMangaParser(context, source, pageSize) {
+
+	private val headers = Headers.headersOf("User-Agent", UserAgents.KOTATSU)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -214,8 +218,11 @@ internal abstract class MangaboxParser(
 	}
 
 	protected open suspend fun fetchChapters(slug: String): List<MangaChapter> {
-		val url = "https://$domain/api/manga/$slug/chapters"
-		val json = webClient.httpGet(url).parseJson()
+		val url = urlBuilder().addPathSegment("api").addPathSegment("manga")
+			.addPathSegment(slug).addPathSegment("chapters")
+			.addQueryParameter("limit", 9999.toString())
+			.addQueryParameter("offset", 0.toString())
+		val json = webClient.httpGet(url.build(), headers).parseJson()
 
 		if (!json.optBoolean("success", false)) {
 			return emptyList()
