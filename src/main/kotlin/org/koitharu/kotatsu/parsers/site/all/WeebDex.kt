@@ -43,8 +43,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 
 	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
-			SERVER_DATA to "High quality cover",
-			SERVER_DATA_SAVER to "Compressed quality cover",
+			SERVER_DATA to "High quality",
+			SERVER_DATA_SAVER to "Compressed quality",
 		),
 		defaultValue = SERVER_DATA,
 	)
@@ -419,7 +419,9 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val url = urlBuilder().host("api.$domain")
+		val quality = config[preferredCoverServerKey] ?: SERVER_DATA
+		val url = urlBuilder()
+			.host("api.$domain")
 			.addPathSegment("chapter")
 			.addPathSegment(chapter.url)
 			.build()
@@ -427,7 +429,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 		val response = webClient.httpGet(url).parseJson()
 		val node = response.getString("node")
 
-		return response.getJSONArray("data").mapJSON { data ->
+		val dataKey = if (quality == SERVER_DATA_SAVER) "data_optimized" else "data"
+		return response.getJSONArray(dataKey).mapJSON { data ->
 			val filename = data.getString("name")
 			MangaPage(
 				id = generateUid(filename),
