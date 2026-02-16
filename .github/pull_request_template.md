@@ -1,38 +1,38 @@
 **PLEASE READ THIS**
 
-I acknowledge that:
+I confirm that:
 
-- [ ] All relevant issues have been mentioned in the PR body (e.g. "Close #???")
-- [ ] Have built this library with that changes to update the number of available sources in [Summary](./summary.yaml) file
-- [ ] Removed `Broken` annotation if the problem causing it to malfunction has been resolved
-- [ ] Added special type to `MangaSourceParser` annotation if necessary (e.g. "`type = ContentType.HENTAI`")
-- [ ] Added special language code to `MangaSourceParser` if that source is not a multilingual source (e.g. "`vi`")
-- [ ] Have not changed parser class name. Made sure the class name did not conflict with an existing class
-- [ ] Have declared all orders, filters that are written in `availableSortOrders`, `filterCapabilities` and `getFilterOptions` must be written in `getList()` OR `getListPage()` function
-- [ ] Have followed the instructions and parser class skeleton in this [CONTRIBUTING](../CONTRIBUTING.md) guide
+- [ ] All relevant issues have been mentioned in the PR description (e.g., "Closes #???")
+- [ ] I have built the library with these changes to update the number of available sources in the [Summary](https://github.com/YakaTeam/kotatsu-parsers/blob/master/.github/summary.yaml) file
+- [ ] I have removed `@Broken` annotation if the issue causing it to malfunction has been resolved
+- [ ] I have added a special type to `MangaSourceParser` annotation if necessary (e.g., "`type = ContentType.HENTAI`")
+- [ ] I have added a specific language code to `MangaSourceParser` annotation if the source is not multilingual (e.g., `vi`)
+- [ ] I have not changed the parser class name and ensured it does not conflict with any existing class
+- [ ] All declared sort orders and filters in `availableSortOrders`, `filterCapabilities`, and `getFilterOptions` are properly implemented in `getList()` OR `getListPage()` function
+- [ ] I have followed the instructions and parser class skeleton provided in [this CONTRIBUTING guide](https://github.com/YakaTeam/kotatsu-parsers/blob/master/CONTRIBUTING.md)
 
 **TESTING**
 
-I acknowledge that:
+I confirm that:
 
-- [ ] Have tested that parser syntax error by compiling that class with this library
-- [ ] Have tested that parser by compiling, building and packing your parsers with the debug application
-- [ ] All orders, filters declared in `availableSortOrders`, `filterCapabilities` and `getFilterOptions` work in the debug application
-- [ ] `getList()` OR `getListPage()` and `getDetails()` functions have received all the necessary information
-- [ ] `getPages()` function has retrieved all images from the source
+- [ ] I have tested the parser for syntax errors by compiling the class with the library
+- [ ] I have tested the parser by compiling, building, and packaging it with the debug application
+- [ ] All sort orders and filters declared in `availableSortOrders`, `filterCapabilities`, and `getFilterOptions` work correctly in the debug application
+- [ ] `getList()` OR `getListPage()` and `getDetails()` functions retrieve all necessary information
+- [ ] `getPages()` function successfully retrieves all images from the source
 
-Note that you must provide accurate information before creating a pull request. This information will be compared with data received from source by reviewers.
+**Note:** You must provide accurate information before creating a pull request. This information will be verified against data retrieved from the source by the reviewers.
 
 ---
 
-### Source Name
+### Source Name (Language)
 
-???
+N/A
 
 ### Related Issues
 
-???
+N/A
 
 ### Description
 
-???
+N/A
