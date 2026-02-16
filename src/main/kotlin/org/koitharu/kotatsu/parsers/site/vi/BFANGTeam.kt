@@ -143,7 +143,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 					volume = 0,
 					url = li.select("a").attr("href").toAbsoluteUrl(domain),
 					scanlator = li.select("span.chapter-sub-text").text(),
-					uploadDate = parseChapterDate(li.select("chapter-time").text()),
+					uploadDate = parseChapterDate(li.select("span.chapter-time").text()),
 					branch = null,
 					source = source,
 				)
