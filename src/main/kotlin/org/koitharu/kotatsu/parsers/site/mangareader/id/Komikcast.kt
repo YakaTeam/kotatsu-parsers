@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.jsoup.nodes.Document
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -40,9 +41,10 @@ import java.util.Calendar
 import java.util.EnumSet
 import java.util.Locale
 
+@Broken("Remake parser needed")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
-	MangaReaderParser(context, MangaParserSource.KOMIKCAST, "komikcast03.com", pageSize = 60, searchPageSize = 28) {
+	MangaReaderParser(context, MangaParserSource.KOMIKCAST, "v1.komikcast.fit", pageSize = 60, searchPageSize = 28) {
 
 	override val userAgentKey = ConfigKey.UserAgent(
 		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"

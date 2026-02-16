@@ -29,6 +29,16 @@ internal abstract class MangaPlusParser(
 
 	private val apiUrl = "https://jumpg-webapi.tokyo-cdn.com/api"
 	override val configKeyDomain = ConfigKey.Domain("mangaplus.shueisha.co.jp")
+	private val detailsCache = object : LinkedHashMap<String, Manga>(64, 0.75f, true) {
+		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Manga>?): Boolean {
+			return size > DETAILS_CACHE_SIZE
+		}
+	}
+	private val pagesCache = object : LinkedHashMap<String, List<MangaPage>>(128, 0.75f, true) {
+		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<MangaPage>>?): Boolean {
+			return size > PAGES_CACHE_SIZE
+		}
+	}
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -133,6 +143,9 @@ internal abstract class MangaPlusParser(
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
+		synchronized(detailsCache) {
+			detailsCache[manga.url]?.let { return it }
+		}
 		val json = apiCall("/title_detailV3?title_id=${manga.url}")
 			.getJSONObject("titleDetailView")
 		val title = json.getJSONObject("title")
@@ -146,7 +159,7 @@ internal abstract class MangaPlusParser(
 		val author = title.getString("author")
 			.split("/").joinToString(transform = String::trim)
 
-		return manga.copy(
+		val details = manga.copy(
 			title = title.getString("name"),
 			publicUrl = "/titles/${title.getInt("titleId")}".toAbsoluteUrl(domain),
 			coverUrl = title.getString("portraitImageUrl"),
@@ -167,6 +180,10 @@ internal abstract class MangaPlusParser(
 				else -> MangaState.ONGOING
 			},
 		)
+		synchronized(detailsCache) {
+			detailsCache[manga.url] = details
+		}
+		return details
 	}
 
 	private fun parseChapters(chapterListGroup: JSONArray, language: String): List<MangaChapter> {
@@ -201,11 +218,14 @@ internal abstract class MangaPlusParser(
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		synchronized(pagesCache) {
+			pagesCache[chapter.url]?.let { return it }
+		}
 		val pages = apiCall("/manga_viewer?chapter_id=${chapter.url}&split=yes&img_quality=super_high")
 			.getJSONObject("mangaViewer")
 			.getJSONArray("pages")
 
-		return pages.mapJSONNotNull {
+		val parsedPages = pages.mapJSONNotNull {
 			val mangaPage = it.optJSONObject("mangaPage")
 				?: return@mapJSONNotNull null
 			val url = mangaPage.getString("imageUrl")
@@ -217,6 +237,12 @@ internal abstract class MangaPlusParser(
 				source = source,
 			)
 		}
+		if (parsedPages.isNotEmpty()) {
+			synchronized(pagesCache) {
+				pagesCache[chapter.url] = parsedPages
+			}
+		}
+		return parsedPages
 	}
 
 	// image descrambling
@@ -329,4 +355,9 @@ internal abstract class MangaPlusParser(
 		MangaParserSource.MANGAPLUSPARSER_DE,
 		"GERMAN",
 	)
+
+	private companion object {
+		private const val DETAILS_CACHE_SIZE = 200
+		private const val PAGES_CACHE_SIZE = 400
+	}
 }
