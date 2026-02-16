@@ -209,8 +209,8 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 	private suspend fun availableTags(): Set<MangaTag> {
 		val url = urlBuilder().addPathSegment("manga").build()
 		val response = webClient.httpGet(url).parseHtml()
-		return response.select(".filter-options").map {
-			val span = it.select("button span.filter-name")
+		return response.select(".filter-options button").map {
+			val span = it.select("span.filter-name")
 			val title = span.text()
 			MangaTag(
 				title = title,
