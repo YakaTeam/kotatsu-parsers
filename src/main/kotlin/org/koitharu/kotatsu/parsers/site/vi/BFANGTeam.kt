@@ -59,9 +59,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 
 		if (!filter.query.isNullOrEmpty()) {
 			url.addQueryParameter("q",
-				filter.query.splitByWhitespace().joinToString(separator = "+") {
-					it.urlEncoded()
-				}
+				filter.query.splitByWhitespace().joinToString(separator = "+") { it }
 			)
 		}
 
@@ -79,9 +77,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 
 		if (!filter.author.isNullOrEmpty()) {
 			url.addQueryParameter("q",
-				filter.author.splitByWhitespace().joinToString(separator = "+") {
-					it.urlEncoded()
-				}
+				filter.author.splitByWhitespace().joinToString(separator = "+") { it }
 			)
 		}
 
