@@ -3,13 +3,13 @@
 I acknowledge that:
 
 - [ ] All relevant issues have been mentioned in the PR body (e.g. "Close #???")
-- [ ] Have built this library with that changes to update the number of available sources in [Summary](./summary.yaml) file
+- [ ] Have built this library with that changes to update the number of available sources in [Summary](https://github.com/YakaTeam/kotatsu-parsers/blob/master/.github/summary.yaml) file
 - [ ] Removed `Broken` annotation if the problem causing it to malfunction has been resolved
 - [ ] Added special type to `MangaSourceParser` annotation if necessary (e.g. "`type = ContentType.HENTAI`")
 - [ ] Added special language code to `MangaSourceParser` if that source is not a multilingual source (e.g. "`vi`")
 - [ ] Have not changed parser class name. Made sure the class name did not conflict with an existing class
 - [ ] Have declared all orders, filters that are written in `availableSortOrders`, `filterCapabilities` and `getFilterOptions` must be written in `getList()` OR `getListPage()` function
-- [ ] Have followed the instructions and parser class skeleton in this [CONTRIBUTING](../CONTRIBUTING.md) guide
+- [ ] Have followed the instructions and parser class skeleton in this [CONTRIBUTING](https://github.com/YakaTeam/kotatsu-parsers/blob/master/CONTRIBUTING.md) guide
 
 **TESTING**
 
@@ -25,14 +25,14 @@ Note that you must provide accurate information before creating a pull request. 
 
 ---
 
-### Source Name
+### Source Name (Language)
 
-???
+N/A
 
 ### Related Issues
 
-???
+N/A
 
 ### Description
 
-???
+N/A
