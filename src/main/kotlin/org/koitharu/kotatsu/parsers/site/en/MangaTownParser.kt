@@ -170,7 +170,7 @@ internal class MangaTownParser(context: MangaLoaderContext) :
 					id = generateUid(href),
 					url = href,
 					source = MangaParserSource.MANGATOWN,
-					number = i + 1f,
+					number = parseChapterNumber(href, i),
 					volume = 0,
 					uploadDate = parseChapterDate(
 						dateFormat,
@@ -253,6 +253,12 @@ internal class MangaTownParser(context: MangaLoaderContext) :
 		}
 	}
 
+	private fun parseChapterNumber(url: String, fallbackIndex: Int): Float {
+		return url.substringAfterLast("/c")
+			.substringBefore('/')
+			.toFloatOrNull() ?: (fallbackIndex + 1f)
+	}
+	
 	private suspend fun bypassLicensedChapters(manga: Manga): List<MangaChapter> {
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(getDomain("m"))).parseHtml()
 		val list = doc.body().selectFirst("ul.detail-ch-list") ?: return emptyList()
@@ -267,7 +273,7 @@ internal class MangaTownParser(context: MangaLoaderContext) :
 				id = generateUid(href),
 				url = href,
 				source = MangaParserSource.MANGATOWN,
-				number = i + 1f,
+				number = parseChapterNumber(href, i),
 				volume = 0,
 				uploadDate = parseChapterDate(
 					dateFormat,
