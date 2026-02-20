@@ -9,7 +9,6 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -22,13 +21,12 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 	private val pagesRequestMutex = Mutex()
 	private var lastPagesRequestTime = 0L
 
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
 			.rateLimit(15, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+			.build(),
+		source,
+	)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)

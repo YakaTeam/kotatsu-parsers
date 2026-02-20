@@ -10,7 +10,6 @@ import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -18,7 +17,6 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 private const val CHAPTERS_PER_PAGE = 500
 private const val SERVER_DATA = "512"
@@ -33,13 +31,12 @@ internal class WeebDex(context: MangaLoaderContext) :
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
 
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(5, 1.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
+			.rateLimit(5)
+			.build(),
+		source,
+	)
 
 	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
@@ -461,9 +458,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 		}
 
 		getTitleForLocale(LOCALE_FALLBACK)?.let { return it }
-		return keys().asSequence()
-			.mapNotNull { getTitleForLocale(it) }
-			.firstOrNull()
+		return keys().asSequence().firstNotNullOfOrNull { getTitleForLocale(it) }
 	}
 
 	private fun JSONObject.getTitleForLocale(locale: String): String? {

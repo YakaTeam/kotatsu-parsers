@@ -20,7 +20,6 @@ import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
@@ -40,13 +39,12 @@ internal abstract class YuriGardenParser(
 	private val apiSuffix = "api.$domain/api"
 	private val cdnSuffix = "db.$domain/storage/v1/object/public/yuri-garden-store"
 
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
 			.rateLimit(20, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+			.build(),
+		source,
+	)
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
 		.add("Referer", "https://$domain/")
