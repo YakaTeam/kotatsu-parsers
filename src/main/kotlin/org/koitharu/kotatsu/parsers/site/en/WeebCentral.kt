@@ -42,6 +42,7 @@ import org.koitharu.kotatsu.parsers.model.SortOrder.RATING_ASC
 import org.koitharu.kotatsu.parsers.model.SortOrder.RELEVANCE
 import org.koitharu.kotatsu.parsers.model.SortOrder.UPDATED
 import org.koitharu.kotatsu.parsers.model.SortOrder.UPDATED_ASC
+import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.util.LinkResolver
 import org.koitharu.kotatsu.parsers.util.attrAsAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.attrAsAbsoluteUrlOrNull
@@ -52,6 +53,7 @@ import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.nullIfEmpty
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseSafe
+import org.koitharu.kotatsu.parsers.util.rateLimit
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import java.text.SimpleDateFormat
 import java.util.EnumSet
@@ -60,6 +62,13 @@ import java.util.Locale
 @MangaSourceParser("WEEBCENTRAL", "Weeb Central", "en")
 internal class WeebCentral(context: MangaLoaderContext) : AbstractMangaParser(context, MangaParserSource.WEEBCENTRAL),
 	MangaParserAuthProvider {
+
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
+			.rateLimit(2)
+			.build(),
+		source,
+	)
 
 	override val configKeyDomain = ConfigKey.Domain("weebcentral.com")
 
@@ -298,8 +307,9 @@ internal class WeebCentral(context: MangaLoaderContext) : AbstractMangaParser(co
 			},
 			authors = setOf(author),
 			description = Element("div").also { desc ->
-				sectionRight.selectFirst("li:has(strong:contains(Description)) > p")?.let {
-					desc.appendChild(it)
+				val el = sectionRight.selectFirst("li:has(strong:contains(Description)) > p")
+				if (el != null) {
+					desc.appendChild(el)
 				}
 
 				val ul = Element("ul")
