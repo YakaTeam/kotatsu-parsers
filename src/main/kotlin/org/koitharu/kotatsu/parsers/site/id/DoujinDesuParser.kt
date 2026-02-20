@@ -35,7 +35,10 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
 		availableTags = fetchAvailableTags(),
-		availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED),
+		availableStates = EnumSet.of(
+			MangaState.ONGOING,
+			MangaState.FINISHED,
+		),
 		availableContentTypes = EnumSet.of(
 			ContentType.MANGA,
 			ContentType.MANHWA,
@@ -51,25 +54,23 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
             when {
-                page > 1 -> addPathSegments("manga/page/$page/")
-                else -> addPathSegment("manga/")
+                page > 1 -> addEncodedPathSegments("manga/page/$page/")
+                else -> addEncodedPathSegment("manga/")
             }
 
-            addQueryParameter(
-				"title",
-				filter.query?.let {
-					filter.query
-				},
-			)
+			if (!filter.query.isNullOrEmpty()) {
+				addQueryParameter("title", filter.query)
+			}
 
-            addQueryParameter(
-                name = "author",
-                value = filter.author?.let { it
-                    space2plus(it).lowercase()
-                }
-            )
+			if (!filter.author.isNullOrEmpty()) {
+				addQueryParameter("author",
+					filter.author.let {
+						space2plus(it).lowercase()
+					}
+				)
+			}
 
-			addQueryParameter(
+			addEncodedQueryParameter(
 				"order",
 				when (order) {
 					SortOrder.UPDATED -> "update"
@@ -80,32 +81,29 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				},
 			)
 
-			filter.tags.forEach {
-				addEncodedQueryParameter("genre[]".urlEncoded(), it.key.urlEncoded())
+			if (!filter.tags.isEmpty()) {
+				filter.tags.forEach {
+					addEncodedQueryParameter("genre[]".urlEncoded(), it.key.urlEncoded())
+				}
 			}
 
-			filter.states.oneOrThrowIfMany()?.let {
-				addEncodedQueryParameter(
-					"statusx",
-					when (it) {
-						MangaState.ONGOING -> "Publishing"
-						MangaState.FINISHED -> "Finished"
-						else -> ""
-					},
-				)
+			if (!filter.states.isEmpty()) {
+				filter.states.oneOrThrowIfMany()?.let {
+					addQueryParameter(
+						"status",
+						when (it) {
+							MangaState.ONGOING -> "Publishing"
+							MangaState.FINISHED -> "Finished"
+							else -> ""
+						},
+					)
+				}
 			}
 
-			filter.types.oneOrThrowIfMany()?.let {
-				addQueryParameter(
-					"type",
-					when (it) {
-						ContentType.MANGA -> "Manga"
-						ContentType.MANHWA -> "Manhwa"
-						ContentType.DOUJINSHI -> "Doujinshi"
-						// force type, prevent 404 page
-						else -> "Manga"
-					},
-				)
+			when (filter.types.oneOrThrowIfMany()) {
+				ContentType.MANHWA -> addQueryParameter("type", "Manhwa")
+				ContentType.DOUJINSHI -> addQueryParameter("type", "Doujinshi")
+				else -> addQueryParameter("type", "Manga")
 			}
 		}.build()
 
