@@ -23,14 +23,12 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override val availableSortOrders: Set<SortOrder>
-		get() = EnumSet.of(SortOrder.UPDATED, SortOrder.NEWEST, SortOrder.ALPHABETICAL, SortOrder.POPULARITY)
+		get() = EnumSet.of(SortOrder.UPDATED)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isMultipleTagsSupported = true,
 			isSearchSupported = true,
-			isSearchWithFiltersSupported = true,
-            isAuthorSearchSupported = true,
+			isAuthorSearchSupported = true,
 		)
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -53,41 +51,27 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
-            when {
-                page > 1 -> addEncodedPathSegments("manga/page/$page/")
-                else -> addEncodedPathSegment("manga/")
-            }
-
-			if (!filter.query.isNullOrEmpty()) {
-				addQueryParameter("title", filter.query)
-			}
-
-			if (!filter.author.isNullOrEmpty()) {
-				addQueryParameter("author",
-					filter.author.let {
-						space2plus(it).lowercase()
-					}
-				)
-			}
-
-			addEncodedQueryParameter(
-				"order",
-				when (order) {
-					SortOrder.UPDATED -> "update"
-					SortOrder.POPULARITY -> "popular"
-					SortOrder.ALPHABETICAL -> "title"
-					SortOrder.NEWEST -> "latest"
-					else -> "latest"
-				},
-			)
-
-			if (!filter.tags.isEmpty()) {
-				filter.tags.forEach {
-					addEncodedQueryParameter("genre[]".urlEncoded(), it.key.urlEncoded())
+			if (filter.tags.isNotEmpty()) {
+				addPathSegment("genre")
+				filter.tags.oneOrThrowIfMany()?.key?.let { it ->
+					addPathSegment(it.lowercase().splitByWhitespace().joinToString("-") { it })
 				}
+			} else if (!filter.author.isNullOrEmpty()) {
+				addPathSegment("author")
+				addPathSegment(filter.author.splitByWhitespace().joinToString("-") { it.lowercase() })
+			} else {
+				addPathSegment("manga")
 			}
 
-			if (!filter.states.isEmpty()) {
+			if (page > 1) {
+				addPathSegment("page")
+				addPathSegment(page.toString())
+			}
+
+			if (!filter.states.isEmpty() &&
+				filter.author.isNullOrEmpty() &&
+				filter.tags.isEmpty()
+			) {
 				filter.states.oneOrThrowIfMany()?.let {
 					addQueryParameter(
 						"status",
@@ -107,11 +91,11 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			}
 		}.build()
 
-		return webClient.httpGet(url).parseHtml()
-			.requireElementById("archives")
-			.selectFirstOrThrow("div.entries")
-			.select(".entry")
-			.mapNotNull {
+		val response = webClient.httpGet(url).parseHtml()
+		return response.selectFirst("section#archives .entries")
+			?.selectFirst("div.entries")
+			?.select(".entry")
+			?.mapNotNull {
 				val href = it.selectFirst(".metadata > a")?.attr("href") ?: return@mapNotNull null
 				Manga(
 					id = generateUid(href),
@@ -129,7 +113,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					description = null,
 					source = source,
 				)
-			}
+			} ?: emptyList()
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -204,6 +188,4 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				)
 			}
 	}
-
-    private fun space2plus(input: String): String = input.replace(' ', '+')
 }
