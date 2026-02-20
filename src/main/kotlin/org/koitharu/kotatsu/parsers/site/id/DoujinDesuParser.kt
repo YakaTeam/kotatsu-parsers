@@ -97,12 +97,13 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 			filter.types.oneOrThrowIfMany()?.let {
 				addQueryParameter(
-					"typex",
+					"type",
 					when (it) {
 						ContentType.MANGA -> "Manga"
 						ContentType.MANHWA -> "Manhwa"
 						ContentType.DOUJINSHI -> "Doujinshi"
-						else -> ""
+						// force type, prevent 404 page
+						else -> "Manga"
 					},
 				)
 			}
