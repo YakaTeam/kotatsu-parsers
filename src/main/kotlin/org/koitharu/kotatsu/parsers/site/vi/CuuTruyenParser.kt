@@ -159,12 +159,12 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 			Manga(
 				id = generateUid(jo.getLong("id")),
 				url = "$apiSuffix/mangas/${jo.getLong("id")}",
-				publicUrl = "https://truycapcuutruyen.pages.dev/mangas/${jo.getLong("id")}",
+				publicUrl = "https://$domain/mangas/${jo.getLong("id")}",
 				title = jo.getString("name"),
 				altTitles = emptySet(),
 				coverUrl = if (server == MOBILE_COVER) jo.getString(MOBILE_COVER)
                     else jo.getString(DESKTOP_COVER),
-				largeCoverUrl = jo.getString(DESKTOP_COVER),
+				largeCoverUrl = null,
 				authors = setOfNotNull(author),
 				tags = emptySet(),
 				state = null,
@@ -177,6 +177,7 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
+		val server = config[preferredServerKey] ?: DESKTOP_COVER
 		val url = "https://" + domain + manga.url
 		val chapters = async {
 			webClient.httpGet("$url/chapters").parseJson().getJSONArray("data")
@@ -230,6 +231,8 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 					source = source,
 				)
 			},
+			largeCoverUrl = if (server == MOBILE_COVER) json.getString(MOBILE_PANORAMA)
+				else json.getString(DESKTOP_PANORAMA),
 		)
 	}
 
@@ -445,6 +448,8 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 		const val DRM_DATA_KEY = "drm_data="
 		const val DECRYPTION_KEY = "3141592653589793"
         const val MOBILE_COVER = "cover_mobile_url"
+		const val MOBILE_PANORAMA = "panorama_mobile_url"
         const val DESKTOP_COVER = "cover_url"
+        const val DESKTOP_PANORAMA = "panorama_url"
 	}
 }
