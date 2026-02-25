@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.parsers.site.fr
 
 import okhttp3.HttpUrl
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -13,6 +14,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Broken("Source is currently broken")
 @MangaSourceParser("INOVASCANMANGA", "InovaScanManga", "fr", type = ContentType.HENTAI)
 internal class InovaScanManga(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.INOVASCANMANGA) {
