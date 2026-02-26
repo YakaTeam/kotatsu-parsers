@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@MangaSourceParser("MULTPORN", "Multporn")
+@MangaSourceParser("MULTPORN", "Multporn", type = ContentType.HENTAI)
 internal class Multporn(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.MULTPORN, 42) {
 
