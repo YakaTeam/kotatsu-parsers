@@ -140,7 +140,7 @@ internal class MangaGeko(context: MangaLoaderContext) :
 		val author = doc.selectFirst(".author span[itemprop='author']")?.text()
 			?: doc.selectFirst(".author")?.text()?.substringAfter("Author:")?.trim()
 		manga.copy(
-			title = doc.selectFirst("h1")?.text()?.trim() ?: manga.title,
+			title = doc.selectFirst("h1")?.text() ?: manga.title,
 			altTitles = setOfNotNull(doc.selectFirst(".alternative-title")?.textOrNull()),
 			state = when {
 				doc.selectFirst("strong.ongoing") != null -> MangaState.ONGOING
@@ -167,8 +167,8 @@ internal class MangaGeko(context: MangaLoaderContext) :
 			doc.select("ul.chapter-list li").forEach { li ->
 				val a = li.selectFirst("a") ?: return@forEach
 				val url = a.attrAsRelativeUrl("href")
-				val name = a.selectFirst(".chapter-title, .chapter-number")?.text()?.trim()
-					?: a.text().trim()
+				val name = a.selectFirst(".chapter-title, .chapter-number")?.text()
+					?: a.text()
 				chapters.add(
 					MangaChapter(
 						id = generateUid(url),
