@@ -13,7 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.Locale
 
-@MangaSourceParser("HOLOEARTH", "HoloEarth")
+@MangaSourceParser("HOLOEARTH", "HoloEarth", "zh")
 internal class HoloEarthParser(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.HOLOEARTH, 3) {
 
@@ -36,9 +36,7 @@ internal class HoloEarthParser(context: MangaLoaderContext) :
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
 		availableLocales = setOf(
-            Locale("en"),
-            Locale.JAPANESE,
-            Locale("id"),
+			Locale.CHINESE,
         ),
 	)
 
