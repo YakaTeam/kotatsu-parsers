@@ -1,15 +1,14 @@
 package org.koitharu.kotatsu.parsers.site.vi
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import okhttp3.Interceptor
+import okhttp3.Response
+import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import kotlin.time.Duration.Companion.seconds
@@ -19,16 +18,12 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 
 	override val configKeyDomain = ConfigKey.Domain("vi-hentai.moe", "vi-hentai.pro")
 
-	private val pagesRequestMutex = Mutex()
-	private var lastPagesRequestTime = 0L
-
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
 			.rateLimit(15, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+			.build(),
+		source,
+	)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -211,25 +206,26 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		pagesRequestMutex.withLock {
-			val currentTime = System.currentTimeMillis()
-			val timeSinceLastRequest = currentTime - lastPagesRequestTime
-			if (timeSinceLastRequest < PAGES_REQUEST_DELAY_MS) {
-				delay(PAGES_REQUEST_DELAY_MS - timeSinceLastRequest)
-			}
-			lastPagesRequestTime = System.currentTimeMillis()
-		}
-
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-		return doc.select("div.text-center img").mapNotNull { img ->
-			val url = img.requireSrc()
-			MangaPage(
-				id = generateUid(url),
-				url = url,
-				preview = null,
-				source = source,
-			)
+		return doc.select(".cover-frame .cover").mapNotNull { div ->
+			div.backgroundImageUrl()?.let { url ->
+				MangaPage(
+					id = generateUid(url),
+					url = url,
+					preview = null,
+					source = source,
+				)
+			}
 		}
+	}
+
+	override fun intercept(chain: Interceptor.Chain): Response {
+		val request = chain.request()
+		val newRequest = request.newBuilder()
+			.addHeader("Referer", "https://$domain/")
+			.build()
+
+		return chain.proceed(newRequest)
 	}
 
 	private suspend fun availableTags(): Set<MangaTag> {
@@ -263,7 +259,10 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 		calendar.timeInMillis
 	}.getOrDefault(0L)
 
-	companion object {
-		private const val PAGES_REQUEST_DELAY_MS = 5000L
-	}
+	private fun Element.backgroundImageUrl(): String? =
+		attr("style")
+			.substringAfter("url(", "")
+			.substringBefore(")")
+			.trim('\'', '"')
+			.ifBlank { null }
 }

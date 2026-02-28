@@ -298,8 +298,9 @@ internal class WeebCentral(context: MangaLoaderContext) : AbstractMangaParser(co
 			},
 			authors = setOf(author),
 			description = Element("div").also { desc ->
-				sectionRight.selectFirst("li:has(strong:contains(Description)) > p")?.let {
-					desc.appendChild(it)
+				val el = sectionRight.selectFirst("li:has(strong:contains(Description)) > p")
+				if (el != null) {
+					desc.appendChild(el)
 				}
 
 				val ul = Element("ul")

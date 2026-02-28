@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@MangaSourceParser("DOUJINDESU", "DoujinDesu.tv", "id")
+@MangaSourceParser("DOUJINDESU", "DoujinDesu.tv", "id", ContentType.HENTAI)
 internal class DoujinDesuParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.DOUJINDESU, pageSize = 18) {
 
@@ -23,19 +23,20 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	}
 
 	override val availableSortOrders: Set<SortOrder>
-		get() = EnumSet.of(SortOrder.UPDATED, SortOrder.NEWEST, SortOrder.ALPHABETICAL, SortOrder.POPULARITY)
+		get() = EnumSet.of(SortOrder.UPDATED)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isMultipleTagsSupported = true,
 			isSearchSupported = true,
-			isSearchWithFiltersSupported = true,
-            isAuthorSearchSupported = true,
+			isAuthorSearchSupported = true,
 		)
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
 		availableTags = fetchAvailableTags(),
-		availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED),
+		availableStates = EnumSet.of(
+			MangaState.ONGOING,
+			MangaState.FINISHED,
+		),
 		availableContentTypes = EnumSet.of(
 			ContentType.MANGA,
 			ContentType.MANHWA,
@@ -50,69 +51,51 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().apply {
-            when {
-                page > 1 -> addPathSegments("manga/page/$page/")
-                else -> addPathSegment("manga/")
-            }
-
-            addQueryParameter(
-				"title",
-				filter.query?.let {
-					filter.query
-				},
-			)
-
-            addQueryParameter(
-                name = "author",
-                value = filter.author?.let { it
-                    space2plus(it).lowercase()
-                }
-            )
-
-			addQueryParameter(
-				"order",
-				when (order) {
-					SortOrder.UPDATED -> "update"
-					SortOrder.POPULARITY -> "popular"
-					SortOrder.ALPHABETICAL -> "title"
-					SortOrder.NEWEST -> "latest"
-					else -> "latest"
-				},
-			)
-
-			filter.tags.forEach {
-				addEncodedQueryParameter("genre[]".urlEncoded(), it.key.urlEncoded())
+			if (filter.tags.isNotEmpty()) {
+				addPathSegment("genre")
+				filter.tags.oneOrThrowIfMany()?.key?.let { it ->
+					addPathSegment(it.lowercase().splitByWhitespace().joinToString("-") { it })
+				}
+			} else if (!filter.author.isNullOrEmpty()) {
+				addPathSegment("author")
+				addPathSegment(filter.author.splitByWhitespace().joinToString("-") { it.lowercase() })
+			} else {
+				addPathSegment("manga")
 			}
 
-			filter.states.oneOrThrowIfMany()?.let {
-				addEncodedQueryParameter(
-					"statusx",
-					when (it) {
-						MangaState.ONGOING -> "Publishing"
-						MangaState.FINISHED -> "Finished"
-						else -> ""
-					},
-				)
+			if (page > 1) {
+				addPathSegment("page")
+				addPathSegment(page.toString())
 			}
 
-			filter.types.oneOrThrowIfMany()?.let {
-				addQueryParameter(
-					"typex",
-					when (it) {
-						ContentType.MANGA -> "Manga"
-						ContentType.MANHWA -> "Manhwa"
-						ContentType.DOUJINSHI -> "Doujinshi"
-						else -> ""
-					},
-				)
+			if (!filter.states.isEmpty() &&
+				filter.author.isNullOrEmpty() &&
+				filter.tags.isEmpty()
+			) {
+				filter.states.oneOrThrowIfMany()?.let {
+					addQueryParameter(
+						"status",
+						when (it) {
+							MangaState.ONGOING -> "Publishing"
+							MangaState.FINISHED -> "Finished"
+							else -> ""
+						},
+					)
+				}
+			}
+
+			when (filter.types.oneOrThrowIfMany()) {
+				ContentType.MANHWA -> addQueryParameter("type", "Manhwa")
+				ContentType.DOUJINSHI -> addQueryParameter("type", "Doujinshi")
+				else -> addQueryParameter("type", "Manga")
 			}
 		}.build()
 
-		return webClient.httpGet(url).parseHtml()
-			.requireElementById("archives")
-			.selectFirstOrThrow("div.entries")
-			.select(".entry")
-			.mapNotNull {
+		val response = webClient.httpGet(url).parseHtml()
+		return response.selectFirst("section#archives .entries")
+			?.selectFirst("div.entries")
+			?.select(".entry")
+			?.mapNotNull {
 				val href = it.selectFirst(".metadata > a")?.attr("href") ?: return@mapNotNull null
 				Manga(
 					id = generateUid(href),
@@ -130,7 +113,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 					description = null,
 					source = source,
 				)
-			}
+			} ?: emptyList()
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -205,6 +188,4 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 				)
 			}
 	}
-
-    private fun space2plus(input: String): String = input.replace(' ', '+')
 }

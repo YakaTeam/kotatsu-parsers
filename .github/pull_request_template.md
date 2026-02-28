@@ -10,6 +10,7 @@ I confirm that:
 - [ ] I have not changed the parser class name and ensured it does not conflict with any existing class
 - [ ] All declared sort orders and filters in `availableSortOrders`, `filterCapabilities`, and `getFilterOptions` are properly implemented in `getList()` OR `getListPage()` function
 - [ ] I have followed the instructions and parser class skeleton provided in [this CONTRIBUTING guide](https://github.com/YakaTeam/kotatsu-parsers/blob/master/CONTRIBUTING.md)
+- [ ] This PR only creates / edits to a single source; any more than that will be automatically rejected by reviewers
 
 **TESTING**
 
@@ -21,7 +22,10 @@ I confirm that:
 - [ ] `getList()` OR `getListPage()` and `getDetails()` functions retrieve all necessary information
 - [ ] `getPages()` function successfully retrieves all images from the source
 
-**Note:** You must provide accurate information before creating a pull request. This information will be verified against data retrieved from the source by the reviewers.
+> [!IMPORTANT]
+> - You must provide accurate information before creating a pull request
+> - Select only the tasks you have completed and leave blank if you haven't done them
+> - This information will be verified against data retrieved from that source by the reviewers.
 
 ---
 
