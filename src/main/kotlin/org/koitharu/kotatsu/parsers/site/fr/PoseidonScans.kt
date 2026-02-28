@@ -21,6 +21,7 @@ import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.extractNextJsTyped
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
@@ -59,21 +60,7 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 		timeZone = TimeZone.getTimeZone("UTC")
 	}
 
-	private val nextFPushRegex = Regex(
-		"""self\.__next_f\.push\(\s*\[\s*1\s*,\s*"((?:\\.|[^"\\])*)"\s*]\s*\)""",
-		RegexOption.DOT_MATCHES_ALL,
-	)
 	private val chapterRouteRegex = Regex("""(?:https?://[^/]+)?/serie/([^/]+)/chapter/([^/?#]+)""")
-	private val nextJsPayloadAnchorPatterns = arrayOf(
-		""""initialData":{""",
-		""""manga":{""",
-		""""mangas":[""",
-		""""series":[""",
-		""""chapter":{""",
-		""""images":[""",
-		""""pages":[""",
-	)
-
 
 	// Helper data classes for sorting and chapter recovery.
 	private data class MangaCache(
@@ -462,7 +449,9 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 	}
 
 	private fun extractFullMangaListFromDocument(doc: Document): List<MangaCache> {
-		val pageData = extractNextJsPageData(doc)
+		val pageData = doc.extractNextJsTyped<JSONObject> { json ->
+			json is JSONObject && (json.has("mangas") || json.has("series") || json.optJSONObject("initialData")?.has("mangas") == true)
+		}
 
 		val mangasArray = pageData?.let {
 			it.optJSONArray("mangas") ?: it.optJSONArray("series") ?: it.optJSONObject("initialData")
@@ -470,7 +459,6 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 		} ?: return emptyList()
 
 		return mangasArray.mapJSON { parseMangaDetailsFromJson(it, popularityScore = null) }
-
 	}
 
 	private fun parseMangaDetailsFromJson(mangaJson: JSONObject, popularityScore: Int?): MangaCache {
@@ -560,12 +548,15 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 		// Preferred path: parse series page (full chapters list).
 		val pageChapters = runCatching {
 			val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
-			val pageData = extractNextJsPageData(doc) ?: throw Exception("Could not extract Next.js data for manga details")
-			val mangaDetailsJson =
-				pageData.optJSONObject("manga") ?: pageData.optJSONObject("initialData")?.optJSONObject("manga")
-				?: pageData.takeIf { it.has("slug") && it.has("title") }
-				?: throw Exception("JSON 'manga' structure not found")
-			extractChaptersFromMangaData(mangaDetailsJson, manga)
+			val mangaDetailsJson = doc.extractNextJsTyped<JSONObject> { json ->
+				json is JSONObject && (json.has("slug") && json.has("title") || json.has("manga") || json.optJSONObject("initialData")?.has("manga") == true)
+			} ?: throw Exception("Could not extract Next.js data for manga details")
+
+			val details = mangaDetailsJson.optJSONObject("manga")
+				?: mangaDetailsJson.optJSONObject("initialData")?.optJSONObject("manga")
+				?: mangaDetailsJson
+
+			extractChaptersFromMangaData(details, manga)
 		}.onFailure { error ->
 			findCloudflareProtectionError(error)?.let { cloudflareProtectionError = it }
 		}.getOrNull().orEmpty()
@@ -769,8 +760,14 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 	private fun extractPagesFromDocument(chapter: MangaChapter, document: Document): List<MangaPage> {
 		val extractedUrls = LinkedHashSet<String>()
 
-		val pageData = extractNextJsPageData(document)
-		val imagesArray = pageData?.let { findBestImagesArray(it) }
+		val pageData = document.extractNextJsTyped<JSONObject> { json ->
+			json is JSONObject && (json.has("images") || json.has("pages"))
+		}
+
+		val imagesArray = pageData?.let {
+			it.optJSONArray("images") ?: it.optJSONArray("pages")
+		}
+
 		if (imagesArray != null) {
 			for (index in 0 until imagesArray.length()) {
 				val imageUrl = extractImageUrlFromArrayItem(imagesArray.opt(index)) ?: continue
@@ -850,113 +847,6 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 		return recoveredChaptersCount <= 2 && (expectedChapterCount == null || expectedChapterCount > 2)
 	}
 
-	private fun extractNextJsPageData(document: Document): JSONObject? {
-		try {
-			var bestObject: JSONObject? = null
-			var bestImageCount = 0
-			for (script in document.select("script")) {
-				val scriptContent = script.data()
-				if (!scriptContent.contains("self.__next_f.push")) continue
-
-				val matches = nextFPushRegex.findAll(scriptContent)
-				for (matchResult in matches) {
-					if (matchResult.groupValues.size < 2) continue
-
-					val rawDataString = matchResult.groupValues[1]
-					val cleanedDataString = rawDataString.replace("\\\\", "\\").replace("\\\"", "\"")
-					val seenObjectStarts = HashSet<Int>()
-
-					for (pattern in nextJsPayloadAnchorPatterns) {
-						var searchIdx = -1
-						while (true) {
-							searchIdx = cleanedDataString.indexOf(pattern, startIndex = searchIdx + 1)
-							if (searchIdx == -1) break
-
-							val objectStartIndex = findJsonObjectStart(cleanedDataString, searchIdx)
-							if (objectStartIndex == -1 || !seenObjectStarts.add(objectStartIndex)) continue
-
-							val potentialJson = extractJsonObjectString(cleanedDataString, objectStartIndex)
-							if (potentialJson != null) {
-								try {
-									val parsedContainer = JSONObject(potentialJson)
-									val imageCount = findBestImagesArray(parsedContainer)?.let { countImageEntries(it) } ?: 0
-									if (
-										bestObject == null ||
-										imageCount > bestImageCount
-									) {
-										bestObject = parsedContainer
-										bestImageCount = imageCount
-									}
-								} catch (_: Exception) {
-									// Continue searching
-								}
-							}
-						}
-					}
-				}
-			}
-
-			return bestObject
-		} catch (_: Exception) {
-			return null
-		}
-	}
-
-	private fun findJsonObjectStart(data: String, fromIndex: Int): Int {
-		var braceDepth = 0
-		for (i in fromIndex downTo 0) {
-			when (data[i]) {
-				'}' -> braceDepth++
-				'{' -> {
-					if (braceDepth == 0) {
-						return i
-					}
-					braceDepth--
-				}
-			}
-		}
-		return -1
-	}
-
-	private fun findBestImagesArray(node: Any?): JSONArray? {
-		var bestArray: JSONArray? = null
-		var bestCount = 0
-
-		fun visit(value: Any?) {
-			when (value) {
-				is JSONObject -> {
-					val keys = value.keys()
-					while (keys.hasNext()) {
-						visit(value.opt(keys.next()))
-					}
-				}
-				is JSONArray -> {
-					val count = countImageEntries(value)
-					if (count > bestCount) {
-						bestCount = count
-						bestArray = value
-					}
-					for (index in 0 until value.length()) {
-						visit(value.opt(index))
-					}
-				}
-			}
-		}
-
-		visit(node)
-		return if (bestCount > 0) bestArray else null
-	}
-
-	private fun countImageEntries(array: JSONArray): Int {
-		var count = 0
-		for (index in 0 until array.length()) {
-			if (extractImageUrlFromArrayItem(array.opt(index)) != null) {
-				count++
-			}
-		}
-		return count
-	}
-
 	private fun extractImageUrlFromArrayItem(item: Any?): String? {
 		val raw = when (item) {
 			is JSONObject -> {
@@ -991,28 +881,6 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 			return true
 		}
 		return valueLowercase.contains("/storage/") && valueLowercase.contains("/mangas/")
-	}
-
-	private fun extractJsonObjectString(data: String, startIndex: Int): String? {
-		if (startIndex < 0 || startIndex >= data.length || data[startIndex] != '{') return null
-
-		var braceBalance = 1
-		var inString = false
-		var i = startIndex + 1
-		while (i < data.length) {
-			val char = data[i]
-			when (char) {
-				'\\' -> if (inString) i++
-				'"' -> inString = !inString
-				'{' -> if (!inString) braceBalance++
-				'}' -> if (!inString) {
-					braceBalance--
-					if (braceBalance == 0) return data.substring(startIndex, i + 1)
-				}
-			}
-			i++
-		}
-		return null
 	}
 
 	private fun parseStatus(status: String?): MangaState? {
