@@ -1,0 +1,54 @@
+name: Update summary for PRs
+
+on:
+    workflow_dispatch:
+    pull_request:
+        paths:
+            - 'src/main/kotlin/org/koitharu/kotatsu/parsers/**'
+
+permissions:
+    contents: write
+
+jobs:
+    update-summary:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
+                with:
+                    fetch-depth: 0
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Set up Java environment 🔧
+                uses: actions/setup-java@fe779bf55ef683c9413269276a7588bb9cedf07a # v5.2.0
+                with:
+                    java-version: '17'
+                    distribution: 'temurin'
+
+            -   name: Set up Gradle environment 📦
+                uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+                with:
+                    gradle-version: '9.3.1'
+                    cache-disabled: true
+
+            -   name: Compile the library 🚀
+                run: ./gradlew compileKotlin
+                continue-on-error: true
+
+            -   name: Check for summary update 🔍
+                id: check
+                run: |
+                    if git diff --quiet .github/summary.yaml; then
+                        echo "changed=false" >> $GITHUB_OUTPUT
+                    else
+                        echo "changed=true" >> $GITHUB_OUTPUT
+                    fi
+
+            -   name: Push / Update summary 📤
+                if: steps.check.outputs.changed == 'true'
+                run: |
+                    git config user.name "YakaBot"
+                    git config user.email "yakateam@proton.me"
+                    git add .github/summary.yaml
+                    git commit -m "chore(automatic): Update summary"
+                    git push
