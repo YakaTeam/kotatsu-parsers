@@ -15,13 +15,11 @@ import org.koitharu.kotatsu.parsers.bitmap.Rect
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("CUUTRUYEN", "Cứu Truyện", "vi")
 internal class CuuTruyenParser(context: MangaLoaderContext) :
@@ -29,13 +27,6 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 
     private val apiSuffix = "/api/v2"
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
-
-	override val webClient = OkHttpWebClient(
-		context.httpClient.newBuilder()
-			.rateLimit(20, 60.seconds)
-			.build(),
-		source,
-	)
 
 	override val configKeyDomain = ConfigKey.Domain(
 		"cuutruyen.net",
