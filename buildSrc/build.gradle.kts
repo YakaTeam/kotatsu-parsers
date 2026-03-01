@@ -7,7 +7,7 @@ repositories {
 }
 
 kotlin {
-    jvmToolchain(17)
+    jvmToolchain(11)
 }
 
 dependencies {
