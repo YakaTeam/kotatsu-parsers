@@ -146,7 +146,7 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 		val maxPageChapterSelect = doc.select(".pagination .page-item a")
 		var maxPageChapter = 1
 		if (!maxPageChapterSelect.isNullOrEmpty()) {
-			maxPageChapterSelect.map {
+			maxPageChapterSelect.forEach {
 				val i = it.attr("href").substringAfterLast("=").toInt()
 				if (i > maxPageChapter) {
 					maxPageChapter = i
@@ -175,7 +175,7 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 					coroutineScope {
 						val result = ArrayList(parseChapters(doc))
 						result.ensureCapacity(result.size * maxPageChapter)
-						(2..maxPageChapter).map { i ->
+						(2 downTo maxPageChapter).map { i ->
 							async {
 								loadChapters(mangaUrl, i)
 							}
@@ -192,20 +192,18 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 		return parseChapters(webClient.httpGet("$baseUrl?page=$page").parseHtml().body())
 	}
 
-	private val dateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", sourceLocale)
-
 	private fun parseChapters(root: Element): List<MangaChapter> {
-		return root.requireElementById("chapter-contact").select(".eplister ul li")
-			.map { li ->
-				val url = li.selectFirstOrThrow("a").attrAsRelativeUrl("href")
+		return root.requireElementById("chaptersContainer").select(".chapter-card")
+			.map { div ->
+				val url = div.selectFirstOrThrow("a").attrAsRelativeUrl("href")
 				MangaChapter(
 					id = generateUid(url),
-					title = li.selectFirstOrThrow(".epl-title").text(),
+					title = div.selectFirstOrThrow(".chapter-title").text(),
 					number = url.substringAfterLast('/').toFloatOrNull() ?: 0f,
 					volume = 0,
 					url = url,
 					scanlator = null,
-					uploadDate = dateFormat.parseSafe(li.selectFirstOrThrow(".epl-date").text()),
+					uploadDate = parseChapterDate(div.selectFirstOrThrow(".chapter-date span").text()),
 					branch = null,
 					source = source,
 				)
@@ -220,13 +218,59 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 				img.hasAttr("src") -> img.requireSrc().toRelativeUrl(domain)
 				else -> img.attrAsRelativeUrl("data-src")
 			}
-			
+
 			MangaPage(
 				id = generateUid(url),
 				url = url,
 				preview = null,
 				source = source,
 			)
+		}
+	}
+
+	private fun parseChapterDate(dateText: String?): Long {
+		if (dateText == null) return 0
+
+		val relativeTimePattern = Regex("(\\d+)\\s*(phút|giờ|ngày|tuần) trước")
+		val absoluteTimePattern = Regex("(\\d{2}-\\d{2}-\\d{4})")
+
+		return when {
+			dateText.contains("minute") -> {
+				val match = relativeTimePattern.find(dateText)
+				val minutes = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				System.currentTimeMillis() - minutes * 60 * 1000
+			}
+
+			dateText.contains("hour") -> {
+				val match = relativeTimePattern.find(dateText)
+				val hours = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				System.currentTimeMillis() - hours * 3600 * 1000
+			}
+
+			dateText.contains("day") -> {
+				val match = relativeTimePattern.find(dateText)
+				val days = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				System.currentTimeMillis() - days * 86400 * 1000
+			}
+
+			dateText.contains("week") -> {
+				val match = relativeTimePattern.find(dateText)
+				val weeks = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				System.currentTimeMillis() - weeks * 7 * 86400 * 1000
+			}
+
+			dateText.contains("year") -> {
+				val match = relativeTimePattern.find(dateText)
+				val years = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				System.currentTimeMillis() - years * 365L * 86400 * 1000
+			}
+
+			absoluteTimePattern.matches(dateText) -> {
+				val formatter = SimpleDateFormat("dd-MM-yyyy", Locale.getDefault())
+				formatter.parseSafe(dateText)
+			}
+
+			else -> 0L
 		}
 	}
 }
