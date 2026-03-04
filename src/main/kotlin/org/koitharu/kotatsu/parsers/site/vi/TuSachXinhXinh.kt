@@ -22,13 +22,13 @@ import javax.crypto.spec.SecretKeySpec
 
 @MangaSourceParser("TUSACHXINHXINH", "Tủ Sách Xinh Xinh", "vi", ContentType.MANGA)
 internal class TuSachXinhXinh(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.TUSACHXINHXINH, 36) {
+	PagedMangaParser(context, MangaParserSource.TUSACHXINHXINH, 20) {
 
 	override val configKeyDomain: ConfigKey.Domain
 		get() = ConfigKey.Domain("tusachxinhxinh12.online")
 
 	override val availableSortOrders: Set<SortOrder>
-		get() = EnumSet.of(SortOrder.UPDATED, SortOrder.POPULARITY)
+		get() = EnumSet.of(SortOrder.UPDATED)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
@@ -39,48 +39,31 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		availableTags = fetchTags(),
 	)
 
-	private suspend fun fetchTags(): Set<MangaTag> {
-		return webClient.httpGet("https://$domain").parseHtml()
-			.select("#nav-tags .tags a[href*=/the-loai/]")
-			.mapToSet(::parseTag)
-	}
-
-	private fun parseTag(tagEl: Element): MangaTag {
-		return MangaTag(
-			title = tagEl.text().toTitleCase(),
-			key = tagEl.attrAsRelativeUrl("href"),
-			source = source,
-		)
-	}
-
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val url = urlBuilder()
 		if (!filter.query.isNullOrEmpty()) {
+			url.addPathSegments("wp-admin/admin-ajax.php")
 			if (page > 1) return emptyList()
 
 			val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
-			return webClient.httpPost("/wp-admin/admin-ajax.php".toAbsoluteUrl(domain), payload)
+			return webClient.httpPost(url.build(), payload)
 				.parseJson().getJSONArray("data")
 				.mapJSONNotNull(::parseSearchItem)
 				.distinctBy { it.url }
-		}
-
-		val tag = filter.tags.oneOrThrowIfMany()
-		if (tag != null) {
-			if (page > 1) return emptyList()
-			return parseMangaList(webClient.httpGet("${tag.key}/".toAbsoluteUrl(domain)).parseHtml())
-		}
-
-		return when (order) {
-			SortOrder.POPULARITY -> {
-				if (page > 1) return emptyList()
-				parseMangaList(webClient.httpGet("/nhieu-xem-nhat/".toAbsoluteUrl(domain)).parseHtml())
+		} else if (!filter.tags.isEmpty()) {
+			val tag = filter.tags.oneOrThrowIfMany()
+			if (tag != null) {
+				url.addPathSegments(tag.key)
 			}
-
-			else -> {
-				val url = if (page == 1) "/" else "/page/$page/"
-				parseMangaList(webClient.httpGet(url.toAbsoluteUrl(domain)).parseHtml())
-			}
+		} else {
+			url.addPathSegment("danh-sach-truyen")
 		}
+
+		if (page > 1 && filter.query.isNullOrEmpty()) {
+			url.addPathSegments("page/$page")
+		}
+
+		return parseMangaList(webClient.httpGet(url.build()).parseHtml())
 	}
 
 	private fun parseSearchItem(jo: JSONObject): Manga? {
@@ -110,58 +93,33 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 	}
 
 	private fun parseMangaList(doc: Document): List<Manga> {
-		val listItems = doc.select("ul.single-list-comic li.position-relative, ul.most-views li.position-relative")
-		if (listItems.isNotEmpty()) {
-			return listItems.map { element ->
-				val linkEl = element.selectFirstOrThrow("p.super-title a")
-				val relativeUrl = linkEl.attrAsRelativeUrl("href")
-				Manga(
-					id = generateUid(relativeUrl),
-					title = linkEl.text(),
-					altTitles = emptySet(),
-					url = relativeUrl,
-					publicUrl = relativeUrl.toAbsoluteUrl(domain),
-					rating = RATING_UNKNOWN,
-					contentRating = null,
-					coverUrl = element.selectFirst("img.list-left-img")?.src(),
-					tags = emptySet(),
-					state = null,
-					authors = emptySet(),
-					largeCoverUrl = null,
-					description = null,
-					chapters = null,
-					source = source,
-				)
-			}
+		return doc.select(".col-md-3.col-xs-6.comic-item, ul#archive-list-table li.position-relative").filter { element ->
+			val href = element.selectFirst("a")?.attrOrNull("href").orEmpty()
+			href.contains("/truyen-tranh/")
+		}.map { element ->
+			val titleEl = element.selectFirst("h3.comic-title")
+				?: element.selectFirstOrThrow("p.super-title a")
+			val linkEl = titleEl.parent()
+			val relativeUrl = linkEl?.attrAsRelativeUrl("href")
+				?: titleEl.attrAsRelativeUrl("href")
+			Manga(
+				id = generateUid(relativeUrl),
+				title = titleEl.text(),
+				altTitles = emptySet(),
+				url = relativeUrl,
+				publicUrl = relativeUrl.toAbsoluteUrl(domain),
+				rating = RATING_UNKNOWN,
+				contentRating = null,
+				coverUrl = element.selectFirst("img")?.src(),
+				tags = emptySet(),
+				state = null,
+				authors = emptySet(),
+				largeCoverUrl = null,
+				description = null,
+				chapters = null,
+				source = source,
+			)
 		}
-
-		return doc.select(".col-md-3.col-xs-6.comic-item")
-			.filter { element ->
-				val href = element.selectFirst("a")?.attrOrNull("href").orEmpty()
-				href.contains("/truyen-tranh/")
-			}
-			.map { element ->
-				val titleEl = element.selectFirstOrThrow("h3.comic-title")
-				val linkEl = titleEl.parent()!!
-				val relativeUrl = linkEl.attrAsRelativeUrl("href")
-				Manga(
-					id = generateUid(relativeUrl),
-					title = titleEl.text(),
-					altTitles = emptySet(),
-					url = relativeUrl,
-					publicUrl = relativeUrl.toAbsoluteUrl(domain),
-					rating = RATING_UNKNOWN,
-					contentRating = null,
-					coverUrl = element.selectFirst("img")?.src(),
-					tags = emptySet(),
-					state = null,
-					authors = emptySet(),
-					largeCoverUrl = null,
-					description = null,
-					chapters = null,
-					source = source,
-				)
-			}
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -177,7 +135,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 				"Hoàn thành", "Trọn bộ" -> MangaState.FINISHED
 				else -> null
 			},
-			tags = doc.select("a[href*=/the-loai/]").mapToSet(::parseTag),
+			tags = emptySet(),
 			description = doc.selectFirst("div.text-justify")?.html(),
 			contentRating = if (doc.getElementById("adult-modal") != null) {
 				ContentRating.ADULT
@@ -209,38 +167,31 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
 		val script = doc.selectFirst("#view-chapter script")?.data()
 
-		if (script != null) {
-			val encryptedContent = script
-				.substringAfter('"')
-				.substringBeforeLast('"')
-				.replace("\\\"", "\"")
-
-			val decryptedHtml = decryptContent(encryptedContent)
-			return Jsoup.parse(decryptedHtml).select("img").mapNotNull { img ->
-				val url = img.attrOrNull("data-${KEY_PART_1.lowercase()}")
-					?.let(::deobfuscateUrl)
-					?: img.src()
-					?: return@mapNotNull null
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				)
-			}
+		val imgs = if (script != null) {
+			val encrypted = script.substringAfter('"')
+				.substringBeforeLast('"').replace("\\\"", "\"")
+			Jsoup.parse(decryptContent(encrypted)).select("img")
+		} else {
+			doc.select("#view-chapter img")
+				.ifEmpty { doc.select(".chapter-content img, .reading-content img, .content-chapter img") }
 		}
 
-		return doc.select("#view-chapter img")
-			.ifEmpty { doc.select(".chapter-content img, .reading-content img, .content-chapter img") }
-			.mapNotNull { img ->
-				val url = img.src() ?: return@mapNotNull null
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				)
-			}
+		return imgs.mapNotNull { img ->
+			val url = (script?.let {
+				img.attrOrNull("data-${KEY_PART_1.lowercase()}")?.let(::deobfuscateUrl)
+			} ?: img.src()) ?: return@mapNotNull null
+			MangaPage(
+				id = generateUid(url),
+				url = url,
+				preview = null,
+				source = source
+			)
+		}
+	}
+
+	override suspend fun getRelatedManga(seed: Manga): List<Manga> {
+		val doc = webClient.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
+		return parseMangaList(doc)
 	}
 
 	private fun decryptContent(secret: String): String {
@@ -261,9 +212,18 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		.replace(KEY_PART_2, ":")
 		.replace(KEY_PART_3, "/")
 
-	override suspend fun getRelatedManga(seed: Manga): List<Manga> {
-		val doc = webClient.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
-		return parseMangaList(doc)
+	private suspend fun fetchTags(): Set<MangaTag> {
+		return webClient.httpGet("https://$domain").parseHtml()
+			.select("#nav-tags .tags a[href*=/the-loai/]")
+			.mapToSet(::parseTag)
+	}
+
+	private fun parseTag(tagEl: Element): MangaTag {
+		return MangaTag(
+			title = tagEl.text().toTitleCase(),
+			key = tagEl.attrAsRelativeUrl("href"),
+			source = source,
+		)
 	}
 
 	private fun String.decodeHex(): ByteArray {
