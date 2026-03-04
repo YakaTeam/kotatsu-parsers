@@ -60,69 +60,45 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 			val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
 			return webClient.httpPost("/wp-admin/admin-ajax.php".toAbsoluteUrl(domain), payload)
 				.parseJson().getJSONArray("data")
-				.mapJSONNotNull { jo ->
-					val link = jo.getString("link")
-					if (!link.contains("/truyen-tranh/")) return@mapJSONNotNull null
-
-					val relativeUrl = link.toRelativeUrl(domain)
-					Manga(
-						id = generateUid(relativeUrl),
-						title = jo.getString("title"),
-						altTitles = emptySet(),
-						url = relativeUrl,
-						publicUrl = relativeUrl.toAbsoluteUrl(domain),
-						rating = RATING_UNKNOWN,
-						contentRating = null,
-						coverUrl = jo.optString("img").let { img ->
-							if (img.isNullOrBlank()) null else img.replace(SMALL_THUMBNAIL_REGEX, "$1")
-						},
-						tags = emptySet(),
-						state = null,
-						authors = emptySet(),
-						largeCoverUrl = null,
-						description = null,
-						chapters = null,
-						source = source,
-					)
-				}.distinctBy { it.url }
+				.mapJSONNotNull(::parseSearchItem)
+				.distinctBy { it.url }
 		}
 
 		val tag = filter.tags.oneOrThrowIfMany()
 		if (tag != null) {
 			if (page > 1) return emptyList()
-			return webClient.httpGet("${tag.key}/".toAbsoluteUrl(domain)).parseHtml()
-				.select("ul.single-list-comic li.position-relative")
-				.map(::parseListItem)
+			return parseMangaList(webClient.httpGet("${tag.key}/".toAbsoluteUrl(domain)).parseHtml())
 		}
 
 		return when (order) {
 			SortOrder.POPULARITY -> {
 				if (page > 1) return emptyList()
-				webClient.httpGet("/nhieu-xem-nhat/".toAbsoluteUrl(domain)).parseHtml()
-					.select("ul.most-views.single-list-comic li.position-relative")
-					.map(::parseListItem)
+				parseMangaList(webClient.httpGet("/nhieu-xem-nhat/".toAbsoluteUrl(domain)).parseHtml())
 			}
 
 			else -> {
 				val url = if (page == 1) "/" else "/page/$page/"
-				val doc = webClient.httpGet(url.toAbsoluteUrl(domain)).parseHtml()
-				parseLatestPage(doc)
+				parseMangaList(webClient.httpGet(url.toAbsoluteUrl(domain)).parseHtml())
 			}
 		}
 	}
 
-	private fun parseListItem(element: Element): Manga {
-		val linkElement = element.selectFirstOrThrow("p.super-title a")
-		val relativeUrl = linkElement.attrAsRelativeUrl("href")
+	private fun parseSearchItem(jo: JSONObject): Manga? {
+		val link = jo.getString("link")
+		if (!link.contains("/truyen-tranh/")) return null
+
+		val relativeUrl = link.toRelativeUrl(domain)
 		return Manga(
 			id = generateUid(relativeUrl),
-			title = linkElement.text(),
+			title = jo.getString("title"),
 			altTitles = emptySet(),
 			url = relativeUrl,
 			publicUrl = relativeUrl.toAbsoluteUrl(domain),
 			rating = RATING_UNKNOWN,
 			contentRating = null,
-			coverUrl = element.selectFirst("img.list-left-img")?.src(),
+			coverUrl = jo.optString("img").let { img ->
+				if (img.isNullOrBlank()) null else img.replace(SMALL_THUMBNAIL_REGEX, "$1")
+			},
 			tags = emptySet(),
 			state = null,
 			authors = emptySet(),
@@ -133,7 +109,32 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		)
 	}
 
-	private fun parseLatestPage(doc: Document): List<Manga> {
+	private fun parseMangaList(doc: Document): List<Manga> {
+		val listItems = doc.select("ul.single-list-comic li.position-relative, ul.most-views li.position-relative")
+		if (listItems.isNotEmpty()) {
+			return listItems.map { element ->
+				val linkEl = element.selectFirstOrThrow("p.super-title a")
+				val relativeUrl = linkEl.attrAsRelativeUrl("href")
+				Manga(
+					id = generateUid(relativeUrl),
+					title = linkEl.text(),
+					altTitles = emptySet(),
+					url = relativeUrl,
+					publicUrl = relativeUrl.toAbsoluteUrl(domain),
+					rating = RATING_UNKNOWN,
+					contentRating = null,
+					coverUrl = element.selectFirst("img.list-left-img")?.src(),
+					tags = emptySet(),
+					state = null,
+					authors = emptySet(),
+					largeCoverUrl = null,
+					description = null,
+					chapters = null,
+					source = source,
+				)
+			}
+		}
+
 		return doc.select(".col-md-3.col-xs-6.comic-item")
 			.filter { element ->
 				val href = element.selectFirst("a")?.attrOrNull("href").orEmpty()
@@ -262,7 +263,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 
 	override suspend fun getRelatedManga(seed: Manga): List<Manga> {
 		val doc = webClient.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
-		return parseLatestPage(doc)
+		return parseMangaList(doc)
 	}
 
 
