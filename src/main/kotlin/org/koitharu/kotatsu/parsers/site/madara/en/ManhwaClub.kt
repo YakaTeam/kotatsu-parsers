@@ -1,4 +1,4 @@
-package org.koitharu.kotatsu.parsers.site.madara.fr
+package org.koitharu.kotatsu.parsers.site.madara.en
 
 import okhttp3.Headers
 import org.jsoup.nodes.Document
@@ -13,7 +13,6 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
-import org.koitharu.kotatsu.parsers.util.insertCookies
 import org.koitharu.kotatsu.parsers.util.mapChapters
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
@@ -21,17 +20,17 @@ import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import java.text.SimpleDateFormat
 import java.util.Locale
 
-@MangaSourceParser("HHENTAIFR", "Histoire d'Hentai", "fr", ContentType.HENTAI)
-internal class HhentaiFr(context: MangaLoaderContext) :
-	MadaraParser(context, MangaParserSource.HHENTAIFR, "hhentai.fr") {
+@MangaSourceParser("MANHWACLUB", "Manhwaclub", "en", ContentType.HENTAI)
+internal class ManhwaClub(context: MangaLoaderContext) :
+	MadaraParser(context, MangaParserSource.MANHWACLUB, "manhwaclub.net") {
 
 	override val listUrl = "manga/"
 	override val datePattern = "MMMM d, yyyy"
+	override val postReq = true
 	override val selectTestAsync = "#manga-chapters-holder li.wp-manga-chapter"
 	override val selectChapter = "li.wp-manga-chapter, div.chapter-item"
 
-	private val chapterDateFormatFr = ThreadLocal.withInitial { SimpleDateFormat(datePattern, sourceLocale) }
-	private val chapterDateFormatEn = ThreadLocal.withInitial { SimpleDateFormat(datePattern, Locale.ENGLISH) }
+	private val chapterDateFormat = ThreadLocal.withInitial { SimpleDateFormat(datePattern, sourceLocale) }
 
 	private val chaptersCache = object : LinkedHashMap<String, List<MangaChapter>>(32, 0.75f, true) {
 		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<MangaChapter>>?): Boolean {
@@ -49,13 +48,6 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 		.set("Referer", "https://$domain/")
 		.set("Origin", "https://$domain")
 		.build()
-
-	init {
-		context.cookieJar.insertCookies(
-			domain,
-			"age_gate=32;",
-		)
-	}
 
 	override suspend fun getChapters(manga: Manga, doc: Document): List<MangaChapter> {
 		val cacheKey = normalizeMangaUrl(manga.url)
@@ -78,8 +70,7 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 			chaptersCache[cacheKey]?.let { return it }
 		}
 
-		val asyncDoc = requestAsyncChapters(mangaUrl, document)
-		val chaptersFromAsync = parseChapterList(asyncDoc.select(selectChapter), sourceOrderFallback = true)
+		val chaptersFromAsync = requestAsyncChapters(mangaUrl, document)
 		val chapters = if (chaptersFromAsync.isNotEmpty()) {
 			chaptersFromAsync
 		} else {
@@ -93,23 +84,20 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 		return chapters
 	}
 
-	private suspend fun requestAsyncChapters(mangaUrl: String, document: Document): Document {
-		val ajaxUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
-		val ajaxDoc = webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
-		if (ajaxDoc.select(selectChapter).isNotEmpty()) {
-			return ajaxDoc
-		}
-
+	private suspend fun requestAsyncChapters(mangaUrl: String, document: Document): List<MangaChapter> {
 		val mangaId = document.select("div#manga-chapters-holder").attr("data-id").trim()
-		if (mangaId.isNotEmpty()) {
-			val url = "https://$domain/wp-admin/admin-ajax.php"
+		if (postReq && mangaId.isNotEmpty()) {
+			val adminAjaxUrl = "https://$domain/wp-admin/admin-ajax.php"
 			val postData = postDataReq + mangaId
-			val adminAjaxDoc = webClient.httpPost(url, postData).parseHtml()
-			if (adminAjaxDoc.select(selectChapter).isNotEmpty()) {
-				return adminAjaxDoc
+			val adminAjaxDoc = webClient.httpPost(adminAjaxUrl, postData).parseHtml()
+			val adminAjaxChapters = parseChapterList(adminAjaxDoc.select(selectChapter), sourceOrderFallback = true)
+			if (adminAjaxChapters.isNotEmpty()) {
+				return adminAjaxChapters
 			}
 		}
-		return ajaxDoc
+		val ajaxUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
+		val ajaxDoc = webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
+		return parseChapterList(ajaxDoc.select(selectChapter), sourceOrderFallback = true)
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
@@ -127,50 +115,58 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 	}
 
 	private fun parseChapterList(items: List<Element>, sourceOrderFallback: Boolean): List<MangaChapter> {
+		val dateFormat = chapterDateFormat.get()
 		return items.mapChapters(reversed = true) { i, li ->
 			val a = li.selectFirstOrThrow("a")
 			val href = a.attrAsRelativeUrl("href")
 			val chapterTitle = (a.selectFirst("p")?.text() ?: a.ownText()).trim().ifEmpty { null }
+			val chapterTitleLower = chapterTitle?.lowercase(Locale.ROOT).orEmpty()
+			val hrefLower = href.lowercase(Locale.ROOT)
 			val dateText = li.selectFirst("a.c-new-tag")?.attr("title")
 				?: li.selectFirst(selectDate)?.text()
 
 			MangaChapter(
 				id = generateUid(href),
 				title = chapterTitle,
-				number = parseChapterNumber(chapterTitle, href, fallback = if (sourceOrderFallback) i + 1f else 0f),
+				number = parseChapterNumber(
+					title = chapterTitle,
+					href = href,
+					titleLower = chapterTitleLower,
+					hrefLower = hrefLower,
+					fallback = if (sourceOrderFallback) i + 1f else 0f,
+				),
 				volume = 0,
 				url = href + stylePage,
-				uploadDate = parseUploadDate(dateText),
+				uploadDate = parseChapterDate(dateFormat, dateText),
 				source = source,
 				scanlator = null,
-				branch = null,
+				branch = parseChapterBranch(chapterTitleLower, hrefLower),
 			)
 		}
 	}
 
-	private fun parseUploadDate(raw: String?): Long {
-		val normalizedRaw = raw?.trim()?.replace('\u00a0', ' ')?.ifEmpty { return 0L } ?: return 0L
-		val frDate = parseChapterDate(chapterDateFormatFr.get(), normalizedRaw)
-		if (frDate != 0L) return frDate
-		return parseChapterDate(chapterDateFormatEn.get(), normalizedRaw)
+	private fun parseChapterBranch(titleLower: String, hrefLower: String): String? {
+		return if ("raw" in titleLower || "-raw/" in hrefLower) "RAW" else null
 	}
 
-	private fun parseChapterNumber(title: String?, href: String, fallback: Float): Float {
+	private fun parseChapterNumber(
+		title: String?,
+		href: String,
+		titleLower: String,
+		hrefLower: String,
+		fallback: Float,
+	): Float {
 		title?.let {
 			CHAPTER_TITLE_NUMBER.find(it)?.groupValues?.getOrNull(1)?.replace(',', '.')?.toFloatOrNull()?.let { n ->
 				return n
 			}
-			if ("oneshot" in it.lowercase(Locale.ROOT)) {
-				return 1f
-			}
 		}
+		if ("oneshot" in titleLower) return 1f
 		CHAPTER_URL_NUMBER.find(href)?.groupValues?.getOrNull(1)?.let { raw ->
 			val value = raw.replace('-', '.')
 			value.toFloatOrNull()?.let { return it }
 		}
-		if ("/oneshot" in href.lowercase(Locale.ROOT)) {
-			return 1f
-		}
+		if ("/oneshot" in hrefLower) return 1f
 		return fallback
 	}
 
