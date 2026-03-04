@@ -20,7 +20,7 @@ import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
 @MangaSourceParser("TUSACHXINHXINH", "Tủ Sách Xinh Xinh", "vi", ContentType.MANGA)
-internal class TuSachXinhXinhParser(context: MangaLoaderContext) :
+internal class TuSachXinhXinh(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.TUSACHXINHXINH, 36) {
 
 	override val configKeyDomain: ConfigKey.Domain
@@ -186,10 +186,12 @@ internal class TuSachXinhXinhParser(context: MangaLoaderContext) :
 				.mapChapters(reversed = true) { index, element ->
 					val url = element.attrAsRelativeUrl("href")
 					val dateText = element.closest("tr")?.selectFirst("td.hidden-xs.hidden-sm")?.text()
+					val rawName = element.text()
+					val chapMatch = CHAPTER_REGEX.find(rawName)
 					MangaChapter(
 						id = generateUid(url),
-						title = element.selectFirst("span")?.textOrNull(),
-						number = index + 1f,
+						title = chapMatch?.value?.trim(),
+						number = chapMatch?.groupValues?.get(1)?.toFloatOrNull() ?: (index + 1f),
 						volume = 0,
 						url = url,
 						scanlator = null,
@@ -283,6 +285,8 @@ internal class TuSachXinhXinhParser(context: MangaLoaderContext) :
 		private const val PASSPHRASE = KEY_PART_1 + KEY_PART_2 + KEY_PART_3
 
 		private val SMALL_THUMBNAIL_REGEX = Regex("-150x150(\\.[a-zA-Z]+)$")
+
+		private val CHAPTER_REGEX = Regex("Chap\\s*(\\d+(?:\\.\\d+)?)", RegexOption.IGNORE_CASE)
 
 		private val DATE_FORMAT by lazy {
 			SimpleDateFormat("dd/MM/yy", Locale.ROOT).apply {
