@@ -12,6 +12,7 @@ import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
+import org.koitharu.kotatsu.parsers.util.json.extractNextJsTyped
 import org.koitharu.kotatsu.parsers.util.json.toJSONArrayOrNull
 import org.koitharu.kotatsu.parsers.util.json.toJSONObjectOrNull
 import java.text.SimpleDateFormat
@@ -215,23 +216,15 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-		val scripts = doc.selectOrThrow("script")
-		val sb = StringBuilder()
-		for (script in scripts) {
-			val raw = script.data().substringBetween("self.__next_f.push(", ")", "").trim()
-			if (raw.isEmpty()) continue
-			val ja = raw.toJSONArrayOrNull() ?: continue
-			for (i in 0 until ja.length()) {
-				(ja.opt(i) as? String)?.let { sb.append(it) }
-			}
-		}
-		val lines = sb.toString().split('\n')
+		val pagesObj = doc.extractNextJsTyped<JSONObject> { json ->
+			json is JSONObject && json.has("pages") && json.has("chapter")
+		} ?: throw ParseException("Could not find page data", chapter.url)
+
+		val pagesArray = pagesObj.getJSONArray("pages")
 		val pages = TreeMap<Int, String>()
-		for (line in lines) {
-			val obj = line.substringAfter(':').toJSONObjectOrNull() ?: continue
-			if (obj.has("order") && obj.has("url")) {
-				pages[obj.getInt("order")] = obj.getString("url")
-			}
+		for (i in 0 until pagesArray.length()) {
+			val obj = pagesArray.getJSONObject(i)
+			pages[obj.getInt("order")] = obj.getString("url")
 		}
 		return pages.values.map { url ->
 			MangaPage(
