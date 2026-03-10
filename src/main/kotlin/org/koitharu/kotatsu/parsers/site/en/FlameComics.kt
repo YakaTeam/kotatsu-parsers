@@ -114,7 +114,11 @@ internal class FlameComics(context: MangaLoaderContext) :
 	private suspend fun fetchCommonPrefix(): String {
 		val raw = webClient.httpGet(urlBuilder().build()).parseRaw()
 		val regex = Regex("/_next/static/([^/]+)/_buildManifest\\.js")
-		return checkNotNull(raw.findGroupValue(regex)) { "Unable to find common prefix" }
+		val prefix = raw.findGroupValue(regex)
+		return checkNotNull(prefix) {
+			"Unable to find common prefix in page. Looking for pattern: /_next/static/([^/]+)/_buildManifest\\.js\n" +
+			"Page content sample: ${raw.take(1000)}"
+		}
 	}
 
 	private fun imageUrl(seriesId: Any, url: String, width: Int) = urlBuilder()
@@ -152,7 +156,23 @@ internal class FlameComics(context: MangaLoaderContext) :
 	}
 
 	private fun parseManga(jo: JSONObject): Manga {
-		val seriesId = jo.getLong("series_id")
+		// Try different possible field names for series ID, including string conversion
+		val seriesId = jo.getLongOrDefault("series_id", -1L).takeIf { it != -1L }
+			?: jo.getLongOrDefault("novel_id", -1L).takeIf { it != -1L }  // Handle novels
+			?: jo.getStringOrNull("series_id")?.toLongOrNull()
+			?: jo.getStringOrNull("novel_id")?.toLongOrNull()  // Handle novels as string
+			?: jo.getLongOrDefault("id", -1L).takeIf { it != -1L }
+			?: jo.getStringOrNull("id")?.toLongOrNull()
+			?: jo.getLongOrDefault("seriesId", -1L).takeIf { it != -1L }
+			?: jo.getStringOrNull("seriesId")?.toLongOrNull()
+			?: jo.getLongOrDefault("series", -1L).takeIf { it != -1L }
+			?: jo.getStringOrNull("series")?.toLongOrNull()
+			?: throw IllegalArgumentException(
+				"No valid series ID found. Available fields: ${jo.keys().asSequence().joinToString()}\n" +
+				"series_id value: ${jo.optString("series_id", "MISSING")}\n" +
+				"novel_id value: ${jo.optString("novel_id", "MISSING")}\n" +
+				"JSON sample: ${jo.toString().take(500)}"
+			)
 		val cover = jo.getStringOrNull("cover")
 		val author = jo.getStringOrNull("author")
 		return Manga(
