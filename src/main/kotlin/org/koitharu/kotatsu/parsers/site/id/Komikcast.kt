@@ -239,7 +239,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 		val url = urlBuilder().host(apiUrl).addPathSegments("series/${chapter.url}")
 		val json = webClient.httpGet(url.build()).parseJson()
 			.getJSONObject("data").getJSONObject("data")
-		return json.getJSONArray("image").asTypedList<String>().map {
+		return json.getJSONArray("images").asTypedList<String>().map {
 			MangaPage(
 				id = generateUid(it),
 				url = it,
@@ -250,8 +250,8 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
-		val url = urlBuilder().addPathSegment("genres").build()
-		val response = webClient.httpGet(url).parseJson()
+		val url = urlBuilder().host(apiUrl).addPathSegment("genres")
+		val response = webClient.httpGet(url.build()).parseJson()
 		return response.getJSONArray("data").mapJSONToSet {
 			val data = it.getJSONObject("data")
 			MangaTag(
