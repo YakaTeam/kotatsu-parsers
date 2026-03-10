@@ -18,7 +18,6 @@ import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.generateUid
-import org.koitharu.kotatsu.parsers.util.ifNullOrEmpty
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -212,7 +211,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 			val chapterData = data.getJSONObject("data")
 			val index = chapterData.getFloatOrDefault("index", i + 1f)
 			val realIndex = if (index % 1.0 == 0.0) index.toInt().toString() else index.toString()
-			val title = data.getString("title").ifNullOrEmpty { "Chapter $realIndex" }
+			val title = data.optString("title", "Chapter $realIndex")
 
 			// fix invalid X character in A5 / A6
 			val createdAt = data.getStringOrNull("created_at")
@@ -254,8 +253,9 @@ internal class Komikcast(context: MangaLoaderContext) :
 		val url = urlBuilder().addPathSegment("genres").build()
 		val response = webClient.httpGet(url).parseJson()
 		return response.getJSONArray("data").mapJSONToSet {
+			val data = it.getJSONObject("data")
 			MangaTag(
-				title = it.getJSONObject("data").getString("name"),
+				title = data.getString("name"),
 				key = it.getInt("id").toString(),
 				source = source,
 			)
