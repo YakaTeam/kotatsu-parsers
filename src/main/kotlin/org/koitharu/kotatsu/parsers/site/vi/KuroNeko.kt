@@ -2,7 +2,6 @@ package org.koitharu.kotatsu.parsers.site.vi
 
 import okhttp3.Interceptor
 import okhttp3.Response
-import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -11,16 +10,18 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("KURONEKO", "Kuro Neko / vi-Hentai", "vi", type = ContentType.HENTAI)
-internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.KURONEKO, 30) {
+internal class KuroNeko(context: MangaLoaderContext):
+	PagedMangaParser(context, MangaParserSource.KURONEKO, 30) {
 
 	override val configKeyDomain = ConfigKey.Domain("vi-hentai.moe", "vi-hentai.pro")
 
 	override val webClient = OkHttpWebClient(
 		context.httpClient.newBuilder()
-			.rateLimit(15, 60.seconds)
+			.rateLimit(10, 60.seconds)
 			.build(),
 		source,
 	)
@@ -207,15 +208,17 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-		return doc.select(".cover-frame .cover").mapNotNull { div ->
-			div.backgroundImageUrl()?.let { url ->
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				)
-			}
+		val packedScript = doc.select("script").map { it.data() }
+			.firstOrNull { it.contains("eval(function(h,u,n,t,e,r)") }
+			?: throw Exception("Could not find packed script with image data")
+
+		return extractImageUrls(packedScript).map {
+			MangaPage(
+				id = generateUid(it),
+				url = it,
+				preview = null,
+				source = source,
+			)
 		}
 	}
 
@@ -259,10 +262,37 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 		calendar.timeInMillis
 	}.getOrDefault(0L)
 
-	private fun Element.backgroundImageUrl(): String? =
-		attr("style")
-			.substringAfter("url(", "")
-			.substringBefore(")")
-			.trim('\'', '"')
-			.ifBlank { null }
+	private fun extractImageUrls(scriptData: String): List<String> {
+		val args = Regex("""\}\("(.+)",\s*(\d+),\s*"([^"]+)",\s*(\d+),\s*(\d+),\s*(\d+)\)""").find(scriptData)
+			?: throw Exception("Could not parse packed script arguments")
+		val h = args.groupValues[1]
+		val n = args.groupValues[3]
+		val t = args.groupValues[4].toInt()
+		val e = args.groupValues[5].toInt()
+		val delimiter = n[e]
+		val decoded = buildString {
+			var i = 0
+			while (i < h.length) {
+				var segment = buildString {
+					while (i < h.length && h[i] != delimiter) append(h[i++])
+				}
+				i++
+				for (j in n.indices) segment = segment.replace(n[j].toString(), j.toString())
+				val chars = BASE_CHARSET.substring(0, e)
+				val value = segment.reversed().foldIndexed(0) { idx, acc, c ->
+					val pos = chars.indexOf(c)
+					if (pos != -1) acc + pos * e.toDouble().pow(idx.toDouble()).toInt() else acc
+				}
+				append((value - t).toChar())
+			}
+		}
+		return Regex(""""(https?:\\?/\\?/[^"]+\.\w{3,4})"""")
+			.findAll(decoded)
+			.map { it.groupValues[1].replace("\\/", "/") }
+			.toList()
+	}
+
+	companion object {
+		private const val BASE_CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/"
+	}
 }

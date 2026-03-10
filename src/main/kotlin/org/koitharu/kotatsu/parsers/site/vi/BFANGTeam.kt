@@ -158,7 +158,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 				?: return@mapNotNull null
 			MangaPage(
 				id = generateUid(img),
-				url = img,
+				url = img.replace(domain, "i.$domain"),
 				preview = null,
 				source = source,
 			)
