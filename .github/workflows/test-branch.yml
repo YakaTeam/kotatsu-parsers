@@ -15,7 +15,7 @@ jobs:
             -   name: Set up Java enviroment 🔧
                 uses: actions/setup-java@fe779bf55ef683c9413269276a7588bb9cedf07a # v5.2.0
                 with:
-                    java-version: '17'
+                    java-version: '11'
                     distribution: 'temurin'
 
             -   name: Set up Gradle enviroment 📦

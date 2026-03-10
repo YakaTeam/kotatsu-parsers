@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.parsers.site.vi
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Response
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -12,6 +13,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Broken("Need to fix getPages function")
 @MangaSourceParser("LXMANGA", "LXManga", "vi", type = ContentType.HENTAI)
 internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.LXMANGA, 60) {
 
@@ -156,7 +158,7 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 
 	override suspend fun getDetails(manga: Manga): Manga {
 		val root = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
-		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.ROOT).apply {
+		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
 			timeZone = TimeZone.getTimeZone("GMT+7")
 		}
 		val author = root.selectFirst("div.mt-2:contains(Tác giả) span a")?.textOrNull()
@@ -184,7 +186,10 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 				.mapChapters(reversed = true) { i, a ->
 					val href = a.attrAsRelativeUrl("href")
 					val name = a.selectFirst("span.text-ellipsis")?.text().orEmpty()
-					val dateText = a.parent()?.selectFirst("span.timeago")?.attr("datetime").orEmpty()
+					val dateText = a.parent()?.selectFirst("span.timeago")
+						?.attr("datetime")
+						?.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
+						.orEmpty()
 					val scanlator = root.selectFirst("div.mt-2:has(span:first-child:contains(Thực hiện:)) span:last-child")?.textOrNull()
 
 					MangaChapter(

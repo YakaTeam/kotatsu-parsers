@@ -82,7 +82,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 		}
 
 		val request = webClient.httpGet(url.build()).parseHtml()
-		return request.select("article.manga-card.reveal").map { ar ->
+		return request.select("article.manga-card").map { ar ->
 			val href = ar.selectFirstOrThrow("a").attrAsRelativeUrl("href")
 			Manga(
 				id = generateUid(href),
@@ -158,7 +158,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 				?: return@mapNotNull null
 			MangaPage(
 				id = generateUid(img),
-				url = img,
+				url = img.replace(domain, "i.$domain"),
 				preview = null,
 				source = source,
 			)

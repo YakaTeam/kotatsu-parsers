@@ -15,13 +15,11 @@ import org.koitharu.kotatsu.parsers.bitmap.Rect
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("CUUTRUYEN", "Cứu Truyện", "vi")
 internal class CuuTruyenParser(context: MangaLoaderContext) :
@@ -29,13 +27,6 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 
     private val apiSuffix = "/api/v2"
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
-
-	override val webClient = OkHttpWebClient(
-		context.httpClient.newBuilder()
-			.rateLimit(20, 60.seconds)
-			.build(),
-		source,
-	)
 
 	override val configKeyDomain = ConfigKey.Domain(
 		"cuutruyen.net",
@@ -183,7 +174,7 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 			webClient.httpGet("$url/chapters").parseJson().getJSONArray("data")
 		}
 		val json = webClient.httpGet(url).parseJson().getJSONObject("data")
-		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.ROOT).apply {
+		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
 			timeZone = TimeZone.getTimeZone("GMT+7")
 		}
 		val tags = json.optJSONArray("tags")?.mapJSONToSet { jo ->
@@ -219,6 +210,8 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 			chapters = chapters.await().mapChapters(reversed = true) { _, jo ->
 				val chapterId = jo.getLong("id")
 				val number = jo.getFloatOrDefault("number", 0f)
+				val createdAt = jo.getStringOrNull("created_at")
+					?.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
 				MangaChapter(
 					id = generateUid(chapterId),
 					title = jo.getStringOrNull("name"),
@@ -226,7 +219,7 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 					volume = 0,
 					url = "$apiSuffix/chapters/$chapterId",
 					scanlator = team,
-					uploadDate = chapterDateFormat.parseSafe(jo.getStringOrNull("created_at")),
+					uploadDate = chapterDateFormat.parseSafe(createdAt),
 					branch = null,
 					source = source,
 				)

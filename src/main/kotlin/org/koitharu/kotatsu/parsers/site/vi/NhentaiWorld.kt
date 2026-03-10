@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.parsers.site.vi
 
 import okhttp3.Headers
 import org.json.JSONObject
+import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -17,6 +18,7 @@ import java.net.URLDecoder
 import java.text.SimpleDateFormat
 import java.util.*
 
+@Broken("Website is not responding")
 @MangaSourceParser("NHENTAIWORLD", "Nhentai World", "vi", ContentType.HENTAI)
 internal class NhentaiWorld(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.NHENTAIWORLD, 24) {

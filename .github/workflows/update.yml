@@ -1,0 +1,58 @@
+name: Update summary for PRs
+
+on:
+    workflow_dispatch:
+    push:
+        branches:
+            - master
+    pull_request_target:
+        paths:
+            - 'src/main/kotlin/org/koitharu/kotatsu/parsers/**'
+
+env:
+    SIGNER_USERNAME: YakaBot
+    SIGNER_EMAIL: yakateam@proton.me
+
+permissions:
+    contents: write
+
+jobs:
+    update:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
+                with:
+                    fetch-depth: 0
+                    ref: ${{ github.event.pull_request.head.ref }}
+                    repository: ${{ github.event.pull_request.head.repo.full_name }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
+
+            -   name: Set up Java environment 🔧
+                uses: actions/setup-java@fe779bf55ef683c9413269276a7588bb9cedf07a # v5.2.0
+                with:
+                    # Should check with the lowest version that parsers library supports, no cache
+                    java-version: '11'
+                    distribution: 'temurin'
+
+            -   name: Set up Gradle environment 📦
+                uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5.0.2
+                with:
+                    gradle-version: '9.3.1'
+
+            -   name: Run ksp tasks 🚀
+                run: ./gradlew kspKotlin --rerun-tasks
+                continue-on-error: true
+
+            -   name: Check & Push summary 📤
+                run: |
+                    if git status --porcelain .github/summary.yaml | grep .; then
+                        git config user.name "${{ env.SIGNER_USERNAME }}"
+                        git config user.email "${{ env.SIGNER_EMAIL }}"
+                        git add .github/summary.yaml
+                        git commit -m "chore: Update summary after compiling the library"
+                        git push
+                        echo "ℹ️ Summary updated"
+                    else
+                        echo "ℹ️ No changes in summary"
+                    fi

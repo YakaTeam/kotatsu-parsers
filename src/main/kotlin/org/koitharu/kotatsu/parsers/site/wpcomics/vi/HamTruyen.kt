@@ -15,7 +15,7 @@ import org.koitharu.kotatsu.parsers.util.textOrNull
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken // The website is not responding, it may be closed.
+@Broken("Website is not responding")
 @MangaSourceParser("HAMTRUYEN", "Ham Truyện", "vi")
 internal class HamTruyen(context: MangaLoaderContext) :
 	WpComicsParser(context, MangaParserSource.HAMTRUYEN, "hamtruyen1.com", 44) {
