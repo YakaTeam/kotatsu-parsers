@@ -5,7 +5,6 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
-import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaChapter
@@ -23,6 +22,7 @@ import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import org.koitharu.kotatsu.parsers.util.mapChapters
+import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.parseSafe
 import org.koitharu.kotatsu.parsers.util.urlBuilder
@@ -32,7 +32,7 @@ import java.util.EnumSet
 import java.util.Locale
 import java.util.TimeZone
 
-@Broken("Testing...")
+@Broken("Need to rewrite getDetails, getPages func. Testing...")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.KOMIKCAST, 12) {
@@ -110,7 +110,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 						MangaState.FINISHED -> addQueryParameter("status", "completed")
 						MangaState.PAUSED -> addQueryParameter("status", "hiatus")
 						MangaState.ABANDONED -> addQueryParameter("status", "cancelled")
-						else -> ""
+						else -> {}
 					}
 				}
 			}
@@ -122,7 +122,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 						ContentType.MANGA -> addQueryParameter("format", "manga")
 						ContentType.MANHWA -> addQueryParameter("format", "manhwa")
 						ContentType.MANHUA -> addQueryParameter("format", "manhua")
-						else -> ""
+						else -> {}
 					}
 				}
 			}
@@ -163,30 +163,41 @@ internal class Komikcast(context: MangaLoaderContext) :
 		}
 
 		val json = webClient.httpGet(url.build()).parseJson()
-		return json.getJSONArray("data").mapJSON {
+		return json.getJSONArray("data").mapJSON { it ->
 			val seriesData = it.getJSONObject("data")
 			val slug = seriesData.getString("slug")
-			val relativeUrl = "/series/$slug"
 			Manga(
-				id = generateUid(relativeUrl),
+				id = generateUid(slug),
 				title = seriesData.getString("title"),
-				altTitles = emptySet(),
-				url = relativeUrl,
-				publicUrl = "https://$domain$relativeUrl",
-				rating = seriesData.optDouble("rating", -1.0).toFloat().div(10f).takeIf { it >= 0 } ?: RATING_UNKNOWN,
-				contentRating = ContentRating.SAFE,
+				altTitles = seriesData.getString("nativeTitle").split(',').mapToSet { it },
+				authors = setOfNotNull(seriesData.getString("author")),
+				contentRating = null,
 				coverUrl = seriesData.optString("coverImage"),
-				tags = emptySet(),
-				state = null,
-				authors = emptySet(),
+				description = seriesData.getString("synopsis"),
+				url = slug,
+				publicUrl = "https://$domain/series/$slug",
+				rating = seriesData.getFloat("rating").takeIf { it >= 0f }?.div(2f) ?: RATING_UNKNOWN,
+				tags = seriesData.getJSONArray("genres").mapJSONToSet {
+					MangaTag(
+						title = it.getJSONObject("data").getString("name"),
+						key = it.getInt("id").toString(),
+						source = source,
+					)
+				},
+				state = when (seriesData.getString("status")) {
+					"ongoing" -> MangaState.ONGOING
+					"completed" -> MangaState.FINISHED
+					"hiatus" -> MangaState.PAUSED
+					"cancelled" -> MangaState.ABANDONED
+					else -> null
+				},
 				source = source
 			)
 		}
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
-		val slug = manga.url.substringAfterLast("/")
-		val detailsUrl = "$apiUrl/series/$slug?includeMeta=true"
+		val detailsUrl = "$apiUrl/series/${manga.url}?includeMeta=true"
 		val detailsJson = webClient.httpGet(detailsUrl).parseJson().getJSONObject("data").getJSONObject("data")
 
 		val title = detailsJson.getString("title")
@@ -210,7 +221,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 			else -> null
 		}
 
-		val chaptersUrl = "$apiUrl/series/$slug/chapters"
+		val chaptersUrl = "$apiUrl/series/${manga.url}/chapters"
 		val chaptersJson = webClient.httpGet(chaptersUrl).parseJson().getJSONArray("data")
 		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US)
 		dateFormat.timeZone = TimeZone.getTimeZone("UTC")
@@ -219,7 +230,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 			val chapterData = item.getJSONObject("data")
 			val index = chapterData.getDouble("index")
 			val indexStr = if (index % 1.0 == 0.0) index.toInt().toString() else index.toString()
-			val chapterApiUrl = "/series/$slug/chapters/$indexStr"
+			val chapterApiUrl = "/series/${manga.url}/chapters/$indexStr"
 			val dateStr = item.getString("createdAt")
 
 			MangaChapter(
