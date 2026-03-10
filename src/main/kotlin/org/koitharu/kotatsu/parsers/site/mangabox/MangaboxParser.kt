@@ -85,7 +85,7 @@ internal abstract class MangaboxParser(
 
 	protected open val listUrl = "/genre"
 	protected open val searchUrl = "/search/story/"
-	protected open val itemSelector = "div.search-story-item, a.list-story-item"
+	protected open val itemSelector = "div.search-story-item, a.list-story-item, .story_item"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder()
