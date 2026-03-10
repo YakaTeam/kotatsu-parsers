@@ -37,7 +37,6 @@ import org.koitharu.kotatsu.parsers.util.parseFailed
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.parseSafe
-import org.koitharu.kotatsu.parsers.util.rateLimit
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
@@ -46,7 +45,6 @@ import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.Locale
 import kotlin.math.min
-import kotlin.time.Duration.Companion.seconds
 
 private const val PIECE_SIZE = 200
 private const val MIN_SPLIT_COUNT = 5
@@ -62,7 +60,6 @@ internal abstract class MangaFireParser(
         val newHttpClient = context.httpClient.newBuilder()
             .sslSocketFactory(SSLUtils.sslSocketFactory!!, SSLUtils.trustManager)
             .hostnameVerifier { _, _ -> true }
-            .rateLimit(url = "https://$domain", permits = 2, period = 1.seconds)
             .addInterceptor { chain ->
                 val request = chain.request()
                 val response = chain.proceed(

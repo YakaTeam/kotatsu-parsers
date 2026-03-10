@@ -1,6 +1,6 @@
 # Contributing
 
-The following is a guide for creating Kotatsu parsers. Thanks for taking the time to contribute!
+The following is a guide for creating kotatsu-parsers library. Thanks for taking the time to contribute!
 
 ## Prerequisites
 
@@ -16,7 +16,7 @@ Before you start, please note that the ability to use the following technologies
 - [IntelliJ IDEA](https://www.jetbrains.com/idea/) (Community edition is enough)
 - Android device (or emulator)
 
-Kotatsu parsers are not a part of the Android application, but you can easily develop and test it directly inside an
+kotatsu-parsers are not a part of the Android application, but you can easily develop and test it directly inside an
 Android application project and relocate it to the library project when done.
 
 ### Before you start
@@ -36,14 +36,14 @@ API, [explore network requests](https://firefox-source-docs.mozilla.org/devtools
 some websites use AJAX.
 
 - [Example](https://github.com/KotatsuApp/kotatsu-parsers/blob/master/src/main/kotlin/org/koitharu/kotatsu/parsers/site/ru/DesuMeParser.kt)
-  of Json API usage.
+  of JSON API usage.
 - [Example](https://github.com/KotatsuApp/kotatsu-parsers/blob/master/src/main/kotlin/org/koitharu/kotatsu/parsers/site/be/AnibelParser.kt)
   of GraphQL API usage
 - [Example](https://github.com/KotatsuApp/kotatsu-parsers/blob/master/src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/MangaTownParser.kt)
   of pure HTML parsing.
 
 If the website is based on some engine it is rationally to use a common base class for this one (for example, Madara
-Wordpress theme and the `MadaraParser` class)
+WordPress theme and the `MadaraParser` class)
 
 ### Parser class skeleton
 
@@ -65,7 +65,7 @@ All members of the `MangaParser` class are documented. Pay attention to some pec
   to find issues during unit testing.
 - Your parser may also implement the `Interceptor` interface for additional manipulation of all network requests and
   responses, including image loading.
-- If the website has strict rate limits, use the `rateLimit` extension on the HTTP client. See [Rate Limiting util](./src/main/kotlin/org/koitharu/kotatsu/parsers/util/RateLimit.kt) for
+- If your source website (or its API) has strict rate limits, use the `rateLimit` extension on the HTTP client. See [Rate Limiting util](./src/main/kotlin/org/koitharu/kotatsu/parsers/util/RateLimit.kt) for
 details and see [Yuri Garden parsers](./src/main/kotlin/org/koitharu/kotatsu/parsers/site/vi/YuriGardenParser.kt) for example.
 - If your source website (or its API) uses pages for pagination instead of offset you should extend `PagedMangaParser`
   instead of `MangaParser`.
@@ -77,8 +77,8 @@ details and see [Yuri Garden parsers](./src/main/kotlin/org/koitharu/kotatsu/par
 ## Development process
 
 During the development, it is recommended (but not necessary) to write it directly
-in the Kotatsu Android application project. You can use the `core.parser.DummyParser` class as a sandbox. The `Dummy`
-manga source is available in the debug Kotatsu build.
+in the [Kotatsu Android application project](https://github.com/KotatsuApp/Kotatsu). You can use the `core.parser.DummyParser` class as a sandbox. The `Dummy`
+manga source is available in the debug Kotatsu build (Deprecated / Removed in latest build).
 
 Once the parser is ready you can relocate your code into the `kotatsu-parsers` library project in a `site` package and
 create a Pull Request.
@@ -90,9 +90,8 @@ It is recommended that unit tests be run before submitting a PR.
 - Temporary modify the `MangaSources` annotation class: specify your parser(s) name(s) and change mode
   to `EnumSource.Mode.INCLUDE`
 - Run the `MangaParserTest` (`gradlew :test --tests "org.koitharu.kotatsu.parsers.MangaParserTest"`)
-- Optionally, you can run the `generateTestsReport` gradle task to get a pretty readable html report from test results.
+- Optionally, you can run the `generateTestsReport` gradle task to get a pretty readable HTML report from test results.
 
-## Help
+## Help wanted ?
 
-If you need help or have some questions, ask a community in our [Telegram chat](https://t.me/kotatsuapp)
-or [Discord server](https://discord.gg/NNJ5RgVBC5).
+If you need help or have some questions, ask a community in our [Discord server](https://discord.gg/PTd2bYgz9m).

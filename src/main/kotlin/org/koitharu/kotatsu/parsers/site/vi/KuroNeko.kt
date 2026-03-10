@@ -1,34 +1,30 @@
 package org.koitharu.kotatsu.parsers.site.vi
 
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import okhttp3.Interceptor
+import okhttp3.Response
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
+import kotlin.math.pow
 import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("KURONEKO", "Kuro Neko / vi-Hentai", "vi", type = ContentType.HENTAI)
-internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.KURONEKO, 30) {
+internal class KuroNeko(context: MangaLoaderContext):
+	PagedMangaParser(context, MangaParserSource.KURONEKO, 30) {
 
 	override val configKeyDomain = ConfigKey.Domain("vi-hentai.moe", "vi-hentai.pro")
 
-	private val pagesRequestMutex = Mutex()
-	private var lastPagesRequestTime = 0L
-
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(15, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
+			.rateLimit(14, 60.seconds)
+			.build(),
+		source,
+	)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -211,25 +207,28 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		pagesRequestMutex.withLock {
-			val currentTime = System.currentTimeMillis()
-			val timeSinceLastRequest = currentTime - lastPagesRequestTime
-			if (timeSinceLastRequest < PAGES_REQUEST_DELAY_MS) {
-				delay(PAGES_REQUEST_DELAY_MS - timeSinceLastRequest)
-			}
-			lastPagesRequestTime = System.currentTimeMillis()
-		}
-
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-		return doc.select("div.text-center img").mapNotNull { img ->
-			val url = img.requireSrc()
+		val packedScript = doc.select("script").map { it.data() }
+			.firstOrNull { it.contains("eval(function(h,u,n,t,e,r)") }
+			?: throw Exception("Could not find packed script with image data")
+
+		return extractImageUrls(packedScript).map {
 			MangaPage(
-				id = generateUid(url),
-				url = url,
+				id = generateUid(it),
+				url = it,
 				preview = null,
 				source = source,
 			)
 		}
+	}
+
+	override fun intercept(chain: Interceptor.Chain): Response {
+		val request = chain.request()
+		val newRequest = request.newBuilder()
+			.addHeader("Referer", "https://$domain/")
+			.build()
+
+		return chain.proceed(newRequest)
 	}
 
 	private suspend fun availableTags(): Set<MangaTag> {
@@ -263,7 +262,37 @@ internal class KuroNeko(context: MangaLoaderContext) : PagedMangaParser(context,
 		calendar.timeInMillis
 	}.getOrDefault(0L)
 
+	private fun extractImageUrls(scriptData: String): List<String> {
+		val args = Regex("""\}\("(.+)",\s*(\d+),\s*"([^"]+)",\s*(\d+),\s*(\d+),\s*(\d+)\)""").find(scriptData)
+			?: throw Exception("Could not parse packed script arguments")
+		val h = args.groupValues[1]
+		val n = args.groupValues[3]
+		val t = args.groupValues[4].toInt()
+		val e = args.groupValues[5].toInt()
+		val delimiter = n[e]
+		val decoded = buildString {
+			var i = 0
+			while (i < h.length) {
+				var segment = buildString {
+					while (i < h.length && h[i] != delimiter) append(h[i++])
+				}
+				i++
+				for (j in n.indices) segment = segment.replace(n[j].toString(), j.toString())
+				val chars = BASE_CHARSET.substring(0, e)
+				val value = segment.reversed().foldIndexed(0) { idx, acc, c ->
+					val pos = chars.indexOf(c)
+					if (pos != -1) acc + pos * e.toDouble().pow(idx.toDouble()).toInt() else acc
+				}
+				append((value - t).toChar())
+			}
+		}
+		return Regex(""""(https?:\\?/\\?/[^"]+\.\w{3,4})"""")
+			.findAll(decoded)
+			.map { it.groupValues[1].replace("\\/", "/") }
+			.toList()
+	}
+
 	companion object {
-		private const val PAGES_REQUEST_DELAY_MS = 5000L
+		private const val BASE_CHARSET = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ+/"
 	}
 }

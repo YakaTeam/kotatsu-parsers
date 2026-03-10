@@ -11,6 +11,7 @@ import java.util.EnumSet
 import java.util.Locale
 import java.util.TimeZone
 
+@Broken("Remake parser needed")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.KOMIKCAST, pageSize = 20) {

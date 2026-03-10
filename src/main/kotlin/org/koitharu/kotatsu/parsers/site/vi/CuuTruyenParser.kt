@@ -15,14 +15,11 @@ import org.koitharu.kotatsu.parsers.bitmap.Rect
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("CUUTRUYEN", "Cứu Truyện", "vi")
 internal class CuuTruyenParser(context: MangaLoaderContext) :
@@ -30,14 +27,6 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 
     private val apiSuffix = "/api/v2"
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
-
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(25, 60.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
 
 	override val configKeyDomain = ConfigKey.Domain(
 		"cuutruyen.net",
@@ -161,12 +150,12 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 			Manga(
 				id = generateUid(jo.getLong("id")),
 				url = "$apiSuffix/mangas/${jo.getLong("id")}",
-				publicUrl = "https://truycapcuutruyen.pages.dev/mangas/${jo.getLong("id")}",
+				publicUrl = "https://$domain/mangas/${jo.getLong("id")}",
 				title = jo.getString("name"),
 				altTitles = emptySet(),
 				coverUrl = if (server == MOBILE_COVER) jo.getString(MOBILE_COVER)
                     else jo.getString(DESKTOP_COVER),
-				largeCoverUrl = jo.getString(DESKTOP_COVER),
+				largeCoverUrl = null,
 				authors = setOfNotNull(author),
 				tags = emptySet(),
 				state = null,
@@ -179,12 +168,13 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
+		val server = config[preferredServerKey] ?: DESKTOP_COVER
 		val url = "https://" + domain + manga.url
 		val chapters = async {
 			webClient.httpGet("$url/chapters").parseJson().getJSONArray("data")
 		}
 		val json = webClient.httpGet(url).parseJson().getJSONObject("data")
-		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSXXX", Locale.ROOT).apply {
+		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
 			timeZone = TimeZone.getTimeZone("GMT+7")
 		}
 		val tags = json.optJSONArray("tags")?.mapJSONToSet { jo ->
@@ -220,6 +210,8 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 			chapters = chapters.await().mapChapters(reversed = true) { _, jo ->
 				val chapterId = jo.getLong("id")
 				val number = jo.getFloatOrDefault("number", 0f)
+				val createdAt = jo.getStringOrNull("created_at")
+					?.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
 				MangaChapter(
 					id = generateUid(chapterId),
 					title = jo.getStringOrNull("name"),
@@ -227,11 +219,13 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 					volume = 0,
 					url = "$apiSuffix/chapters/$chapterId",
 					scanlator = team,
-					uploadDate = chapterDateFormat.parseSafe(jo.getStringOrNull("created_at")),
+					uploadDate = chapterDateFormat.parseSafe(createdAt),
 					branch = null,
 					source = source,
 				)
 			},
+			largeCoverUrl = if (server == MOBILE_COVER) json.getString(MOBILE_PANORAMA)
+				else json.getString(DESKTOP_PANORAMA),
 		)
 	}
 
@@ -447,6 +441,8 @@ internal class CuuTruyenParser(context: MangaLoaderContext) :
 		const val DRM_DATA_KEY = "drm_data="
 		const val DECRYPTION_KEY = "3141592653589793"
         const val MOBILE_COVER = "cover_mobile_url"
+		const val MOBILE_PANORAMA = "panorama_mobile_url"
         const val DESKTOP_COVER = "cover_url"
+        const val DESKTOP_PANORAMA = "panorama_url"
 	}
 }

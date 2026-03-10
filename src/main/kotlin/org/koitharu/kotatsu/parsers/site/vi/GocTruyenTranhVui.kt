@@ -13,23 +13,20 @@ import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaParserAuthProvider
 import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import java.util.*
 import kotlin.collections.map
-import kotlin.time.Duration.Companion.seconds
 
 @MangaSourceParser("GOCTRUYENTRANHVUI", "Góc Truyện Tranh Vui", "vi")
 internal class GocTruyenTranhVui(context: MangaLoaderContext):
     PagedMangaParser(context, MangaParserSource.GOCTRUYENTRANHVUI, 50), MangaParserAuthProvider {
 
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(3, 1.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
+	override val webClient = OkHttpWebClient(
+		context.httpClient.newBuilder()
+			.rateLimit(3)
+			.build(),
+		source,
+	)
 
     override val configKeyDomain = ConfigKey.Domain("goctruyentranhvui19.com")
 	override val userAgentKey = ConfigKey.UserAgent(

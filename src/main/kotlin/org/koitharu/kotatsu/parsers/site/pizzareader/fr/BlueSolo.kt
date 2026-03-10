@@ -7,14 +7,18 @@ import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.site.pizzareader.PizzaReaderParser
 import java.util.EnumSet
 
-@MangaSourceParser("FMTEAM", "FmTeam", "fr")
-internal class FmTeam(context: MangaLoaderContext) :
-	PizzaReaderParser(context, MangaParserSource.FMTEAM, "fmteam.fr") {
+@MangaSourceParser("BLUESOLO", "BlueSolo", "fr")
+internal class BlueSolo(context: MangaLoaderContext) :
+	PizzaReaderParser(context, MangaParserSource.BLUESOLO, "bluesolo.org") {
+
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.ALPHABETICAL,
 		SortOrder.UPDATED,
 		SortOrder.UPDATED_ASC,
 	)
+
 	override val ongoingFilter = "en cours"
 	override val completedFilter = "terminé"
+	override val hiatusFilter = "hiatus"
+	override val abandonedFilter = "cancel"
 }

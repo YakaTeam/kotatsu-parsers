@@ -55,20 +55,23 @@ internal class CMangaParser(context: MangaLoaderContext) :
 		get() = domain
 
 	override suspend fun isAuthorized(): Boolean =
-		context.cookieJar.getCookies(domain).any { it.name == "login_password" }
+		context.cookieJar.getCookies(domain).any { it.name == "user_security" && it.value.isEmpty() }
 
 	override suspend fun getUsername(): String {
-		val userId = webClient.httpGet("https://$domain").parseRaw()
-			.substringAfter("token_user = ")
-			.substringBefore(';')
-			.trim()
-		if (userId.isEmpty() || userId == "0") throw AuthRequiredException(
-			source,
-			IllegalStateException("No userId found"),
-		)
-		return webClient.httpGet("/api/user_info?user=$userId".toAbsoluteUrl(domain)).parseJson()
-			.parseJson("info")
-			.getString("name")
+		val cookieValue = context.cookieJar.getCookies(domain)
+			.firstOrNull { it.name.equals("user_security", true) }
+			?.value
+
+		val name = cookieValue?.let {
+			val json = JSONObject(it)
+			json.getJSONObject("info").optString("name", "")
+		}.orEmpty()
+
+		if (name.isBlank()) {
+			throw AuthRequiredException(source, IllegalStateException("No user found!"))
+		}
+
+		return name
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -188,12 +191,28 @@ internal class CMangaParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val pageResponse = webClient
-			.httpGet("/api/chapter_image?chapter=${chapter.url.substringAfterLast('-')}".toAbsoluteUrl(domain))
-			.parseJson()
+		val cookieValue = context.cookieJar.getCookies(domain)
+			.firstOrNull { it.name.equals("user_security", true) }
+			?.value
 
-		if (pageResponse.isLocked()) {
-			throw IllegalStateException("This chapter is locked, you would need to buy it from website")
+		val cookieJson = cookieValue?.let { JSONObject(it) }
+		val userID = cookieJson?.optString("id", "0") ?: "0"
+		val token = cookieJson?.optString("token", "0") ?: "0"
+		val currentTimestamp = System.currentTimeMillis()
+
+		val url = urlBuilder().addPathSegment("api").addPathSegment("chapter_image")
+			.addQueryParameter("chapter", chapter.url.substringAfterLast('-'))
+			.addQueryParameter("v", 0.toString())
+			.addQueryParameter("time", currentTimestamp.toString())
+			.addQueryParameter("user_id", userID)
+			.addQueryParameter("user_token", token)
+			.build()
+
+		val pageResponse = webClient.httpGet(url).parseJson()
+		val info = pageResponse.getJSONObject("data")
+
+		if (pageResponse.isLocked() || info.isLocked()) {
+			throw IllegalStateException("This chapter is locked, you would need to buy it and login!")
 		}
 
 		// trying to block ads page

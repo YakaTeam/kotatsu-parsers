@@ -8,9 +8,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.UserAgents
-import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -18,7 +16,6 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.Duration.Companion.seconds
 
 private const val CHAPTERS_PER_PAGE = 500
 private const val SERVER_DATA = "512"
@@ -33,18 +30,10 @@ internal class WeebDex(context: MangaLoaderContext) :
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
 
-	override val webClient: WebClient by lazy {
-		val newHttpClient = context.httpClient.newBuilder()
-			.rateLimit(5, 1.seconds)
-			.build()
-
-		OkHttpWebClient(newHttpClient, source)
-	}
-
 	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
-			SERVER_DATA to "High quality cover",
-			SERVER_DATA_SAVER to "Compressed quality cover",
+			SERVER_DATA to "High quality",
+			SERVER_DATA_SAVER to "Compressed quality",
 		),
 		defaultValue = SERVER_DATA,
 	)
@@ -419,7 +408,9 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val url = urlBuilder().host("api.$domain")
+		val quality = config[preferredCoverServerKey] ?: SERVER_DATA
+		val url = urlBuilder()
+			.host("api.$domain")
 			.addPathSegment("chapter")
 			.addPathSegment(chapter.url)
 			.build()
@@ -427,7 +418,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 		val response = webClient.httpGet(url).parseJson()
 		val node = response.getString("node")
 
-		return response.getJSONArray("data").mapJSON { data ->
+		val dataKey = if (quality == SERVER_DATA_SAVER) "data_optimized" else "data"
+		return response.getJSONArray(dataKey).mapJSON { data ->
 			val filename = data.getString("name")
 			MangaPage(
 				id = generateUid(filename),
@@ -458,9 +450,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 		}
 
 		getTitleForLocale(LOCALE_FALLBACK)?.let { return it }
-		return keys().asSequence()
-			.mapNotNull { getTitleForLocale(it) }
-			.firstOrNull()
+		return keys().asSequence().firstNotNullOfOrNull { getTitleForLocale(it) }
 	}
 
 	private fun JSONObject.getTitleForLocale(locale: String): String? {
