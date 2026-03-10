@@ -1,6 +1,5 @@
 package org.koitharu.kotatsu.parsers.site.id
 
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -19,6 +18,10 @@ import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.ifNullOrEmpty
+import org.koitharu.kotatsu.parsers.util.json.asTypedList
+import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
+import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import org.koitharu.kotatsu.parsers.util.mapChapters
@@ -32,14 +35,13 @@ import java.util.EnumSet
 import java.util.Locale
 import java.util.TimeZone
 
-@Broken("Need to rewrite getDetails, getPages func. Testing...")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.KOMIKCAST, 12) {
 
 	override val configKeyDomain = ConfigKey.Domain("v1.komikcast.fit")
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
-	private val apiUrl = "be.komikcast.cc" // emulate the same API from site requests
+	private val apiUrl = "be.komikcast.cc" // simulates API requests similar to web
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -170,13 +172,14 @@ internal class Komikcast(context: MangaLoaderContext) :
 				id = generateUid(slug),
 				title = seriesData.getString("title"),
 				altTitles = seriesData.getString("nativeTitle").split(',').mapToSet { it },
-				authors = setOfNotNull(seriesData.getString("author")),
+				authors = seriesData.getString("author").split(',').mapToSet { it },
 				contentRating = null,
-				coverUrl = seriesData.optString("coverImage"),
+				coverUrl = seriesData.getString("coverImage"),
+				largeCoverUrl = seriesData.getString("backgroundImage"),
 				description = seriesData.getString("synopsis"),
 				url = slug,
 				publicUrl = "https://$domain/series/$slug",
-				rating = seriesData.getFloat("rating").takeIf { it >= 0f }?.div(2f) ?: RATING_UNKNOWN,
+				rating = seriesData.getFloatOrDefault("rating", RATING_UNKNOWN).div(2f),
 				tags = seriesData.getJSONArray("genres").mapJSONToSet {
 					MangaTag(
 						title = it.getJSONObject("data").getString("name"),
@@ -197,85 +200,54 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
-		val detailsUrl = "$apiUrl/series/${manga.url}?includeMeta=true"
-		val detailsJson = webClient.httpGet(detailsUrl).parseJson().getJSONObject("data").getJSONObject("data")
+		val chaptersUrl = urlBuilder().host(apiUrl)
+			.addPathSegments("/series/${manga.url}/chapters").build()
+		val data = webClient.httpGet(chaptersUrl).parseJson().getJSONArray("data")
 
-		val title = detailsJson.getString("title")
-		val description = detailsJson.optString("synopsis")
-		val coverUrl = detailsJson.optString("coverImage")
-		val author = detailsJson.optString("author")
-		val status = detailsJson.optString("status")
-		val genresJson = detailsJson.optJSONArray("genres")
-		val tags = mutableSetOf<MangaTag>()
-		if (genresJson != null) {
-			for (i in 0 until genresJson.length()) {
-				val genreObj = genresJson.getJSONObject(i).getJSONObject("data")
-				val name = genreObj.getString("name")
-				tags.add(MangaTag(name, name, source))
-			}
+		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
+			timeZone = TimeZone.getTimeZone("UTC")
 		}
 
-		val state = when (status.lowercase()) {
-			"ongoing" -> MangaState.ONGOING
-			"completed" -> MangaState.FINISHED
-			else -> null
-		}
+		val chapters = data.mapChapters(reversed = true) { i, data ->
+			val chapterData = data.getJSONObject("data")
+			val index = chapterData.getFloatOrDefault("index", i + 1f)
+			val realIndex = if (index % 1.0 == 0.0) index.toInt().toString() else index.toString()
+			val title = data.getString("title").ifNullOrEmpty { "Chapter $realIndex" }
 
-		val chaptersUrl = "$apiUrl/series/${manga.url}/chapters"
-		val chaptersJson = webClient.httpGet(chaptersUrl).parseJson().getJSONArray("data")
-		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSX", Locale.US)
-		dateFormat.timeZone = TimeZone.getTimeZone("UTC")
-
-		val chapters = chaptersJson.mapChapters(reversed = true) { _, item ->
-			val chapterData = item.getJSONObject("data")
-			val index = chapterData.getDouble("index")
-			val indexStr = if (index % 1.0 == 0.0) index.toInt().toString() else index.toString()
-			val chapterApiUrl = "/series/${manga.url}/chapters/$indexStr"
-			val dateStr = item.getString("createdAt")
+			// fix invalid X character in A5 / A6
+			val createdAt = data.getStringOrNull("created_at")
+				?.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
 
 			MangaChapter(
-				id = generateUid(chapterApiUrl),
-				title = "Chapter $indexStr",
-				url = chapterApiUrl,
-				number = index.toFloat(),
+				id = generateUid(realIndex),
+				title = title,
+				url = "${manga.url}/chapters/$realIndex",
+				number = realIndex.toFloat(),
 				volume = 0,
 				scanlator = null,
-				uploadDate = dateFormat.parseSafe(dateStr),
+				uploadDate = chapterDateFormat.parseSafe(createdAt),
 				branch = null,
 				source = source
 			)
 		}
 
 		return manga.copy(
-			title = title,
-			description = description,
-			coverUrl = coverUrl,
-			authors = author?.let { setOf(it) } ?: emptySet(),
-			state = state,
-			tags = tags,
 			chapters = chapters
 		)
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val url = "$apiUrl${chapter.url}"
-		val json = webClient.httpGet(url).parseJson().getJSONObject("data").getJSONObject("data")
-		val images = json.getJSONArray("images")
-		val pages = ArrayList<MangaPage>()
-
-		for (i in 0 until images.length()) {
-			val imageUrl = images.getString(i)
-			pages.add(
-				MangaPage(
-					id = generateUid(imageUrl),
-					url = imageUrl,
-					preview = null,
-					source = source
-				)
+		val url = urlBuilder().host(apiUrl).addPathSegments("/series/${chapter.url}")
+		val json = webClient.httpGet(url.build()).parseJson()
+			.getJSONObject("data").getJSONObject("data")
+		return json.getJSONArray("image").asTypedList<String>().map {
+			MangaPage(
+				id = generateUid(it),
+				url = it,
+				preview = null,
+				source = source
 			)
 		}
-
-		return pages
 	}
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
