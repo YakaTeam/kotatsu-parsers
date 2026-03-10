@@ -5,24 +5,46 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
-import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.model.ContentRating
+import org.koitharu.kotatsu.parsers.model.ContentType
+import org.koitharu.kotatsu.parsers.model.Manga
+import org.koitharu.kotatsu.parsers.model.MangaChapter
+import org.koitharu.kotatsu.parsers.model.MangaListFilter
+import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
+import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
+import org.koitharu.kotatsu.parsers.model.MangaPage
+import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.model.MangaState
+import org.koitharu.kotatsu.parsers.model.MangaTag
+import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
+import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.UserAgents
+import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
+import org.koitharu.kotatsu.parsers.util.mapChapters
+import org.koitharu.kotatsu.parsers.util.parseJson
+import org.koitharu.kotatsu.parsers.util.parseSafe
+import org.koitharu.kotatsu.parsers.util.urlBuilder
+import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.Locale
 import java.util.TimeZone
 
-@Broken("Remake parser needed")
+@Broken("Testing...")
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.KOMIKCAST, pageSize = 20) {
+	PagedMangaParser(context, MangaParserSource.KOMIKCAST, 12) {
 
-	override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("v1.komikcast.fit")
-	private val apiUrl = "https://be.komikcast.fit"
+	override val configKeyDomain = ConfigKey.Domain("v1.komikcast.fit")
+	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
+	private val apiUrl = "be.komikcast.cc" // emulate the same API from site requests
 
-	override val userAgentKey = ConfigKey.UserAgent(
-		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-	)
+	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
+		super.onCreateConfig(keys)
+		keys.remove(userAgentKey)
+	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
 		.add("Origin", "https://$domain")
@@ -30,32 +52,30 @@ internal class Komikcast(context: MangaLoaderContext) :
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
-		SortOrder.UPDATED,
-		SortOrder.POPULARITY,
-		SortOrder.ALPHABETICAL,
-		SortOrder.ALPHABETICAL_DESC
+		SortOrder.UPDATED, // latest + desc = default
+		SortOrder.UPDATED_ASC, // latest + asc
+		SortOrder.POPULARITY, // popularity
+		SortOrder.POPULARITY_ASC, // popularity + asc
+		SortOrder.RATING, // rating
+		SortOrder.RATING_ASC, // rating + asc
 	)
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
+			isSearchSupported = true,
+			isSearchWithFiltersSupported = true,
 			isMultipleTagsSupported = true,
-			isTagsExclusionSupported = false,
-			isSearchSupported = true
 		)
-
-	private val tagMap = listOf(
-		"Action", "Adventure", "Comedy", "Cooking", "Demons", "Drama", "Ecchi", "Fantasy", "Game",
-		"Gender Bender", "Gore", "Harem", "Historical", "Horror", "Isekai", "Josei", "Magic",
-		"Martial Arts", "Mature", "Mecha", "Medical", "Military", "Music", "Mystery", "One-Shot",
-		"Police", "Psychological", "Reincarnation", "Romance", "School", "School Life", "Sci-Fi",
-		"Seinen", "Senen", "Shoujo", "Shoujo Ai", "Shounen", "Shounen Ai", "Slice of Life", "Sports",
-		"Super Power", "Supernatural", "Thriller", "Tragedy", "Vampire", "Webtoons", "4-Koma", "Yuri"
-	)
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions {
 		return MangaListFilterOptions(
-			availableTags = tagMap.map { MangaTag(it, it, source) }.toSet(),
-			availableStates = EnumSet.of(MangaState.ONGOING, MangaState.FINISHED),
+			availableTags = fetchAvailableTags(),
+			availableStates = EnumSet.of(
+				MangaState.ONGOING, // ongoing
+				MangaState.FINISHED, // finished
+				MangaState.PAUSED, // hiatus
+				MangaState.ABANDONED, // cancelled
+			),
 			availableContentTypes = EnumSet.of(
 				ContentType.MANGA,
 				ContentType.MANHWA,
@@ -65,79 +85,103 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val url = buildString {
-			append("$apiUrl/series?")
-			append("page=$page")
-			append("&take=$pageSize")
+		val url = urlBuilder().host(apiUrl).apply {
+			addPathSegment("series")
 
-			if (filter.query.isNullOrEmpty()) {
-				when (order) {
-					SortOrder.UPDATED -> append("&preset=rilisan_terbaru")
-					SortOrder.POPULARITY -> append("&preset=popular_all")
-					SortOrder.ALPHABETICAL -> append("&sort=title&sortOrder=asc")
-					SortOrder.ALPHABETICAL_DESC -> append("&sort=title&sortOrder=desc")
-					else -> append("&preset=rilisan_terbaru")
-				}
-			} else {
-				val q = filter.query.replace("\"", "\\\"")
-				val filterStr = "title=like=\"$q\",nativeTitle=like=\"$q\""
-				append("&filter=${filterStr.urlEncoded()}")
+			// Query with keyword, testing...
+			if (!filter.query.isNullOrEmpty()) {
+				val keyword = filter.query.encodeKeyword()
+				val filterValue = "title=like=\"$keyword\",nativeTitle=like=\"$keyword\""
+				addEncodedQueryParameter("filter", filterValue)
 			}
 
-			filter.types.oneOrThrowIfMany()?.let {
-				append("&type=")
-				append(when (it) {
-					ContentType.MANGA -> "manga"
-					ContentType.MANHWA -> "manhwa"
-					ContentType.MANHUA -> "manhua"
-					else -> ""
-				})
-			}
-
-			filter.states.oneOrThrowIfMany()?.let {
-				append("&status=")
-				append(when (it) {
-					MangaState.ONGOING -> "ongoing"
-					MangaState.FINISHED -> "completed"
-					else -> ""
-				})
-			}
-
+			// Tags
 			if (filter.tags.isNotEmpty()) {
-				append("&genreIds=")
-				append(filter.tags.joinToString(",") { it.key }.urlEncoded())
+				filter.tags.forEach {
+					addEncodedQueryParameter("genreIds", it.title.encodeKeyword())
+				}
 			}
+
+			// MangaState
+			if (filter.states.isNotEmpty()) {
+				filter.states.forEach {
+					when (it) {
+						MangaState.ONGOING -> addQueryParameter("status", "ongoing")
+						MangaState.FINISHED -> addQueryParameter("status", "completed")
+						MangaState.PAUSED -> addQueryParameter("status", "hiatus")
+						MangaState.ABANDONED -> addQueryParameter("status", "cancelled")
+						else -> ""
+					}
+				}
+			}
+
+			// ContentType
+			if (filter.types.isNotEmpty()) {
+				filter.types.forEach {
+					when (it) {
+						ContentType.MANGA -> addQueryParameter("format", "manga")
+						ContentType.MANHWA -> addQueryParameter("format", "manhwa")
+						ContentType.MANHUA -> addQueryParameter("format", "manhua")
+						else -> ""
+					}
+				}
+			}
+
+			addQueryParameter("takeChapter", 2.toString())
+			addQueryParameter("includeMeta", true.toString())
+
+			// order
+			when (order) {
+				SortOrder.UPDATED_ASC -> {
+					addQueryParameter("sort", "latest")
+					addQueryParameter("sortOrder", "asc")
+				}
+				SortOrder.POPULARITY -> {
+					addQueryParameter("sort", "popularity")
+					addQueryParameter("sortOrder", "desc")
+				}
+				SortOrder.POPULARITY_ASC -> {
+					addQueryParameter("sort", "popularity")
+					addQueryParameter("sortOrder", "asc")
+				}
+				SortOrder.RATING -> {
+					addQueryParameter("sort", "rating")
+					addQueryParameter("sortOrder", "desc")
+				}
+				SortOrder.RATING_ASC -> {
+					addQueryParameter("sort", "rating")
+					addQueryParameter("sortOrder", "asc")
+				}
+				else -> {
+					addQueryParameter("sort", "latest")
+					addQueryParameter("sortOrder", "desc")
+				}
+			}
+
+			addQueryParameter("take", pageSize.toString())
+			addQueryParameter("page", page.toString())
 		}
 
-		val json = webClient.httpGet(url).parseJson()
-		val data = json.getJSONArray("data")
-		val mangaList = ArrayList<Manga>()
-
-		for (i in 0 until data.length()) {
-			val item = data.getJSONObject(i)
-			val seriesData = item.getJSONObject("data")
+		val json = webClient.httpGet(url.build()).parseJson()
+		return json.getJSONArray("data").mapJSON {
+			val seriesData = it.getJSONObject("data")
 			val slug = seriesData.getString("slug")
 			val relativeUrl = "/series/$slug"
-
-			mangaList.add(
-				Manga(
-					id = generateUid(relativeUrl),
-					title = seriesData.getString("title"),
-					altTitles = emptySet(),
-					url = relativeUrl,
-					publicUrl = "https://$domain$relativeUrl",
-					rating = seriesData.optDouble("rating", -1.0).toFloat().div(10f).takeIf { it >= 0 } ?: RATING_UNKNOWN,
-					contentRating = ContentRating.SAFE,
-					coverUrl = seriesData.optString("coverImage"),
-					tags = emptySet(),
-					state = null,
-					authors = emptySet(),
-					source = source
-				)
+			Manga(
+				id = generateUid(relativeUrl),
+				title = seriesData.getString("title"),
+				altTitles = emptySet(),
+				url = relativeUrl,
+				publicUrl = "https://$domain$relativeUrl",
+				rating = seriesData.optDouble("rating", -1.0).toFloat().div(10f).takeIf { it >= 0 } ?: RATING_UNKNOWN,
+				contentRating = ContentRating.SAFE,
+				coverUrl = seriesData.optString("coverImage"),
+				tags = emptySet(),
+				state = null,
+				authors = emptySet(),
+				source = source
 			)
 		}
-
-		return mangaList
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -221,5 +265,21 @@ internal class Komikcast(context: MangaLoaderContext) :
 		}
 
 		return pages
+	}
+
+	private suspend fun fetchAvailableTags(): Set<MangaTag> {
+		val url = urlBuilder().addPathSegment("genres").build()
+		val response = webClient.httpGet(url).parseJson()
+		return response.getJSONArray("data").mapJSONToSet {
+			MangaTag(
+				title = it.getJSONObject("data").getString("name"),
+				key = it.getInt("id").toString(),
+				source = source,
+			)
+		}
+	}
+
+	private fun String.encodeKeyword(): String {
+		return URLEncoder.encode(this, "UTF-8")
 	}
 }
