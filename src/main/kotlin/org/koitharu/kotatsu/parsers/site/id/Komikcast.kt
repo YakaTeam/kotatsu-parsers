@@ -200,7 +200,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 
 	override suspend fun getDetails(manga: Manga): Manga {
 		val chaptersUrl = urlBuilder().host(apiUrl)
-			.addPathSegments("/series/${manga.url}/chapters").build()
+			.addPathSegments("series/${manga.url}/chapters").build()
 		val data = webClient.httpGet(chaptersUrl).parseJson().getJSONArray("data")
 
 		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
@@ -236,7 +236,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val url = urlBuilder().host(apiUrl).addPathSegments("/series/${chapter.url}")
+		val url = urlBuilder().host(apiUrl).addPathSegments("series/${chapter.url}")
 		val json = webClient.httpGet(url.build()).parseJson()
 			.getJSONObject("data").getJSONObject("data")
 		return json.getJSONArray("image").asTypedList<String>().map {
