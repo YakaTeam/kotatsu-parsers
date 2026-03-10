@@ -32,7 +32,6 @@ import java.net.URLEncoder
 import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.Locale
-import java.util.TimeZone
 
 @MangaSourceParser("KOMIKCAST", "KomikCast", "id")
 internal class Komikcast(context: MangaLoaderContext) :
@@ -203,10 +202,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 			.addPathSegments("series/${manga.url}/chapters").build()
 		val data = webClient.httpGet(chaptersUrl).parseJson().getJSONArray("data")
 
-		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT).apply {
-			timeZone = TimeZone.getTimeZone("UTC")
-		}
-
+		val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.ROOT)
 		val chapters = data.mapChapters(reversed = true) { i, data ->
 			val chapterData = data.getJSONObject("data")
 			val index = chapterData.getFloatOrDefault("index", i + 1f)
@@ -214,7 +210,7 @@ internal class Komikcast(context: MangaLoaderContext) :
 			val title = data.optString("title", "Chapter $realIndex")
 
 			// fix invalid X character in A5 / A6
-			val createdAt = data.getStringOrNull("created_at")
+			val createdAt = data.getStringOrNull("createdAt")
 				?.replace(Regex("([+-]\\d{2}):(\\d{2})$"), "$1$2")
 
 			MangaChapter(
