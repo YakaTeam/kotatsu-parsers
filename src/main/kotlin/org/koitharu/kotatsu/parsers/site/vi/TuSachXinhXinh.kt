@@ -97,14 +97,12 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 			val href = element.selectFirst("a")?.attrOrNull("href").orEmpty()
 			href.contains("/truyen-tranh/")
 		}.map { element ->
-			val titleEl = element.selectFirst("h3.comic-title")
+			val linkEl = element.selectFirst("h3.comic-title")?.parents()?.firstOrNull { it.tagName() == "a" }
 				?: element.selectFirstOrThrow("p.super-title a")
-			val linkEl = titleEl.parent()
-			val relativeUrl = linkEl?.attrAsRelativeUrl("href")
-				?: titleEl.attrAsRelativeUrl("href")
+			val relativeUrl = linkEl.attrAsRelativeUrl("href")
 			Manga(
 				id = generateUid(relativeUrl),
-				title = titleEl.text(),
+				title = linkEl.text(),
 				altTitles = emptySet(),
 				url = relativeUrl,
 				publicUrl = relativeUrl.toAbsoluteUrl(domain),
