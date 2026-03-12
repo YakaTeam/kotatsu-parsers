@@ -41,22 +41,22 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder()
-		if (!filter.query.isNullOrEmpty()) {
-			url.addPathSegments("wp-admin/admin-ajax.php")
-			if (page > 1) return emptyList()
+		when {
+			!filter.query.isNullOrEmpty() -> {
+				if (page > 1) return emptyList()
 
-			val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
-			return webClient.httpPost(url.build(), payload)
-				.parseJson().getJSONArray("data")
-				.mapJSONNotNull(::parseSearchItem)
-				.distinctBy { it.url }
-		} else if (!filter.tags.isEmpty()) {
-			val tag = filter.tags.oneOrThrowIfMany()
-			if (tag != null) {
-				url.addPathSegments(tag.key)
+				url.addPathSegments("wp-admin/admin-ajax.php")
+				val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
+				return webClient.httpPost(url.build(), payload)
+					.parseJson().getJSONArray("data")
+					.mapJSONNotNull(::parseSearchItem)
+					.distinctBy { it.url }
 			}
-		} else {
-			url.addPathSegment("danh-sach-truyen")
+			!filter.tags.isEmpty() -> {
+				val tag = filter.tags.oneOrThrowIfMany()
+				tag?.key?.let { url.addPathSegment(it) }
+			}
+			else -> url.addPathSegment("danh-sach-truyen")
 		}
 
 		if (page > 1 && filter.query.isNullOrEmpty()) {
