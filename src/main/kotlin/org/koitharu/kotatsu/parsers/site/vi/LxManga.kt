@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.parsers.site.vi
 
 import okhttp3.Headers
 import okhttp3.Interceptor
+import okhttp3.Request
 import okhttp3.Response
 import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -227,19 +228,27 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 				}
 			}
 
-		if (pages.isEmpty()) {
-			context.requestBrowserAction(this, fullUrl)
-		}
+		// Test token key
+		val testRequest = Request.Builder()
+			.url(pages.first().url)
+			.head()
+			.addHeader("Referer", "https://$domain/")
+			.addHeader("Origin", "https://$domain")
+			.addHeader("Token", TOKEN_KEY)
+			.build()
 
 		val testResponse = runCatching {
-			webClient.httpHead(pages.first().url)
+			context.httpClient.newCall(testRequest).execute()
 		}.getOrNull()
 
+		// If token key is not valid -> Open WebView
 		if (testResponse == null || !testResponse.isSuccessful) {
+			// try to fetch token first
 			val token = context.evaluateJs(fullUrl, "actionToken || null")
 			if (token != null) {
 				TOKEN_KEY = token
 			} else {
+				// open WebView, interaction is required to solve CF challenge
 				context.requestBrowserAction(this, fullUrl)
 			}
 		}
@@ -283,6 +292,8 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 	}
 
 	private companion object {
-		var TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
+		// var TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
+		// Test function with empty token key
+		var TOKEN_KEY = ""
 	}
 }
