@@ -54,7 +54,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 			}
 			!filter.tags.isEmpty() -> {
 				val tag = filter.tags.oneOrThrowIfMany()
-				tag?.key?.let { url.addPathSegment(it) }
+				tag?.key?.let { url.encodedPath(it) }
 			}
 			else -> url.addPathSegment("danh-sach-truyen")
 		}
@@ -133,7 +133,6 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 				"Hoàn thành", "Trọn bộ" -> MangaState.FINISHED
 				else -> null
 			},
-			tags = emptySet(),
 			description = doc.selectFirst("div.text-justify")?.html(),
 			contentRating = if (doc.getElementById("adult-modal") != null) {
 				ContentRating.ADULT
