@@ -21,7 +21,7 @@ internal class KuroNeko(context: MangaLoaderContext):
 
 	override val webClient = OkHttpWebClient(
 		context.httpClient.newBuilder()
-			.rateLimit(14, 60.seconds)
+			.rateLimit(10, 60.seconds)
 			.build(),
 		source,
 	)

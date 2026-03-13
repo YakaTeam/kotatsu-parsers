@@ -17,7 +17,6 @@ import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
-import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrlOrNull
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.mapChapters
 import org.koitharu.kotatsu.parsers.util.parseHtml
@@ -153,12 +152,14 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val response = webClient.httpGet(chapter.url).parseHtml()
 		return response.select(".page-card img").mapNotNull { div ->
-			val img = div.attrAsRelativeUrlOrNull("src")
-				?: div.attrAsRelativeUrlOrNull("data-src")
+			val img = div.attr("src").takeIf { it.isNotBlank() && !it.startsWith("data:") }
+				?: div.attr("data-src").takeIf { it.isNotBlank() && !it.startsWith("data:") }
 				?: return@mapNotNull null
+
+			val url = if (img.startsWith("http")) img else "https://i.$domain$img"
 			MangaPage(
-				id = generateUid(img),
-				url = img,
+				id = generateUid(url),
+				url = url,
 				preview = null,
 				source = source,
 			)

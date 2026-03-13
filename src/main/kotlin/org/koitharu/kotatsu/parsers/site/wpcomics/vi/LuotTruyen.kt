@@ -18,7 +18,7 @@ import java.util.*
 
 @MangaSourceParser("LUOTTRUYEN", "LuotTruyen", "vi")
 internal class LuotTruyen(context: MangaLoaderContext) :
-	WpComicsParser(context, MangaParserSource.LUOTTRUYEN, "luottruyen1.com", 36), MangaParserAuthProvider {
+	WpComicsParser(context, MangaParserSource.LUOTTRUYEN, "luottruyen2.com", 36), MangaParserAuthProvider {
 
 	override val userAgentKey = ConfigKey.UserAgent(
 		"Mozilla/5.0 (Linux; Android 10; K) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.7204.46 Mobile Safari/537.36",
