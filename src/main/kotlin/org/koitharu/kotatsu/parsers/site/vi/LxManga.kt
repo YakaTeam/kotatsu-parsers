@@ -210,7 +210,7 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val fullUrl = chapter.url.toAbsoluteUrl(domain)
 		val doc = webClient.httpGet(fullUrl).parseHtml()
-		return doc.select("div.text-center div.lazy")
+		val pages = doc.select("div.text-center div.lazy")
 			.mapNotNull { div ->
 				val url = div.attr("data-src")
 				if (url.endsWith(".jpg", ignoreCase = true) ||
@@ -223,9 +223,28 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 						source = source,
 					)
 				} else {
-					throw IllegalArgumentException("Bạn cần nạp LXCoin để xem nội dung này trên trang Web!")
+					null
 				}
 			}
+
+		if (pages.isEmpty()) {
+			context.requestBrowserAction(this, fullUrl)
+		}
+
+		val testResponse = runCatching {
+			webClient.httpHead(pages.first().url)
+		}.getOrNull()
+
+		if (testResponse == null || !testResponse.isSuccessful) {
+			val token = context.evaluateJs(fullUrl, "actionToken || null")
+			if (token != null) {
+				TOKEN_KEY = token
+			} else {
+				context.requestBrowserAction(this, fullUrl)
+			}
+		}
+
+		return pages
 	}
 
 	override fun intercept(chain: Interceptor.Chain): Response {
@@ -264,6 +283,6 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 	}
 
 	private companion object {
-		const val TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
+		var TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
 	}
 }
