@@ -20,7 +20,7 @@ import javax.crypto.spec.IvParameterSpec
 import javax.crypto.spec.PBEKeySpec
 import javax.crypto.spec.SecretKeySpec
 
-@MangaSourceParser("TUSACHXINHXINH", "Tủ Sách Xinh Xinh", "vi", ContentType.MANGA)
+@MangaSourceParser("TUSACHXINHXINH", "Tủ Sách Xinh Xinh", "vi")
 internal class TuSachXinhXinh(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.TUSACHXINHXINH, 20) {
 
@@ -43,8 +43,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		val url = urlBuilder()
 		when {
 			!filter.query.isNullOrEmpty() -> {
-				if (page > 1) return emptyList()
-
+				if (page > 1) return emptyList() // no paging
 				url.addPathSegments("wp-admin/admin-ajax.php")
 				val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
 				return webClient.httpPost(url.build(), payload)
@@ -124,6 +123,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
 		val author = doc.selectFirst("strong:contains(Tác giả) + span")?.textOrNull()
 		return manga.copy(
+			// should implement MangaTag
 			altTitles = setOfNotNull(doc.selectFirst("strong:contains(Tên khác) + span")?.textOrNull())
 				.filterNot { it.contains("Không có") }
 				.toSet(),
