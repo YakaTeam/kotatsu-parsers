@@ -13,4 +13,8 @@ public class WebViewHelper(
     public suspend fun getUrlValue(url: String, value: String): String? {
         return context.evaluateJs(url, "new URLSearchParams(window.location.search).get('$value');")
     }
+
+	public suspend fun getVariable(url: String, key: String): String? {
+		return context.evaluateJs(url, "window.$key;")
+	}
 }

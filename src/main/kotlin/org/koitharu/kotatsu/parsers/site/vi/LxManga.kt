@@ -11,6 +11,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import java.net.HttpURLConnection
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -18,6 +19,7 @@ import java.util.*
 @MangaSourceParser("LXMANGA", "LXManga", "vi", type = ContentType.HENTAI)
 internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.LXMANGA, 60) {
 
+	private var tokenGlobal: String = ""
 	override val configKeyDomain = ConfigKey.Domain("lxmanga.space")
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
@@ -224,33 +226,25 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 						source = source,
 					)
 				} else {
-					null
+					throw IllegalArgumentException("Bạn cần nạp LXCoin để xem nội dung này trên trang Web!")
 				}
 			}
 
-		// Test token key
+		tokenGlobal = getToken(fullUrl)
+
 		val testRequest = Request.Builder()
 			.url(pages.first().url)
 			.head()
 			.addHeader("Referer", "https://$domain/")
 			.addHeader("Origin", "https://$domain")
-			.addHeader("Token", TOKEN_KEY)
+			.addHeader("Token", tokenGlobal)
 			.build()
 
-		val testResponse = runCatching {
-			context.httpClient.newCall(testRequest).execute()
-		}.getOrNull()
+		val response = context.httpClient.newCall(testRequest).execute()
+		response.close()
 
-		// If token key is not valid -> Open WebView
-		if (testResponse == null || !testResponse.isSuccessful) {
-			// try to fetch token first
-			val token = context.evaluateJs(fullUrl, "actionToken || null")
-			if (token != null) {
-				TOKEN_KEY = token
-			} else {
-				// open WebView, interaction is required to solve CF challenge
-				context.requestBrowserAction(this, fullUrl)
-			}
+		if (response.code == HttpURLConnection.HTTP_FORBIDDEN) {
+			context.requestBrowserAction(this, fullUrl)
 		}
 
 		return pages
@@ -264,7 +258,7 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 			request.headers.newBuilder()
 				.add("Referer", "https://$domain/")
 				.add("Origin", "https://$domain")
-				.add("Token", TOKEN_KEY)
+				.add("Token", tokenGlobal)
 				.build()
 		} else {
 			request.headers
@@ -291,9 +285,7 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 		}.toSet()
 	}
 
-	private companion object {
-		// var TOKEN_KEY = "364b9dccc5ef526587f108c4d4fd63ee35286e19e36ec55b93bd4d79410dbbf6"
-		// Test function with empty token key
-		var TOKEN_KEY = ""
-	}
+	private suspend fun getToken(url: String): String = WebViewHelper(context)
+		.getVariable(url, "actionToken")?.removeSurrounding('"')?.nullIfEmpty()
+		?: context.requestBrowserAction(this, url)
 }
