@@ -96,9 +96,9 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		return doc.select(".col-md-3.col-xs-6.comic-item, ul#archive-list-table li.position-relative").filter { element ->
 			val href = element.selectFirst("a")?.attrOrNull("href").orEmpty()
 			href.contains("/truyen-tranh/")
-		}.map { element ->
+		}.mapNotNull { element ->
 			val linkEl = element.selectFirst("h3.comic-title")?.parents()?.firstOrNull { it.tagName() == "a" }
-				?: element.selectFirstOrThrow("p.super-title a")
+				?: element.selectFirst("p.super-title a") ?: return@mapNotNull null
 			val relativeUrl = linkEl.attrAsRelativeUrl("href")
 			Manga(
 				id = generateUid(relativeUrl),
@@ -124,10 +124,10 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
 		val author = doc.selectFirst("strong:contains(Tác giả) + span")?.textOrNull()
 		return manga.copy(
-			altTitles = setOfNotNull(
-				doc.selectFirst("strong:contains(Tên khác) + span")?.textOrNull(),
-			),
-			authors = setOfNotNull(author),
+			altTitles = setOfNotNull(doc.selectFirst("strong:contains(Tên khác) + span")?.textOrNull())
+				.filterNot { it.contains("Không có") }
+				.toSet(),
+			authors = setOfNotNull(author).filterNot { it.contains("Đang cập nhật") }.toSet(),
 			state = when (doc.selectFirst("span.comic-stt")?.text()) {
 				"Đang tiến hành" -> MangaState.ONGOING
 				"Hoàn thành", "Trọn bộ" -> MangaState.FINISHED
