@@ -161,45 +161,34 @@ internal class MangaGeko(context: MangaLoaderContext) :
 	}
 
 	private suspend fun loadChapters(detailsDoc: org.jsoup.nodes.Document, mangaUrl: String): List<MangaChapter> {
-		val chapters = mutableListOf<MangaChapter>()
+		val urlChapter = mangaUrl.removeSuffix("/") + "/all-chapters/"
+		val chapters = runCatching { parseChapters(webClient.httpGet(urlChapter.toAbsoluteUrl(domain)).parseHtml()) }
+			.getOrElse { emptyList() }
+			.ifEmpty { parseChapters(detailsDoc) }
+			.distinctBy { it.url }
 
-		fun parseChapters(doc: org.jsoup.nodes.Document) {
-			doc.select("ul.chapter-list li").forEach { li ->
-				val a = li.selectFirst("a") ?: return@forEach
-				val url = a.attrAsRelativeUrl("href")
-				val name = a.selectFirst(".chapter-title, .chapter-number")?.text()
-					?: a.text()
-				chapters.add(
-					MangaChapter(
-						id = generateUid(url),
-						title = name,
-						number = 0f, // will be set later
-						volume = 0,
-						url = url,
-						scanlator = null,
-						uploadDate = 0L,
-						branch = null,
-						source = source,
-					)
-				)
-			}
-		}
-
-		// Try all-chapters page first
-		try {
-			val urlChapter = mangaUrl.removeSuffix("/") + "/all-chapters/"
-			val allChaptersDoc = webClient.httpGet(urlChapter.toAbsoluteUrl(domain)).parseHtml()
-			parseChapters(allChaptersDoc)
-		} catch (e: Exception) {
-			// fallback to chapters already in details page
-		}
-
-		if (chapters.isEmpty()) {
-			parseChapters(detailsDoc)
-		}
-
-		return chapters.distinctBy { it.url }.mapIndexed { i, chapter ->
+		return chapters.mapIndexed { i, chapter ->
 			chapter.copy(number = (chapters.size - i).toFloat())
+		}
+	}
+
+	private fun parseChapters(doc: org.jsoup.nodes.Document): List<MangaChapter> {
+		return doc.select("ul.chapter-list li").mapNotNull { li ->
+			val a = li.selectFirst("a") ?: return@mapNotNull null
+			val url = a.attrAsRelativeUrl("href")
+			val name = a.selectFirst(".chapter-title, .chapter-number")?.text()
+				?: a.text()
+			MangaChapter(
+				id = generateUid(url),
+				title = name,
+				number = 0f,
+				volume = 0,
+				url = url,
+				scanlator = null,
+				uploadDate = 0L,
+				branch = null,
+				source = source,
+			)
 		}
 	}
 

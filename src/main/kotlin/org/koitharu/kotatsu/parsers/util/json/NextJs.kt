@@ -1,3 +1,7 @@
+/**
+ * Utility for extracting Next.js data from HTML or RSC responses.
+ * Based on the Next.js extraction logic from the Keiyoushi repository.
+ */
 @file:JvmName("NextJsUtils")
 
 package org.koitharu.kotatsu.parsers.util.json
