@@ -112,7 +112,7 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 			"en" -> "english"
 			"ja" -> "japanese"
 			"fr" -> "french"
-			"ja" -> "jp"
+			"jp" if locale.country == "ja" -> "jp"
 			"zh" if locale.country == "TW" -> "traditional-chinese"
 			"zh" if locale.country == "HK" -> "cantonese"
 			"zh" -> "chinese"
