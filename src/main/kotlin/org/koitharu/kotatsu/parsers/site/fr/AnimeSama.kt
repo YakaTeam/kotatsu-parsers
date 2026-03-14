@@ -18,6 +18,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJson
@@ -38,7 +39,7 @@ internal class AnimeSama(context: MangaLoaderContext) :
 	private val cdnUrl = "$baseUrl/s2/scans/"
 
 	override fun getRequestHeaders() = Headers.Builder()
-		.add("Referer", baseUrl)
+		.add(CommonHeaders.REFERER, baseUrl)
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(

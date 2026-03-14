@@ -3,6 +3,7 @@ package org.koitharu.kotatsu.parsers.site.madara.en
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
 @MangaSourceParser("FREEMANGATOP", "FreeMangaTop", "en")
@@ -11,6 +12,6 @@ internal class FreeMangaTop(context: MangaLoaderContext) :
 	override val datePattern = "MM/dd/yyyy"
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-        .add("Referer", "https://$domain/")
+        .add(CommonHeaders.REFERER, "https://$domain/")
         .build()
 }

@@ -24,6 +24,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.generateUid
@@ -53,7 +54,7 @@ internal abstract class BatoParser(
 	}
 
 	override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -273,9 +274,9 @@ internal abstract class BatoParser(
 		val mediaType = "application/json; charset=utf-8".toMediaType()
 		val requestBody = bodyString.toRequestBody(mediaType)
 		val headers = getRequestHeaders().newBuilder()
-			.set("Content-Type", "application/json; charset=utf-8")
-			.removeAll("Content-Encoding")
-			.removeAll("Accept-Encoding")
+			.set(CommonHeaders.CONTENT_TYPE, "application/json; charset=utf-8")
+			.removeAll(CommonHeaders.CONTENT_ENCODING)
+			.removeAll(CommonHeaders.ACCEPT_ENCODING)
 			.build()
 
 		val request = Request.Builder()

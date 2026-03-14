@@ -11,6 +11,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -59,7 +60,7 @@ internal abstract class NineMangaParser(
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val request = chain.request()
 		val newRequest = if (request.url.host == domain) {
-			request.newBuilder().removeHeader("Referer").build()
+			request.newBuilder().removeHeader(CommonHeaders.REFERER).build()
 		} else {
 			request
 		}

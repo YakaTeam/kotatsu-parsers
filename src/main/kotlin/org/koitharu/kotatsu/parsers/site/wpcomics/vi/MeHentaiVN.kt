@@ -10,6 +10,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.site.wpcomics.WpComicsParser
 import org.koitharu.kotatsu.parsers.exception.NotFoundException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.net.URL
 import java.util.*
@@ -19,7 +20,7 @@ internal class MeHentaiVN(context: MangaLoaderContext) :
 	WpComicsParser(context, MangaParserSource.MEHENTAIVN, "www.hentaivnx.autos", 44) {
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val filterCapabilities: MangaListFilterCapabilities

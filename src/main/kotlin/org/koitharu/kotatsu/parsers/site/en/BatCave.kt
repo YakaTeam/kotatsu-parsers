@@ -7,6 +7,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -22,7 +23,7 @@ internal class BatCave(context: MangaLoaderContext) :
 	override val configKeyDomain = ConfigKey.Domain("batcave.biz")
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-        .add("Referer", "https://$domain/")
+        .add(CommonHeaders.REFERER, "https://$domain/")
         .build()
 
 	private val availableTags = suspendLazy(initializer = ::fetchTags)

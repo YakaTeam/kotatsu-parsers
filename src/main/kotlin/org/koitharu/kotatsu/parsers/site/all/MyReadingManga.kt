@@ -20,6 +20,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.mapToSet
@@ -40,8 +41,8 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 	override val configKeyDomain = ConfigKey.Domain("myreadingmanga.info")
 
     override fun getRequestHeaders(): Headers = Headers.Builder()
-        .add("User-Agent", "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36")
-        .add("X-Requested-With", randomString((1..20).random()))
+        .add(CommonHeaders.USER_AGENT, "Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Mobile Safari/537.36")
+        .add(CommonHeaders.X_REQUESTED_WITH, randomString((1..20).random()))
         .build()
 
 	override val filterCapabilities: MangaListFilterCapabilities
@@ -107,44 +108,44 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 	)
 
 	private fun getLanguageSlug(locale: Locale?): String? {
-		return when {
-            locale?.language == "en" -> "english"
-            locale?.language == "ja" -> "japanese"
-			locale?.language == "fr" -> "french"
-			locale?.language == "ja" -> "jp"
-			locale?.language == "zh" && locale.country == "TW" -> "traditional-chinese"
-			locale?.language == "zh" && locale.country == "HK" -> "cantonese"
-			locale?.language == "zh" -> "chinese"
-			locale?.language == "de" -> "german"
-			locale?.language == "it" -> "italian"
-			locale?.language == "ko" -> "korean"
-			locale?.language == "es" -> "spanish"
-			locale?.language == "pt" -> "portuguese"
-			locale?.language == "ru" -> "russian"
-			locale?.language == "tr" -> "turkish"
-			locale?.language == "vi" -> "vietnamese"
-			locale?.language == "ar" -> "arabic"
-			locale?.language == "id" -> "bahasa"
-			locale?.language == "th" -> "thai"
-			locale?.language == "pl" -> "polish"
-			locale?.language == "sv" -> "swedish"
-			locale?.language == "nl" -> "flemish-dutch"
-			locale?.language == "hu" -> "hungarian"
-			locale?.language == "hi" -> "hindi"
-			locale?.language == "he" -> "hebrew"
-			locale?.language == "el" -> "greek"
-			locale?.language == "fi" -> "finnish"
-			locale?.language == "fil" -> "filipino"
-			locale?.language == "da" -> "danish"
-			locale?.language == "cs" -> "czech"
-			locale?.language == "hr" -> "croatian"
-			locale?.language == "bg" -> "bulgarian"
-			locale?.language == "fa" -> "persian"
-			locale?.language == "sk" -> "slovak"
-			locale?.language == "ro" -> "romanian"
-			locale?.language == "no" -> "norwegian-bokmal"
-			locale?.language == "ms" -> "malay"
-			locale?.language == "lt" -> "lithuanian"
+		return when (locale?.language) {
+			"en" -> "english"
+			"ja" -> "japanese"
+			"fr" -> "french"
+			"jp" if locale.country == "ja" -> "jp"
+			"zh" if locale.country == "TW" -> "traditional-chinese"
+			"zh" if locale.country == "HK" -> "cantonese"
+			"zh" -> "chinese"
+			"de" -> "german"
+			"it" -> "italian"
+			"ko" -> "korean"
+			"es" -> "spanish"
+			"pt" -> "portuguese"
+			"ru" -> "russian"
+			"tr" -> "turkish"
+			"vi" -> "vietnamese"
+			"ar" -> "arabic"
+			"id" -> "bahasa"
+			"th" -> "thai"
+			"pl" -> "polish"
+			"sv" -> "swedish"
+			"nl" -> "flemish-dutch"
+			"hu" -> "hungarian"
+			"hi" -> "hindi"
+			"he" -> "hebrew"
+			"el" -> "greek"
+			"fi" -> "finnish"
+			"fil" -> "filipino"
+			"da" -> "danish"
+			"cs" -> "czech"
+			"hr" -> "croatian"
+			"bg" -> "bulgarian"
+			"fa" -> "persian"
+			"sk" -> "slovak"
+			"ro" -> "romanian"
+			"no" -> "norwegian-bokmal"
+			"ms" -> "malay"
+			"lt" -> "lithuanian"
 			else -> null //all
 		}
 	}
@@ -321,7 +322,7 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 			.mapNotNull { findImageSrc(it) }
 			.distinct()
 
-		return images.mapIndexed { index, url ->
+		return images.map { url ->
 			MangaPage(
 				id = generateUid(url),
 				url = url,

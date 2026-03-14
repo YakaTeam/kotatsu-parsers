@@ -5,16 +5,17 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.site.hotcomics.HotComicsParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 
 @MangaSourceParser("DAYCOMICS", "DayComics", "en")
 internal class DayComics(context: MangaLoaderContext) :
 	HotComicsParser(context, MangaParserSource.DAYCOMICS, "daycomics.me/en") {
-	
+
 	override suspend fun getDetails(manga: Manga): Manga {
 		val mangaUrl = manga.url.toAbsoluteUrl(domain)
-		val redirectHeaders = Headers.Builder().set("Referer", mangaUrl).build()
+		val redirectHeaders = Headers.Builder().set(CommonHeaders.REFERER, mangaUrl).build()
 		val doc = webClient.httpGet(mangaUrl, redirectHeaders).parseHtml()
 		val chapters = doc.select("#tab-chapter a").mapChapters { i, element ->
 			val url = element.attr("onclick").substringAfter("popupLogin('").substringBefore("'")

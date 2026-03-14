@@ -23,6 +23,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.extractNextJsTyped
@@ -106,10 +107,10 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		val request = Request.Builder()
 			.url("https://$meiliDomain/multi-search")
 			.post(requestBody)
-			.addHeader("Authorization", "Bearer $MEILIKEY")
-			.addHeader("Origin", "https://$domain")
-			.addHeader("Referer", "https://$domain/")
-			.addHeader("Accept", "application/json")
+			.addHeader(CommonHeaders.AUTHORIZATION, "Bearer $MEILIKEY")
+			.addHeader(CommonHeaders.ORIGIN, "https://$domain")
+			.addHeader(CommonHeaders.REFERER, "https://$domain/")
+			.addHeader(CommonHeaders.ACCEPT, "application/json")
 			.tag(MangaParserSource::class.java, source)
 			.build()
 		val client = context.httpClient.newBuilder()

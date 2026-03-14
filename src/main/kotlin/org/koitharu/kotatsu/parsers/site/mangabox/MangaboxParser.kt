@@ -17,6 +17,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
@@ -47,7 +48,7 @@ internal abstract class MangaboxParser(
 	pageSize: Int = 48,
 ) : PagedMangaParser(context, source, pageSize) {
 
-	private val headers = Headers.headersOf("User-Agent", UserAgents.KOTATSU)
+	private val headers = Headers.headersOf(CommonHeaders.USER_AGENT, UserAgents.KOTATSU)
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
@@ -55,7 +56,7 @@ internal abstract class MangaboxParser(
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -85,7 +86,7 @@ internal abstract class MangaboxParser(
 
 	protected open val listUrl = "/genre"
 	protected open val searchUrl = "/search/story/"
-	protected open val itemSelector = "div.search-story-item, a.list-story-item"
+	protected open val itemSelector = "div.search-story-item, a.list-story-item, .story_item"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder()

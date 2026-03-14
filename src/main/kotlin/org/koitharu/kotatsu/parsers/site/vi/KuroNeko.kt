@@ -7,6 +7,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
@@ -225,7 +226,7 @@ internal class KuroNeko(context: MangaLoaderContext):
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val request = chain.request()
 		val newRequest = request.newBuilder()
-			.addHeader("Referer", "https://$domain/")
+			.addHeader(CommonHeaders.REFERER, "https://$domain/")
 			.build()
 
 		return chain.proceed(newRequest)

@@ -8,6 +8,7 @@ import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
@@ -121,7 +122,7 @@ internal class HentaiManga(context: MangaLoaderContext) :
 		val mangaId = document.select("div#manga-chapters-holder").attr("data-id")
 		val url = "https://$domain/wp-admin/admin-ajax.php".toHttpUrl()
 		val postData = "post_id=$mangaId&action=ajax_chap"
-		val headers = Headers.Builder().add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8").build()
+		val headers = Headers.Builder().add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=UTF-8").build()
 		val doc = makeRequest(url, postData, headers)
 		val dateFormat = SimpleDateFormat(datePattern, sourceLocale)
 		return doc.select(selectChapter).mapChapters(reversed = true) { i, li ->

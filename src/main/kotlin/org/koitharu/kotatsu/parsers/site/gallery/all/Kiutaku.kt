@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.gallery.GalleryParser
 
 @MangaSourceParser("KIUTAKU", "Kiutaku", type = ContentType.OTHER)
@@ -18,7 +19,7 @@ internal class Kiutaku(context: MangaLoaderContext) :
 
 		val headers = if (url.contains("wp-content")) {
 			request.headers.newBuilder()
-				.removeAll("Referer")
+				.removeAll(CommonHeaders.REFERER)
 				.build()
 		} else {
 			request.headers

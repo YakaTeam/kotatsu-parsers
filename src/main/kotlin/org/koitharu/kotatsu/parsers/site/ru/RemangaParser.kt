@@ -15,6 +15,7 @@ import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ContentUnavailableException
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.DateFormat
@@ -31,7 +32,7 @@ internal class RemangaParser(
 
 	private val baseHeaders: Headers
 		get() = Headers.Builder()
-			.add("User-Agent", config[userAgentKey])
+			.add(CommonHeaders.USER_AGENT, config[userAgentKey])
 			.build()
 
 	override fun getRequestHeaders() = getApiHeaders()

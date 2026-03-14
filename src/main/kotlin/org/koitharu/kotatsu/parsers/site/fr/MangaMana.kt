@@ -14,6 +14,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getIntOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -168,7 +169,7 @@ internal class MangaMana(context: MangaLoaderContext) :
 		val url = "https://$domain/liste-mangas".toHttpUrl()
 		val token = webClient.httpGet(url).parseHtml().selectFirstOrThrow("meta[name=csrf-token]").attr("content")
 		val headers = Headers.Builder().add("X-CSRF-TOKEN", token).add("X-Requested-With", "XMLHttpRequest")
-			.add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8").build()
+			.add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=UTF-8").build()
 		val doc = makeRequest(url, postData, headers)
 
 		return doc.select("div.p-2 div.col").map { div ->
@@ -232,7 +233,7 @@ internal class MangaMana(context: MangaLoaderContext) :
 		var maxPageChapter = 1
 		val author = doc.selectFirst("div.show_details span[itemprop=author]")?.text().orEmpty()
 		if (!maxPageChapterSelect.isNullOrEmpty()) {
-			maxPageChapterSelect.map {
+			maxPageChapterSelect.forEach {
 				val i = it.attr("href").substringAfterLast("=").toInt()
 				if (i > maxPageChapter) {
 					maxPageChapter = i
@@ -264,7 +265,7 @@ internal class MangaMana(context: MangaLoaderContext) :
 					coroutineScope {
 						val result = ArrayList(parseChapters(doc))
 						result.ensureCapacity(result.size * maxPageChapter)
-						(2..maxPageChapter).map { i ->
+						(2 downTo maxPageChapter).map { i ->
 							async {
 								loadChapters(mangaUrl, i)
 							}

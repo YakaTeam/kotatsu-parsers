@@ -19,6 +19,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.json.getBooleanOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
@@ -59,8 +60,8 @@ internal class InMangaParser(context: MangaLoaderContext) : PagedMangaParser(
 	}
 
 	private val postHeaders = Headers.Builder()
-		.add("Content-Type", "application/x-www-form-urlencoded; charset=UTF-8")
-		.add("X-Requested-With", "XMLHttpRequest")
+		.add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded; charset=UTF-8")
+		.add(CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest")
 		.build()
 
 	private val imageCDN = "https://pack-yak.intomanga.com/"

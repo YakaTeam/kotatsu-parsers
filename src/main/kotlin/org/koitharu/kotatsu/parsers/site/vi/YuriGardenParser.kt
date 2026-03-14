@@ -19,6 +19,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
@@ -47,10 +48,10 @@ internal abstract class YuriGardenParser(
 	)
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("Referer", "https://$domain/")
-		.add("Origin", "https://$domain")
-		.add("x-app-origin", "https://$domain")
-		.add("User-Agent", UserAgents.KOTATSU)
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.X_APP_ORIGIN, "https://$domain")
+		.add(CommonHeaders.USER_AGENT, UserAgents.KOTATSU)
 		.build()
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {

@@ -11,6 +11,7 @@ import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.*
@@ -31,7 +32,7 @@ internal class MadaraDex(context: MangaLoaderContext) :
     }
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-        .set("User-Agent", UserAgents.CHROME_DESKTOP)
+        .set(CommonHeaders.USER_AGENT, UserAgents.CHROME_DESKTOP)
         .build()
 
     override val authUrl: String
@@ -77,7 +78,7 @@ internal class MadaraDex(context: MangaLoaderContext) :
             copyCookies()
             val cleanUrl = url.newBuilder().fragment(null).toString()
             val newReq = request.newBuilder()
-                .header("Referer", fullUrl)
+                .header(CommonHeaders.REFERER, fullUrl)
                 .url(cleanUrl)
                 .build()
             chain.proceed(newReq)

@@ -20,6 +20,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
@@ -259,9 +260,9 @@ internal class Klz9(context: MangaLoaderContext) :
             .joinToString("") { "%02x".format(it) }
 
         return Headers.Builder()
-            .add("x-client-ts", ts)
-            .add("x-client-sig", sig)
-            .add("User-Agent", UserAgents.CHROME_DESKTOP)
+            .add(CommonHeaders.X_CLIENT_TS, ts)
+            .add(CommonHeaders.X_CLIENT_SIG, sig)
+            .add(CommonHeaders.USER_AGENT, UserAgents.CHROME_DESKTOP)
             .build()
     }
 

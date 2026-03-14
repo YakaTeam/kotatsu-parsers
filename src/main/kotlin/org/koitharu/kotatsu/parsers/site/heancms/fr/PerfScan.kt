@@ -18,6 +18,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.heancms.HeanCms
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
@@ -50,9 +51,9 @@ internal class PerfScan(context: MangaLoaderContext) :
 	private var statusMap: Map<MangaState, String>? = null
 
 	private val apiHeaders = Headers.headersOf(
-		"Origin", "https://$domain",
-		"Referer", "https://$domain/",
-		"Cookie", "NEXT_LOCALE=$sourceLocale",
+		CommonHeaders.ORIGIN, "https://$domain",
+		CommonHeaders.REFERER, "https://$domain/",
+		CommonHeaders.COOKIE, "NEXT_LOCALE=$sourceLocale",
 	)
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.UPDATED)
@@ -167,7 +168,7 @@ internal class PerfScan(context: MangaLoaderContext) :
 		val data = response.getJSONObject("data")
 		val chapterData = data.getJSONArray("content")
 
-		return chapterData.mapJSONIndexed { i, pageObject ->
+		return chapterData.mapJSONIndexed { _, pageObject ->
 			val imageId = pageObject.getString("value")
 
 			MangaPage(

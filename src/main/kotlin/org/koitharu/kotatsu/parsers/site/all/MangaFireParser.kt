@@ -21,6 +21,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.site.all.mangafire.utils.SSLUtils
@@ -64,7 +65,7 @@ internal abstract class MangaFireParser(
                 val request = chain.request()
                 val response = chain.proceed(
                     request.newBuilder()
-                        .addHeader("Referer", "https://$domain/")
+                        .addHeader(CommonHeaders.REFERER, "https://$domain/")
                         .build()
                 )
 

@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
 @MangaSourceParser("HIPERCOOL", "Hipercool", "pt", ContentType.HENTAI)
@@ -20,17 +21,17 @@ internal class Hipercool(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
-		.add("Accept-Language", "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
-		.add("Cache-Control", "max-age=0")
-		.add("Connection", "keep-alive")
-		.add("Sec-Ch-Ua", "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
-		.add("Sec-Ch-Ua-Mobile", "?0")
-		.add("Sec-Ch-Ua-Platform", "\"Windows\"")
-		.add("Sec-Fetch-Dest", "document")
-		.add("Sec-Fetch-Mode", "navigate")
-		.add("Sec-Fetch-Site", "none")
-		.add("Sec-Fetch-User", "?1")
-		.add("Upgrade-Insecure-Requests", "1")
+		.add(CommonHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7")
+		.add(CommonHeaders.ACCEPT_LANGUAGE, "pt-BR,pt;q=0.9,en-US;q=0.8,en;q=0.7")
+		.add(CommonHeaders.CACHE_CONTROL, "max-age=0")
+		.add(CommonHeaders.CONNECTION, "keep-alive")
+		.add(CommonHeaders.SEC_CH_UA, "\"Not_A Brand\";v=\"8\", \"Chromium\";v=\"120\", \"Google Chrome\";v=\"120\"")
+		.add(CommonHeaders.SEC_CH_UA_MOBILE, "?0")
+		.add(CommonHeaders.SEC_CH_UA_PLATFORM, "\"Windows\"")
+		.add(CommonHeaders.SEC_FETCH_DEST, "document")
+		.add(CommonHeaders.SEC_FETCH_MODE, "navigate")
+		.add(CommonHeaders.SEC_FETCH_SITE, "none")
+		.add(CommonHeaders.SEC_FETCH_USER, "?1")
+		.add(CommonHeaders.UPGRADE_INSECURE_REQUESTS, "1")
 		.build()
 }
