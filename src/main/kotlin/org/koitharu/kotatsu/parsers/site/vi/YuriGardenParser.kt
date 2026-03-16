@@ -238,16 +238,25 @@ internal abstract class YuriGardenParser(
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val json = webClient.httpGet("https://$apiSuffix/chapters/${chapter.url}").parseJson()
+		// Testing...
+		val pwdInput: String? = if (json.optBoolean("locked", false)) {
+			val inputKey = "chapter_${chapter.url}_password"
+			val cached = context.getUserInput(inputKey)
+			if (cached.isNullOrEmpty()) {
+				throw InputRequiredException(
+					source = source,
+					message = "Chương này yêu cầu mật khẩu. Vui lòng nhập để tiếp tục.",
+					key = inputKey,
+				)
+			}
+			cached
+		} else {
+			null
+		}
+
 		val pages = json.getJSONArray("pages").asTypedList<JSONObject>()
 
 		return pages.mapIndexed { index, page ->
-			// Testing...
-			if (1 != 0) throw InputRequiredException(
-				source,
-				"Nhập mật khẩu cho chương này",
-				cause = IllegalStateException("Password required!")
-			)
-
 			val rawUrl = page.getString("url").replace("_credit", "")
 
 			if (rawUrl.startsWith("comics")) {
@@ -275,6 +284,8 @@ internal abstract class YuriGardenParser(
 			}
 		}
 	}
+
+
 
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val response = chain.proceed(chain.request())

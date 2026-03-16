@@ -75,4 +75,17 @@ public abstract class MangaLoaderContext {
 		width: Int,
 		height: Int,
 	): Bitmap
+
+	/**
+	 * Return a user-supplied value collected by the host app in response to an
+	 * [org.koitharu.kotatsu.parsers.exception.InputRequiredException].
+	 *
+	 * The value is consumed (removed) after the first successful read so that it
+	 * is never reused across independent requests.
+	 *
+	 * @param key The same [key][org.koitharu.kotatsu.parsers.exception.InputRequiredException.key]
+	 *            that was passed when throwing the exception.
+	 * @return The text the user typed, or `null` if nothing has been supplied yet.
+	 */
+	public open fun getUserInput(key: String): String? = null
 }
