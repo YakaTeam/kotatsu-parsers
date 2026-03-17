@@ -25,6 +25,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.NHENTAIWORLD, 24) {
 
     private val apiDomain = "vvcz.online"
+	private val cdnDomain = "vvcz.store"
     override val configKeyDomain = ConfigKey.Domain("nhentaiclub.site")
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
@@ -123,7 +124,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 				publicUrl = "/g/$id".toAbsoluteUrl(domain),
 				rating = RATING_UNKNOWN,
 				contentRating = ContentRating.ADULT,
-				coverUrl = "https://$apiDomain/$id/thumbnail.jpg",
+				coverUrl = "https://$cdnDomain/$id/thumbnail.jpg",
 				tags = emptySet(),
 				state = null,
 				authors = emptySet(),
@@ -239,7 +240,7 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 			}
 
 		return (1..pictures).map { pageNumber ->
-			val imgUrl = "https://$apiDomain/$mangaId/$language/$name/$pageNumber.jpg"
+			val imgUrl = "https://$cdnDomain/$mangaId/$language/$name/$pageNumber.jpg"
 			MangaPage(
 				id = generateUid(imgUrl),
 				url = imgUrl,
