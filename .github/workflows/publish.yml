@@ -1,0 +1,35 @@
+name: Publish to GitHub Packages
+
+on:
+    release:
+        types: [ published ]
+
+permissions:
+    contents: read
+    packages: write
+
+jobs:
+    publish:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98
+
+            -   name: Set up Java environment 🔧
+                uses: actions/setup-java@fe779bf55ef683c9413269276a7588bb9cedf07a
+                with:
+                    java-version: '11'
+                    distribution: 'temurin'
+
+            -   name: Set up Gradle environment 📦
+                uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c
+                with:
+                    gradle-version: '9.3.1'
+
+            -   name: Publish to GitHub Packages 🚀
+                run: |
+                    TAG="${{ github.event.release.tag_name }}"
+                    VERSION="${TAG#v}"
+                    RELEASE_VERSION="$VERSION" ./gradlew publish
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

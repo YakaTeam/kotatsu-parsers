@@ -1,0 +1,48 @@
+name: Trigger JitPack Build
+
+on:
+    push:
+        branches:
+            - master
+
+jobs:
+    trigger-jitpack:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Trigger JitPack build 🚀
+                run: |
+                    REPO="${{ github.repository }}"
+                    COMMIT="${{ github.sha }}"
+                    URL="https://jitpack.io/api/builds/${REPO}/${COMMIT}"
+
+                    echo "ℹ️ Triggering JitPack build for ${REPO}@${COMMIT}..."
+
+                    RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" -X GET "$URL")
+                    if [ "$RESPONSE" -eq 200 ] || [ "$RESPONSE" -eq 202 ]; then
+                        echo "ℹ️ JitPack build triggered successfully!"
+                    else
+                        echo "⚠️ Unexpected response ($RESPONSE), check https://jitpack.io/#${REPO}/${COMMIT}"
+                    fi
+
+            -   name: Verify JitPack build status 🌏
+                run: |
+                    REPO="${{ github.repository }}"
+                    COMMIT="${{ github.sha }}"
+                    CHECK_URL="https://jitpack.io/api/builds/${REPO}/${COMMIT}/status"
+
+                    echo "ℹ️ Build log: https://jitpack.io/com/github/${REPO}/${COMMIT}/build.log"
+                    echo "ℹ️ Package:   https://jitpack.io/#${REPO}/${COMMIT}"
+
+                    for i in $(seq 1 10); do
+                        sleep 30
+                        STATUS=$(curl -s "$CHECK_URL" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
+                        if [ "$STATUS" = "ok" ]; then
+                            echo "ℹ️ JitPack build succeeded!"
+                            exit 0
+                        elif [ "$STATUS" = "error" ]; then
+                            echo "⚠️ JitPack build failed! Check: https://jitpack.io/#${REPO}/${COMMIT}"
+                            exit 1
+                        fi
+                    done
+
+                    echo "⏱️ Timed out waiting for JitPack. Check manually: https://jitpack.io/#${REPO}/${COMMIT}"
