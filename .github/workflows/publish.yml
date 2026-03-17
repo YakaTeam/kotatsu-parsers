@@ -32,5 +32,4 @@ jobs:
                     VERSION="${TAG#v}"
                     RELEASE_VERSION="$VERSION" ./gradlew publish
                 env:
-                    GITHUB_ACTOR: ${{ github.actor }}
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -48,9 +48,12 @@ publishing {
 		maven {
 			name = "GitHubPackages"
 			url = uri("https://maven.pkg.github.com/YakaTeam/kotatsu-parsers")
-			credentials {
-				username = System.getenv("GITHUB_ACTOR")
-				password = System.getenv("GITHUB_TOKEN")
+			credentials(HttpHeaderCredentials::class) {
+				name = "Authorization"
+				value = "Bearer ${System.getenv("GITHUB_TOKEN")}"
+			}
+			authentication {
+				create<HttpHeaderAuthentication>("header")
 			}
 		}
 	}

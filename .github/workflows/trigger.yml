@@ -34,7 +34,7 @@ jobs:
                     echo "ℹ️ Package:   https://jitpack.io/#${REPO}/${COMMIT}"
 
                     for i in $(seq 1 10); do
-                        sleep 30
+                        sleep 120
                         STATUS=$(curl -s "$CHECK_URL" | grep -o '"status":"[^"]*"' | head -1 | cut -d'"' -f4)
                         if [ "$STATUS" = "ok" ]; then
                             echo "ℹ️ JitPack build succeeded!"
