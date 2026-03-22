@@ -12,6 +12,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaParserAuthProvider
 import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import java.util.*
@@ -36,9 +37,9 @@ internal class GocTruyenTranhVui(context: MangaLoaderContext):
 	private var userToken: String = ""
 
 	private fun apiHeaders(): Headers = Headers.Builder()
-		.add("Authorization", userToken)
-		.add("Referer", "https://$domain/")
-		.add("X-Requested-With", "XMLHttpRequest")
+		.add(CommonHeaders.AUTHORIZATION, userToken)
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest")
 		.build()
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {

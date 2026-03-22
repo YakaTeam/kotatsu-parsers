@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
@@ -22,7 +23,7 @@ internal class DragonTranslationParser(context: MangaLoaderContext) :
     }
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-        .add("referer", "no-referrer")
+        .add(CommonHeaders.REFERER, "no-referrer")
         .build()
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.UPDATED)

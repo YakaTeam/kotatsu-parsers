@@ -22,6 +22,7 @@ import org.koitharu.kotatsu.parsers.core.AbstractMangaParser
 import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
@@ -34,7 +35,6 @@ private const val PAGE_SIZE = 70
 private const val NSFW_ALERT = "сексуальные сцены"
 private const val NOTHING_FOUND = "Ничего не найдено"
 private const val MIN_IMAGE_SIZE = 1024L
-private const val HEADER_ACCEPT = "Accept"
 private const val RELATED_TITLE = "Связанные произведения"
 private const val COPYRIGHT_ALERT = "Запрещена публикация произведения"
 private const val NO_CHAPTERS = "В этой манге еще нет ни одной главы"
@@ -55,8 +55,8 @@ internal abstract class GroupleParser(
     private val tagsIndex = suspendLazy(initializer = ::fetchTagsMap)
 
     override fun getRequestHeaders(): Headers = Headers.Builder()
-        .add("User-Agent", config[userAgentKey])
-        .add("Accept-Language", "ru,en-US;q=0.7,en;q=0.3")
+        .add(CommonHeaders.USER_AGENT, config[userAgentKey])
+        .add(CommonHeaders.ACCEPT_LANGUAGE, "ru,en-US;q=0.7,en;q=0.3")
         .build()
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -308,13 +308,13 @@ internal abstract class GroupleParser(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val request = chain.request()
-        if (!request.header(HEADER_ACCEPT).isNullOrEmpty()) {
+        if (!request.header(CommonHeaders.ACCEPT).isNullOrEmpty()) {
             return chain.proceed(request).checkIfAuthRequired()
         }
         val ext = request.url.pathSegments.lastOrNull()?.substringAfterLast('.', "")?.lowercase(Locale.ROOT)
         return if (ext == "jpg" || ext == "jpeg" || ext == "png" || ext == "webp") {
             chain.proceed(
-                request.newBuilder().header(HEADER_ACCEPT, "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8").build(),
+                request.newBuilder().header(CommonHeaders.ACCEPT, "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8").build(),
             )
         } else {
             chain.proceed(request).checkIfAuthRequired()

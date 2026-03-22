@@ -5,6 +5,7 @@ import kotlinx.coroutines.coroutineScope
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.wpcomics.WpComicsParser
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -15,7 +16,7 @@ internal class NetTruyenX(context: MangaLoaderContext) :
 	WpComicsParser(context, MangaParserSource.NETTRUYENX, "nettruyenx.net", 36) {
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
     override val selectDesc = "div.detail-content div.shortened"

@@ -12,6 +12,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.AbstractMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
@@ -20,7 +21,6 @@ import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
 
-private const val HEADER_ENCODING = "Content-Encoding"
 private const val PAGE_SIZE = 60
 
 // NOTE High profile focus
@@ -173,8 +173,8 @@ internal class HentaiUkrParser(context: MangaLoaderContext) : AbstractMangaParse
 	// Need for disable encoding (with encoding not working)
 	override fun intercept(chain: Interceptor.Chain): Response {
 		val request = chain.request()
-		val newRequest = if (request.header(HEADER_ENCODING) != null) {
-			request.newBuilder().removeHeader(HEADER_ENCODING).build()
+		val newRequest = if (request.header(CommonHeaders.CONTENT_ENCODING) != null) {
+			request.newBuilder().removeHeader(CommonHeaders.CONTENT_ENCODING).build()
 		} else {
 			request
 		}

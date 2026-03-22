@@ -4,6 +4,7 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
 @MangaSourceParser("RAVENSCANS", "RavenScans", "en")
@@ -18,6 +19,6 @@ internal class RavenScans(context: MangaLoaderContext) :
 		)
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 }

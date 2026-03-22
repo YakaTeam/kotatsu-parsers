@@ -21,6 +21,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
@@ -78,7 +79,7 @@ internal class SussyScan(context: MangaLoaderContext) : PagedMangaParser(
 
 	private val apiHeaders: Headers
 		get() = Headers.Builder()
-			.add("Referer", "https://$domain/")
+			.add(CommonHeaders.REFERER, "https://$domain/")
 			.add("scan-id", scanId.toString())
 			.build()
 

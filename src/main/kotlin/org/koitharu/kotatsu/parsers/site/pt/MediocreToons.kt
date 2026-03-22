@@ -19,6 +19,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
@@ -40,9 +41,9 @@ internal class MediocreToons(context: MangaLoaderContext) : PagedMangaParser(
 	private val cdnUrl = "https://cdn.mediocretoons.site"
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Referer", "https://$domain/")
-		.add("Origin", "https://$domain")
-		.add("X-App-Key", "toons-mediocre-app")
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.X_APP_KEY, "toons-mediocre-app")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(

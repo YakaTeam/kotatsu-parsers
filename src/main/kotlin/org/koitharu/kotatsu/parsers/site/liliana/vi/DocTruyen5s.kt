@@ -7,6 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.exception.ParseException
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.liliana.LilianaParser
 import org.koitharu.kotatsu.parsers.util.json.getBooleanOrDefault
 import org.koitharu.kotatsu.parsers.util.*
@@ -16,7 +17,7 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 	LilianaParser(context, MangaParserSource.DOCTRUYEN5S, "manga.io.vn", 42) {
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "no-referrer")
+		.add(CommonHeaders.REFERER, "no-referrer")
 		.build()
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
@@ -41,7 +42,7 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 		return pageListDoc.selectOrThrow("div.separator a").mapNotNull { element ->
 			val originalUrl = element.attr("href").takeIf { it.isNotEmpty() } ?: element.attr("src")
 			if (originalUrl.isEmpty()) return@mapNotNull null
-			
+
 			val workingUrl = addCdnServers(originalUrl).firstOrNull { url ->
 				checkMangaImgs(url)
 			}
@@ -59,7 +60,7 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 
 	private fun addCdnServers(url: String): List<String> {
 		if (!url.startsWith("http")) return emptyList()
-		
+
 		val urlFinal = url.replace("https://", "")
 		return listOf(
 			url,
@@ -73,9 +74,9 @@ internal class DocTruyen5s(context: MangaLoaderContext) :
 	private suspend fun checkMangaImgs(url: String): Boolean {
 		return try {
 			val response = webClient.httpHead(url)
-			val contentType = response.header("Content-Type") ?: ""
+			val contentType = response.header(CommonHeaders.CONTENT_TYPE) ?: ""
 			contentType.startsWith("image/")
-		} catch (e: Exception) {
+		} catch (_: Exception) {
 			false
 		}
 	}

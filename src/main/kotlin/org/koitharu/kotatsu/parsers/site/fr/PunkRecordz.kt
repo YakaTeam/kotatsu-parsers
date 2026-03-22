@@ -21,6 +21,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
@@ -869,10 +870,10 @@ internal class PunkRecordz(context: MangaLoaderContext) :
 	private fun siteRequestHeaders(baseUrl: String): Headers {
 		val origin = baseUrl.toHttpUrlOrNull()?.let { "${it.scheme}://${it.host}" } ?: "https://punkrecordz.com"
 		return Headers.headersOf(
-			"Origin", origin,
-			"Referer", "$origin/",
-			"Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-			"X-Requested-With", "XMLHttpRequest",
+			CommonHeaders.ORIGIN, origin,
+			CommonHeaders.REFERER, "$origin/",
+			CommonHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+			CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest",
 		)
 	}
 
@@ -885,10 +886,10 @@ internal class PunkRecordz(context: MangaLoaderContext) :
 			?: "punkrecordz.com"
 		val origin = "https://$originHost"
 		return Headers.headersOf(
-			"Origin", origin,
-			"Referer", "$origin/",
-			"Accept", "application/json",
-			"X-Requested-With", "XMLHttpRequest",
+			CommonHeaders.ORIGIN, origin,
+			CommonHeaders.REFERER, "$origin/",
+			CommonHeaders.ACCEPT, "application/json",
+			CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest",
 		)
 	}
 

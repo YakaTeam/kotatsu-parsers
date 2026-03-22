@@ -23,6 +23,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.attrAsAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.await
@@ -59,8 +60,8 @@ internal abstract class NatsuParser(
     }
 
     override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-        .add("Referer", "https://$domain/")
-        .add("Origin", "https://$domain")
+        .add(CommonHeaders.REFERER, "https://$domain/")
+        .add(CommonHeaders.ORIGIN, "https://$domain")
         .build()
 
     override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -310,7 +311,7 @@ internal abstract class NatsuParser(
 			"HX-Target", "chapter-list",
 			"HX-Trigger", "chapter-list",
 			"HX-Current-URL", mangaAbsoluteUrl,
-			"Referer", mangaAbsoluteUrl,
+			CommonHeaders.REFERER, mangaAbsoluteUrl,
 		)
 
 		return buildList {
@@ -475,12 +476,12 @@ internal abstract class NatsuParser(
         val requestBuilder = Request.Builder()
             .url(url)
             .post(body.build())
-            .addHeader("Referer", "https://${domain}/advanced-search/")
-            .addHeader("Origin", "https://${domain}")
+            .addHeader(CommonHeaders.REFERER, "https://${domain}/advanced-search/")
+            .addHeader(CommonHeaders.ORIGIN, "https://${domain}")
 
         if (extraHeaders != null) {
             for (name in extraHeaders.names()) {
-                if (!name.equals("Content-Type", ignoreCase = true)) {
+                if (!name.equals(CommonHeaders.CONTENT_TYPE, ignoreCase = true)) {
                     val value = extraHeaders[name] ?: continue
                     requestBuilder.addHeader(name, value)
                 }

@@ -17,6 +17,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.Broken
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -299,7 +300,7 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders() = Headers.Builder()
-		.add("User-Agent", UserAgents.CHROME_DESKTOP)
+		.add(CommonHeaders.USER_AGENT, UserAgents.CHROME_DESKTOP)
 		.build()
 
 	private fun Any?.toSafeInt(): Int {

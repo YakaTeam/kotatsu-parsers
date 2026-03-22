@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.util.*
 import kotlin.random.Random
 
@@ -26,14 +27,14 @@ internal class Mgkomik(context: MangaLoaderContext) :
 	private val randomLength = Random.Default.nextInt(13, 21)
 	private val randomString = generateRandomString(randomLength)
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
-		.add("Accept-Language", "en-US,en;q=0.9,id;q=0.8")
-		.add("Sec-Fetch-Dest", "document")
-		.add("Sec-Fetch-Mode", "navigate")
-		.add("Sec-Fetch-Site", "same-origin")
-		.add("Sec-Fetch-User", "?1")
-		.add("Upgrade-Insecure-Requests", "1")
-		.add("X-Requested-With", randomString)
+		.add(CommonHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8")
+		.add(CommonHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.9,id;q=0.8")
+		.add(CommonHeaders.SEC_FETCH_DEST, "document")
+		.add(CommonHeaders.SEC_FETCH_MODE, "navigate")
+		.add(CommonHeaders.SEC_FETCH_SITE, "same-origin")
+		.add(CommonHeaders.SEC_FETCH_USER, "?1")
+		.add(CommonHeaders.UPGRADE_INSECURE_REQUESTS, "1")
+		.add(CommonHeaders.X_REQUESTED_WITH, randomString)
 		.build()
 
 	private fun generateRandomString(length: Int): String {

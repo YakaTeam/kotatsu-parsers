@@ -12,6 +12,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 import java.math.BigDecimal
@@ -26,8 +27,8 @@ internal class Comix(context: MangaLoaderContext) :
 	private val apiBaseUrl get() = "https://$domain/$apiBase"
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Referer", "https://$domain/")
-		.add("Origin", "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
 		.build()
 
 	private val nsfwGenreIds = listOf("87264", "8", "87265", "13", "87266", "87268")

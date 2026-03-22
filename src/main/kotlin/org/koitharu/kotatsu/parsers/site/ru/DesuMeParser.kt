@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
@@ -47,7 +48,7 @@ internal class DesuMeParser(context: MangaLoaderContext) :
     )
 
     override fun getRequestHeaders(): Headers = Headers.Builder()
-        .add("User-Agent", UserAgents.KOTATSU)
+        .add(CommonHeaders.USER_AGENT, UserAgents.KOTATSU)
         .build()
 
     private val tagsCache = suspendLazy(initializer = ::fetchTags)

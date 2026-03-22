@@ -1,16 +1,18 @@
 package org.koitharu.kotatsu.parsers.site.pt
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
 import org.json.JSONObject
-import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
+import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.model.MangaListFilter
@@ -22,8 +24,10 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.await
 import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.extractNextJsTyped
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJson
@@ -34,7 +38,6 @@ import java.text.SimpleDateFormat
 import java.util.EnumSet
 import java.util.Locale
 import java.util.TimeZone
-import java.util.regex.Pattern
 
 @Broken("Refactor code")
 @MangaSourceParser("TAIYO", "Taiyō", "pt")
@@ -96,28 +99,6 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 	}
 
 	/**
-	 * Extract RSC (React Server Components) flight data from a page.
-	 * Each script tag contains: self.__next_f.push([1,"content"])
-	 * We extract just the string content from type-1 pushes and concatenate them.
-	 */
-	private fun extractFlightData(html: Document): String {
-		val result = StringBuilder()
-		val pushContentPattern = Pattern.compile("""self\.__next_f\.push\(\[1,"(.*?)"]\)""", Pattern.DOTALL)
-		for (script in html.select("script")) {
-			val data = script.data()
-			if (data.contains("self.__next_f.push")) {
-				val matcher = pushContentPattern.matcher(data)
-				if (matcher.find()) {
-					result.append(matcher.group(1))
-				}
-			}
-		}
-		return result.toString()
-			.replace("\\\"", "\"")
-			.replace("\\n", "\n")
-	}
-
-	/**
 	 * Make a raw OkHttp POST to MeiliSearch, bypassing webClient interceptors.
 	 */
 	private suspend fun meiliPost(body: JSONObject): JSONObject {
@@ -126,10 +107,10 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 		val request = Request.Builder()
 			.url("https://$meiliDomain/multi-search")
 			.post(requestBody)
-			.addHeader("Authorization", "Bearer $MEILIKEY")
-			.addHeader("Origin", "https://$domain")
-			.addHeader("Referer", "https://$domain/")
-			.addHeader("Accept", "application/json")
+			.addHeader(CommonHeaders.AUTHORIZATION, "Bearer $MEILIKEY")
+			.addHeader(CommonHeaders.ORIGIN, "https://$domain")
+			.addHeader(CommonHeaders.REFERER, "https://$domain/")
+			.addHeader(CommonHeaders.ACCEPT, "application/json")
 			.tag(MangaParserSource::class.java, source)
 			.build()
 		val client = context.httpClient.newBuilder()
@@ -300,7 +281,9 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 
 		do {
 			val input = "{\"json\":{\"mediaId\":\"$mediaId\",\"page\":$page,\"perPage\":$perPage}}"
-			val encodedInput = URLEncoder.encode(input, "UTF-8")
+			val encodedInput = withContext(Dispatchers.IO) {
+				URLEncoder.encode(input, "UTF-8")
+			}
 			val apiUrl = "https://$domain/api/trpc/chapters.getByMediaId?input=$encodedInput"
 
 			val response = webClient.httpGet(apiUrl).parseJson()
@@ -369,30 +352,14 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val fullUrl = chapter.url.toAbsoluteUrl(domain)
-		val html = webClient.httpGet(fullUrl).parseHtml()
-		val flightStr = extractFlightData(html)
+		val doc = webClient.httpGet(fullUrl).parseHtml()
+		val chapterObj = doc.extractNextJsTyped<JSONObject> { json ->
+			json is JSONObject && json.has("pages") && json.has("media")
+		} ?: throw ParseException("Could not find page data", chapter.url)
 
 		val chapterId = chapter.url.substringAfter("/chapter/").substringBefore("/")
-
-		// Extract mediaId from the flight data
-		val mediaIdPattern = Pattern.compile("\"media\":\\{\"id\":\"([a-f0-9-]+)\"")
-		val mediaIdMatcher = mediaIdPattern.matcher(flightStr)
-		val mediaId = if (mediaIdMatcher.find()) {
-			mediaIdMatcher.group(1)
-		} else {
-			throw IllegalStateException("Could not find media ID for chapter")
-		}
-
-		// Extract pages array from flight data
-		// Format: "pages":[{"id":"uuid","extension":"jpg"},{"id":"uuid","extension":"png"}, ...]
-		val pagesPattern = Pattern.compile("\"pages\":\\[(.+?)],\"previous")
-		val pagesMatcher = pagesPattern.matcher(flightStr)
-
-		if (!pagesMatcher.find()) {
-			throw IllegalStateException("Could not find pages for chapter")
-		}
-
-		val pagesArray = JSONArray("[" + pagesMatcher.group(1) + "]")
+		val mediaId = chapterObj.getJSONObject("media").getString("id")
+		val pagesArray = chapterObj.getJSONArray("pages")
 		val pages = mutableListOf<MangaPage>()
 
 		for (i in 0 until pagesArray.length()) {

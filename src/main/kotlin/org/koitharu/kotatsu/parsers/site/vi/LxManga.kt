@@ -3,25 +3,27 @@ package org.koitharu.kotatsu.parsers.site.vi
 import okhttp3.Headers
 import okhttp3.Interceptor
 import okhttp3.Response
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
+import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken("Need to fix getPages function")
 @MangaSourceParser("LXMANGA", "LXManga", "vi", type = ContentType.HENTAI)
 internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.LXMANGA, 60) {
 
 	override val configKeyDomain = ConfigKey.Domain("lxmanga.space")
 
+	override val userAgentKey = ConfigKey.UserAgent(UserAgents.CHROME_WINDOWS)
+
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("Referer", "https://$domain/")
-		.add("Origin", "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
 		.build()
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
@@ -234,9 +236,10 @@ internal class LxManga(context: MangaLoaderContext) : PagedMangaParser(context, 
 
 		val headers = if (!url.contains("covers")) {
 			request.headers.newBuilder()
-				.add("Referer", "https://$domain/")
-				.add("Origin", "https://$domain")
-				.add("Token", TOKEN_KEY)
+				.add(CommonHeaders.REFERER, "https://$domain/")
+				.add(CommonHeaders.ORIGIN, "https://$domain")
+				.add(CommonHeaders.TOKEN, TOKEN_KEY)
+				.add(CommonHeaders.USER_AGENT, UserAgents.CHROME_WINDOWS)
 				.build()
 		} else {
 			request.headers

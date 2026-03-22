@@ -10,6 +10,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.text.DateFormat
@@ -46,15 +47,15 @@ internal class MangaPark(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
-		.add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
-		.add("Accept-Language", "en-US,en;q=0.9")
-		.add("Origin", "https://$domain")
-		.add("Referer", "https://$domain/")
-		.add("Sec-Fetch-Dest", "document")
-		.add("Sec-Fetch-Mode", "navigate")
-		.add("Sec-Fetch-Site", "same-origin")
-		.add("Sec-Fetch-User", "?1")
-		.add("Upgrade-Insecure-Requests", "1")
+		.add(CommonHeaders.ACCEPT, "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8")
+		.add(CommonHeaders.ACCEPT_LANGUAGE, "en-US,en;q=0.9")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
+		.add(CommonHeaders.SEC_FETCH_DEST, "document")
+		.add(CommonHeaders.SEC_FETCH_MODE, "navigate")
+		.add(CommonHeaders.SEC_FETCH_SITE, "same-origin")
+		.add(CommonHeaders.SEC_FETCH_USER, "?1")
+		.add(CommonHeaders.UPGRADE_INSECURE_REQUESTS, "1")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(

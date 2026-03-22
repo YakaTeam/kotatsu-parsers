@@ -4,6 +4,7 @@ import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 
 @MangaSourceParser("USAGI", "Usagi", "ru")
 internal class UsagiParser(
@@ -13,7 +14,7 @@ internal class UsagiParser(
 	override val configKeyDomain = ConfigKey.Domain(*domains)
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	companion object {

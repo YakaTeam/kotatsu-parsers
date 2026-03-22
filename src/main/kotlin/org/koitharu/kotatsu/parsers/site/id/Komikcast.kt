@@ -16,6 +16,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
@@ -47,8 +48,8 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Origin", "https://$domain")
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(

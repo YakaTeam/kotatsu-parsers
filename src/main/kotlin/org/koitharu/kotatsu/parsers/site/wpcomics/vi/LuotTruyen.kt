@@ -11,6 +11,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.exception.AuthRequiredException
 import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.wpcomics.WpComicsParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
@@ -79,7 +80,7 @@ internal class LuotTruyen(context: MangaLoaderContext) :
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val header = Headers.Builder()
-			.add("Cookie", context.cookieJar.getCookies(domain).toString())
+			.add(CommonHeaders.COOKIE, context.cookieJar.getCookies(domain).toString())
 			.build()
 
 		val fullUrl = chapter.url.toAbsoluteUrl(domain)

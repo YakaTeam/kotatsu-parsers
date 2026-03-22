@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -275,7 +276,7 @@ internal class TuMangaOnlineParser(context: MangaLoaderContext) : PagedMangaPars
 		val script4 = document.selectFirst("input#redir")
 		val script5 = document.selectFirst("script:containsData(window.opener):containsData(location.replace)")
 
-		val redirectHeaders = Headers.Builder().set("Referer", document.baseUri()).build()
+		val redirectHeaders = Headers.Builder().set(CommonHeaders.REFERER, document.baseUri()).build()
 
 		if (script1 != null) {
 			val data = script1.data()

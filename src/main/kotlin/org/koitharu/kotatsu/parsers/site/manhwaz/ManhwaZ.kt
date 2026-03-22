@@ -15,6 +15,7 @@ import org.koitharu.kotatsu.parsers.model.MangaState
 import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.mapChapters
@@ -46,8 +47,8 @@ internal abstract class ManhwaZ(
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Origin", "https://$domain")
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
@@ -164,7 +165,7 @@ internal abstract class ManhwaZ(
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val fullUrl = chapter.url.toAbsoluteUrl(domain)
 		val doc = webClient.httpGet(fullUrl).parseHtml()
-		return doc.selectOrThrow("div.page-break img").mapIndexed { _, img ->
+		return doc.selectOrThrow("div.page-break img").map { img ->
 			val url = img.src().orEmpty()
             MangaPage(
                 id = generateUid(url),

@@ -11,7 +11,6 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONIndexed
-import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.getCookies
@@ -25,8 +24,8 @@ import org.koitharu.kotatsu.parsers.util.parseHtml
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.Interceptor
 import okhttp3.Response
-import okhttp3.Request
 import kotlinx.coroutines.delay
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
 import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.runCatchingCancellable
@@ -92,12 +91,12 @@ internal class KomiicParser(context: MangaLoaderContext) :
             }
 
             val newReq = req.newBuilder()
-                .header("Accept", "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8")
-                .header("User-Agent", UserAgents.CHROME_DESKTOP)
-                .header("Referer", referer)
-                .header("Origin", "https://$domain")
+                .header(CommonHeaders.ACCEPT, "image/webp,image/png;q=0.9,image/jpeg,*/*;q=0.8")
+                .header(CommonHeaders.USER_AGENT, UserAgents.CHROME_DESKTOP)
+                .header(CommonHeaders.REFERER, referer)
+                .header(CommonHeaders.ORIGIN, "https://$domain")
                 // 不在图片请求上强行附加 Authorization，避免服务端返回 400
-                .removeHeader("Authorization")
+                .removeHeader(CommonHeaders.AUTHORIZATION)
                 .build()
             chain.proceed(newReq)
         } else {
@@ -116,15 +115,15 @@ internal class KomiicParser(context: MangaLoaderContext) :
     }
 
     override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
-        .add("Referer", "https://$domain/")
-        .add("Origin", "https://$domain")
-        .add("Accept", "application/json, text/plain, */*")
-        .add("Accept-Language", "zh-CN,zh;q=0.9,en;q=0.8")
-        .add("X-Requested-With", "XMLHttpRequest")
-        .add("Sec-Fetch-Site", "same-origin")
-        .add("Sec-Fetch-Mode", "cors")
-        .add("Sec-Fetch-Dest", "empty")
-        .add("Content-Type", "application/json")
+        .add(CommonHeaders.REFERER, "https://$domain/")
+        .add(CommonHeaders.ORIGIN, "https://$domain")
+        .add(CommonHeaders.ACCEPT, "application/json, text/plain, */*")
+        .add(CommonHeaders.ACCEPT_LANGUAGE, "zh-CN,zh;q=0.9,en;q=0.8")
+        .add(CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest")
+        .add(CommonHeaders.SEC_FETCH_SITE, "same-origin")
+        .add(CommonHeaders.SEC_FETCH_MODE, "cors")
+        .add(CommonHeaders.SEC_FETCH_DEST, "empty")
+        .add(CommonHeaders.CONTENT_TYPE, "application/json")
         .apply {
             // 若存在登录产生的 token 或 access_token Cookie，附加 Bearer 认证头
             val cookies = context.cookieJar.getCookies(domain)
@@ -135,7 +134,7 @@ internal class KomiicParser(context: MangaLoaderContext) :
                 val v = tokenCookie.value
                 if (v.isNotEmpty()) {
                     // 使用通用 Bearer 方案，部分接口可能更兼容
-                    add("Authorization", "Bearer $v")
+                    add(CommonHeaders.AUTHORIZATION, "Bearer $v")
                 }
             }
         }
@@ -159,7 +158,7 @@ internal class KomiicParser(context: MangaLoaderContext) :
         }
 
         val base = if (!filter.query.isNullOrEmpty()) {
-            val list = search(filter.query!!)
+            val list = search(filter.query)
             if (page == paginator.firstPage) {
                 searchFirstPageCacheQuery = filter.query
                 searchFirstPageCache = list
@@ -428,7 +427,7 @@ internal class KomiicParser(context: MangaLoaderContext) :
         )
     }
 
-    private suspend fun applyLocalFilters(list: List<Manga>, filter: MangaListFilter): List<Manga> {
+    private fun applyLocalFilters(list: List<Manga>, filter: MangaListFilter): List<Manga> {
         var result = list
         // 仅保留状态与排除标签的本地过滤；色气程度严格依赖远端 sexyLevel
         if (filter.states.isNotEmpty()) {
@@ -669,7 +668,7 @@ internal class KomiicParser(context: MangaLoaderContext) :
             val dateStr = jo.optString("dateUpdated", "")
             val upload = if (dateStr.isNotEmpty()) runCatching {
                 java.text.SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", java.util.Locale.US).apply {
-                    timeZone = java.util.TimeZone.getTimeZone("UTC")
+                    timeZone = TimeZone.getTimeZone("UTC")
                 }.parse(dateStr)?.time ?: 0L
             }.getOrDefault(0L) else 0L
             MangaChapter(
@@ -768,7 +767,7 @@ internal class KomiicParser(context: MangaLoaderContext) :
                     ready = true; break
                 }
                 // 若仍未就绪，额外触发一次图片页预热后再试（首两次）
-                if (!ready && idx < 2 && !comicId.isNullOrEmpty()) {
+                if (idx < 2 && !comicId.isNullOrEmpty()) {
                     runCatchingCancellable {
                         webClient.httpGet(
                             "https://$domain/comic/$comicId/chapter/$chapterId/images/all",

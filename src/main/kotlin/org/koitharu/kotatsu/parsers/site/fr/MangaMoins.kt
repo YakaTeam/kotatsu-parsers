@@ -25,6 +25,7 @@ import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.json.JSONObject
 import org.jsoup.nodes.Document
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.net.URLDecoder
 import java.nio.charset.StandardCharsets
 import java.util.EnumSet
@@ -50,7 +51,7 @@ internal class MangaMoins(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override suspend fun getFilterOptions(): MangaListFilterOptions = MangaListFilterOptions()

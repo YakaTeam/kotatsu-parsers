@@ -4,7 +4,6 @@ import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.Response
 import org.json.JSONArray
-import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.bitmap.Bitmap
@@ -17,7 +16,6 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.math.PI
 
 @MangaSourceParser("MIMIHENTAI", "MimiHentai", "vi", type = ContentType.HENTAI)
 internal class MimiHentai(context: MangaLoaderContext) :
@@ -310,40 +308,30 @@ internal class MimiHentai(context: MangaLoaderContext) :
 	}
 
 	private fun extractMetadata(bitmap: Bitmap, ori: String): Bitmap {
-        val gt = decodeGt(ori)
-		val metadata = JSONObject().apply {
-			var sw = 0
-			var sh = 0
-			val pos = JSONObject()
-			val dims = JSONObject()
+		val gt = decodeGt(ori)
 
-			for (t in gt.split("|")) {
-				when {
-					t.startsWith("sw:") -> sw = t.substring(3).toInt()
-					t.startsWith("sh:") -> sh = t.substring(3).toInt()
-					t.contains("@") && t.contains(">") -> {
-						val (left, right) = t.split(">")
-						val (n, rectStr) = left.split("@")
-						val (x, y, w, h) = rectStr.split(",").map { it.toInt() }
-						dims.put(n, JSONObject().apply {
-							put("x", x)
-							put("y", y)
-							put("width", w)
-							put("height", h)
-						})
-						pos.put(n, right)
-					}
-				}
-			}
-			put("sw", sw)
-			put("sh", sh)
-			put("dims", dims)
-			put("pos", pos)
+		// Cre: FiorenMas
+		// Refer from https://github.com/keiyoushi/extensions-source/pull/13977
+		// Parse format: v1|sw:W|sh:H|ID@x,y,w,h>ID|...
+		val mapMatch = MAP_REGEX.find(gt) ?: return bitmap
+		val sw = mapMatch.groupValues[1].toIntOrNull() ?: return bitmap
+		val sh = mapMatch.groupValues[2].toIntOrNull() ?: return bitmap
+		val rawSegments = mapMatch.groupValues[3].split('|')
+
+		data class Seg(val id: String, val x: Int, val y: Int, val w: Int, val h: Int, val srcId: String)
+
+		val segments = rawSegments.mapNotNull { seg ->
+			val m = SEGMENT_REGEX.matchEntire(seg) ?: return@mapNotNull null
+			Seg(
+				id = m.groupValues[1],
+				x = m.groupValues[2].toIntOrNull() ?: return@mapNotNull null,
+				y = m.groupValues[3].toIntOrNull() ?: return@mapNotNull null,
+				w = m.groupValues[4].toIntOrNull() ?: return@mapNotNull null,
+				h = m.groupValues[5].toIntOrNull() ?: return@mapNotNull null,
+				srcId = m.groupValues[6],
+			)
 		}
-
-		val sw = metadata.optInt("sw")
-		val sh = metadata.optInt("sh")
-		if (sw <= 0 || sh <= 0) return bitmap
+		if (segments.size != 9) return bitmap
 
 		val fullW = bitmap.width
 		val fullH = bitmap.height
@@ -352,94 +340,62 @@ internal class MimiHentai(context: MangaLoaderContext) :
 			k.drawBitmap(bitmap, Rect(0, 0, sw, sh), Rect(0, 0, sw, sh))
 		}
 
-		val keys = arrayOf("00","01","02","10","11","12","20","21","22")
-		val baseW = sw / 3
-		val baseH = sh / 3
-		val rw = sw % 3
-		val rh = sh % 3
-		val defaultDims = HashMap<String, IntArray>().apply {
-			for (k in keys) {
-				val i = k[0].digitToInt()
-				val j = k[1].digitToInt()
-				val w = baseW + if (j == 2) rw else 0
-				val h = baseH + if (i == 2) rh else 0
-				put(k, intArrayOf(j * baseW, i * baseH, w, h))
-			}
-		}
-
-		val dimsJson = metadata.optJSONObject("dims") ?: JSONObject()
-		val dims = HashMap<String, IntArray>().apply {
-			for (k in keys) {
-				val jo = dimsJson.optJSONObject(k)
-				if (jo != null) {
-					put(k, intArrayOf(
-						jo.getInt("x"),
-						jo.getInt("y"),
-						jo.getInt("width"),
-						jo.getInt("height"),
-					))
-				} else {
-					put(k, defaultDims.getValue(k))
-				}
-			}
-		}
-
-		val pos = metadata.optJSONObject("pos") ?: JSONObject()
-		val inv = HashMap<String, String>().apply {
-			val it = pos.keys()
-			while (it.hasNext()) {
-				val a = it.next()
-				val b = pos.getString(a)
-				put(b, a)
-			}
-		}
-
+		val byId = segments.associateBy { it.id }
 		val result = context.createBitmap(fullW, fullH)
-
-		for (k in keys) {
-			val srcKey = inv[k] ?: continue
-			val s = dims.getValue(k)
-			val d = dims.getValue(srcKey)
+		for (dst in segments) {
+			val src = byId[dst.srcId] ?: continue
+			val drawW = minOf(dst.w, sw - src.x, fullW - dst.x)
+			val drawH = minOf(dst.h, sh - src.y, fullH - dst.y)
+			if (drawW <= 0 || drawH <= 0) continue
 			result.drawBitmap(
 				working,
-				Rect(s[0], s[1], s[0] + s[2], s[1] + s[3]),
-				Rect(d[0], d[1], d[0] + d[2], d[1] + d[3]),
+				Rect(src.x, src.y, src.x + drawW, src.y + drawH),
+				Rect(dst.x, dst.y, dst.x + drawW, dst.y + drawH),
 			)
 		}
 
 		if (sh < fullH) {
-			result.drawBitmap(
-				bitmap,
-				Rect(0, sh, fullW, fullH),
-				Rect(0, sh, fullW, fullH),
-			)
+			result.drawBitmap(bitmap, Rect(0, sh, fullW, fullH), Rect(0, sh, fullW, fullH))
 		}
 		if (sw < fullW) {
-			result.drawBitmap(
-				bitmap,
-				Rect(sw, 0, fullW, sh),
-				Rect(sw, 0, fullW, sh),
-			)
+			result.drawBitmap(bitmap, Rect(sw, 0, fullW, sh), Rect(sw, 0, fullW, sh))
 		}
 
 		return result
 	}
 
-    private fun decodeGt(hexData: String): String {
-        val strategyStr = hexData.takeLast(2)
-        val strategy = strategyStr.toInt(10)
-        val encryptionKey = getFixedEncryptionKey(strategy)
-        val encryptedHex = hexData.dropLast(2)
-        val encryptedBytes = hexToBytes(encryptedHex)
-        val keyBytes = encryptionKey.toByteArray(Charsets.UTF_8)
-        val decrypted = ByteArray(encryptedBytes.size)
+	private fun decodeGt(drm: String): String {
+		val payload = drm.dropLast(2)
+		if (payload.isEmpty() || payload.length % 2 != 0) return drm
 
-        for (i in encryptedBytes.indices) {
-            decrypted[i] = (encryptedBytes[i].toInt() xor keyBytes[i % keyBytes.size].toInt()).toByte()
-        }
+		val encryptedBytes = parseHex(payload) ?: return drm
+		val key = deriveKey(drm).toByteArray(Charsets.UTF_8)
+		val decrypted = ByteArray(encryptedBytes.size) { i ->
+			(encryptedBytes[i].toInt() xor key[i % key.size].toInt()).toByte()
+		}
+		return decrypted.toString(Charsets.UTF_8)
+	}
 
-        return decrypted.toString(Charsets.UTF_8)
-    }
+	private fun parseHex(hex: String): ByteArray? {
+		if (hex.length % 2 != 0) return null
+		return try {
+			ByteArray(hex.length / 2) { i ->
+				hex.substring(i * 2, i * 2 + 2).toInt(16).toByte()
+			}
+		} catch (_: NumberFormatException) { null }
+	}
+
+	private fun deriveKey(drm: String): String {
+		if (drm.isEmpty()) return KEY_TABLE[0]
+		val last = drm.last().digitToIntOrNull() ?: return KEY_TABLE[0]
+		val prev = if (drm.length >= 2) drm[drm.length - 2].digitToIntOrNull() ?: 0 else 0
+		val index = prev * 10 + last
+		return when {
+			index in KEY_TABLE.indices -> KEY_TABLE[index]
+			index > 49 -> FALLBACK_HIGH_KEY
+			else -> KEY_TABLE[0]
+		}
+	}
 
     private suspend fun fetchTags(): Set<MangaTag> {
 		val url = "https://$domain/$apiSuffix/genres"
@@ -453,72 +409,31 @@ internal class MimiHentai(context: MangaLoaderContext) :
 		}
 	}
 
-    private fun getKeyByStrategy(strategy: Int): Double {
-        return when (strategy) {
-            0 -> 1.23872913102938
-            1 -> 1.28767913123448
-            2 -> 1.391378192300391
-            3 -> 2.391378192500391
-            4 -> 3.391378191230391
-            5 -> 4.391373210965091
-            6 -> 2.847291847392847
-            7 -> 5.192847362847291
-            8 -> 3.947382917483921
-            9 -> 1.847392847291847
-            10 -> 6.293847291847382
-            11 -> 4.847291847392847
-            12 -> 2.394827394827394
-            13 -> 7.847291847392847
-            14 -> 3.827394827394827
-            15 -> 1.947382947382947
-            16 -> 8.293847291847382
-            17 -> 5.847291847392847
-            18 -> 2.738472938472938
-            19 -> 9.847291847392847
-            20 -> 4.293847291847382
-            21 -> 6.847291847392847
-            22 -> 3.492847291847392
-            23 -> 1.739482738472938
-            24 -> 7.293847291847382
-            25 -> 5.394827394827394
-            26 -> 2.847391847392847
-            27 -> 8.847291847392847
-            28 -> 4.738472938472938
-            29 -> 6.293847391847382
-            30 -> 3.847291847392847
-            31 -> 1.492847291847392
-            32 -> 9.293847291847382
-            33 -> 5.847291847392847
-            34 -> 2.120381029475602
-            35 -> 7.390481264726194
-            36 -> 4.293012462419412
-            37 -> 6.301412704170294
-            38 -> 3.738472938472938
-            39 -> 1.847291847392847
-            40 -> 8.213901280149210
-            41 -> 5.394827394827394
-            42 -> 2.201381022038956
-            43 -> 9.310129031284698
-            44 -> 10.32131031284698
-            45 -> 1.130712039820147
-            else -> 1.2309829040349309
-        }
-    }
-
-    private fun getFixedEncryptionKey(strategy: Int): String {
-        val baseKey = getKeyByStrategy(strategy)
-        return (PI * baseKey).toString()
-    }
-
-    private fun hexToBytes(hex: String): ByteArray {
-        val bytes = ByteArray(hex.length / 2)
-        for (i in hex.indices step 2) {
-            bytes[i / 2] = hex.substring(i, i + 2).toInt(16).toByte()
-        }
-        return bytes
-    }
-
 	companion object {
 		private const val GT = "gt="
+		private val MAP_REGEX = Regex(
+			"""v1\|sw:(\d+)\|sh:(\d+)\|((?:[0-2]{2}@\d+,\d+,\d+,\d+>[0-2]{2}\|){8}[0-2]{2}@\d+,\d+,\d+,\d+>[0-2]{2})"""
+		)
+		private val SEGMENT_REGEX = Regex("""([0-2]{2})@(\d+),(\d+),(\d+),(\d+)>([0-2]{2})""")
+		private const val FALLBACK_HIGH_KEY = "3.8672468480107685"
+		private val KEY_TABLE = arrayOf(
+			"10.094534846668065", "7.830415197347441",  "16.99376503124865",
+			"13.206661543266259", "7.316826787559291",  "10.4581449488877",
+			"4.175296661012279",  "10.175873934720146", "16.434397649190988",
+			"7.009874458739787",  "13.575803014637726", "29.279163189766738",
+			"10.750231018960623", "10.094342559715047", "28.658921501338497",
+			"25.793772667060153", "25.79379811121803",  "15.748609882695796",
+			"7.534001429117513",  "28.907337185559953", "13.22733409213105",
+			"7.266890610739514",  "6.669662254093193",  "13.227334074999675",
+			"28.564557448091602", "16.619459066493555", "6.969300123013573",
+			"26.138465628985216", "13.317787084345925", "19.228026822727582",
+			"10.772577818410019", "3.7994766625978458", "29.188688520919868",
+			"16.369262643760873", "7.631192793297872",  "22.635116664169104",
+			"7.008299254805293",  "19.918386626762093", "10.432972563129333",
+			"4.367499602056042",  "26.166382731558237", "16.342370610615042",
+			"7.515015438908234",  "29.295296241376956", "32.16934026452751",
+			"4.177784547778614",  "4.159160201118592",  "10.436068860553476",
+			"4.1529681276331845", "10.436068612003677",
+		)
 	}
 }

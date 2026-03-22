@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.core.AbstractMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.config.ConfigKey
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
@@ -191,10 +192,10 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         val signature = hash.joinToString("") { "%02x".format(it) }
 
         val headers = Headers.Builder()
-            .add("Referer", "$domain/")
-            .add("x-wm-request-time", timestamp)
-            .add("x-wm-accses-key", ACCESS_KEY)
-            .add("x-wm-request-signature", signature)
+            .add(CommonHeaders.REFERER, "$domain/")
+            .add(CommonHeaders.X_WM_REQUEST_TIME, timestamp)
+            .add(CommonHeaders.X_WM_ACCESS_KEY, ACCESS_KEY)
+            .add(CommonHeaders.X_WM_REQUEST_SIGNATURE, signature)
             .build()
 
         val response = webClient.httpGet(httpUrl, headers)

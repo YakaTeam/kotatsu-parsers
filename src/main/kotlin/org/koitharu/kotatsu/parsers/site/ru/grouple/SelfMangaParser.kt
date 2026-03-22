@@ -5,6 +5,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 
 @MangaSourceParser("SELFMANGA", "SelfManga", "ru", type = ContentType.OTHER)
 internal class SelfMangaParser(
@@ -14,7 +15,7 @@ internal class SelfMangaParser(
 	override val configKeyDomain = ConfigKey.Domain(*domains)
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("referer", "https://$domain/")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	companion object {

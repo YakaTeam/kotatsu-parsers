@@ -8,6 +8,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.asTypedList
@@ -45,8 +46,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
-		.add("Origin", "https://$domain")
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.ORIGIN, "https://$domain")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(

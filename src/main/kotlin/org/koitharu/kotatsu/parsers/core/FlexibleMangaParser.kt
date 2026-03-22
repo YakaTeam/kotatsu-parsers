@@ -11,6 +11,7 @@ import org.koitharu.kotatsu.parsers.MangaParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.config.MangaSourceConfig
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.network.OkHttpWebClient
 import org.koitharu.kotatsu.parsers.network.WebClient
 import org.koitharu.kotatsu.parsers.util.*
@@ -44,7 +45,7 @@ internal abstract class FlexibleMangaParser @InternalParsersApi constructor(
 
 	@Deprecated("Override intercept() instead")
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("User-Agent", config[userAgentKey])
+		.add(CommonHeaders.USER_AGENT, config[userAgentKey])
 		.build()
 
 	/**

@@ -13,6 +13,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.SinglePageMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.zip.ZipInputStream
@@ -25,7 +26,8 @@ internal class LuratoonScansParser(context: MangaLoaderContext) :
 
     override val configKeyDomain = ConfigKey.Domain("luratoons.net")
 
-    override fun getRequestHeaders(): Headers = Headers.Builder().add("User-Agent", config[userAgentKey]).build()
+    override fun getRequestHeaders(): Headers = Headers.Builder()
+		.add(CommonHeaders.USER_AGENT, config[userAgentKey]).build()
 
     override val availableSortOrders = setOf(SortOrder.ALPHABETICAL)
 
@@ -147,7 +149,7 @@ internal class LuratoonScansParser(context: MangaLoaderContext) :
                 "image/*"
             }.toMediaTypeOrNull()
             return response.newBuilder()
-                .setHeader("Content-Type", type?.toString())
+                .setHeader(CommonHeaders.CONTENT_TYPE, type?.toString())
                 .body(bytes.toResponseBody(type))
                 .build()
         } else {

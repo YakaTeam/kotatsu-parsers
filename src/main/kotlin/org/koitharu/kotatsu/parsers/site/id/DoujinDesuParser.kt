@@ -6,6 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -45,8 +46,8 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 	)
 
 	override fun getRequestHeaders(): Headers = Headers.Builder()
-		.add("X-Requested-With", "XMLHttpRequest")
-		.add("Referer", "https://$domain/")
+		.add(CommonHeaders.X_REQUESTED_WITH, "XMLHttpRequest")
+		.add(CommonHeaders.REFERER, "https://$domain/")
 		.build()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {

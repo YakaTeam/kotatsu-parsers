@@ -8,6 +8,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
@@ -46,7 +47,7 @@ internal class Kumapage(context: MangaLoaderContext) :
 				val genre = if (filter.tags.isNotEmpty()) filter.tags.first().key else "all"
 				val url = "https://$domain/search-process/"
 				val headers = Headers.Builder()
-					.add("Content-Type", "application/x-www-form-urlencoded")
+					.add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
 					.build()
 				val response = webClient.httpPost(url.toHttpUrl(), payload = "view=1&keyword=${filter.query}&genre=$genre", headers).parseHtml()
 				parseSearchList(response)

@@ -18,6 +18,7 @@ import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.parseHtml
@@ -96,7 +97,7 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
 
         // FIX 2: Construct headers manually
         val searchHeaders = Headers.Builder()
-            .add("Content-Type", "application/x-www-form-urlencoded")
+            .add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
             .build()
 
         val doc = webClient.httpPost(

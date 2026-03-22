@@ -63,7 +63,8 @@ JVM and Android applications. It's a fork of [kotatsu-parsers](https://github.co
 - [kotatsu-dl](https://github.com/YakaTeam/kotatsu-dl) (Forked from [KotatsuApp](https://github.com/KotatsuApp/kotatsu-dl))
 - [Shirizu](https://github.com/ztimms73/shirizu) (Dead)
 - [OtakuWorld](https://github.com/jakepurple13/OtakuWorld) (Switched to using [Tachiyomi Extensions](https://github.com/tachiyomiorg/extensions))
-- [Yumemi](https://github.com/YumemiProject/Yumemi) (Reference)
+- [Usagi](https://github.com/UsagiApp/Usagi) (For core only)
+- [Yumemi](https://github.com/YumemiProject/Yumemi) (Archived, Reference)
 
 ## Contribution
 

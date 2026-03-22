@@ -375,14 +375,14 @@ internal abstract class MadaraParser(
 				payload["vars[tax_query][2][terms][]"] = filter.year.toString()
 			}
 
-			// Support author
-			//  filter.author.let {
-			//	payload["vars[tax_query][3][taxonomy]"] = "wp-manga-author"
-			//	payload["vars[tax_query][3][field]"] = "name"
-			//	payload["vars[tax_query][3][terms][0]"] = filter.author
-			//	payload["vars[tax_query][3][operator]"] = "IN"
-			//}
-
+			if (!filter.author.isNullOrEmpty()) {
+				filter.author.let {
+					payload["vars[tax_query][3][taxonomy]"] = "wp-manga-author"
+					payload["vars[tax_query][3][field]"] = "name"
+					payload["vars[tax_query][3][terms][0]"] = filter.author
+					payload["vars[tax_query][3][operator]"] = "IN"
+				}
+			}
 
 			// Support artist
 			//  filter.artist.let {
@@ -734,7 +734,7 @@ internal abstract class MadaraParser(
 	}
 
 	protected open val selectBodyPage = "div.main-col-inner div.reading-content"
-	protected open val selectPage = "div.page-break"
+	protected open val selectPage = "div.page-break, div.page-box"
 	protected open val selectRequiredLogin = ".content-blocked, .login-required"
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
