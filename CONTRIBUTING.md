@@ -94,4 +94,4 @@ It is recommended that unit tests be run before submitting a PR.
 
 ## Help wanted ?
 
-If you need help or have some questions, ask a community in our [Discord server](https://discord.gg/PTd2bYgz9m).
+If you need help or have questions, join the community on our [Discord server](https://discord.gg/PTd2bYgz9m) and ask us.
