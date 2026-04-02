@@ -1,10 +1,12 @@
-name: Update summary for PRs
+name: Update summary (if necessary)
 
 on:
     workflow_dispatch:
     push:
         branches:
             - master
+        paths:
+            - 'src/main/kotlin/org/koitharu/kotatsu/parsers/**'
     pull_request_target:
         paths:
             - 'src/main/kotlin/org/koitharu/kotatsu/parsers/**'
@@ -15,6 +17,7 @@ env:
 
 permissions:
     contents: write
+    pull-requests: write
 
 jobs:
     update:
@@ -44,15 +47,39 @@ jobs:
                 run: ./gradlew kspKotlin --rerun-tasks
                 continue-on-error: true
 
-            -   name: Check & Push summary 📤
+            -   name: Check summary changes 📤
+                id: summary_check
                 run: |
                     if git status --porcelain .github/summary.yaml | grep .; then
-                        git config user.name "${{ env.SIGNER_USERNAME }}"
-                        git config user.email "${{ env.SIGNER_EMAIL }}"
-                        git add .github/summary.yaml
-                        git commit -m "chore: Update summary after compiling the library"
-                        git push
-                        echo "ℹ️ Summary updated"
+                      echo "changed=true" >> $GITHUB_OUTPUT
                     else
-                        echo "ℹ️ No changes in summary"
+                      echo "changed=false" >> $GITHUB_OUTPUT
                     fi
+
+            -   name: Commit summary change 📦
+                if: steps.summary_check.outputs.changed == 'true'
+                run: |
+                    git config user.name "${{ env.SIGNER_USERNAME }}"
+                    git config user.email "${{ env.SIGNER_EMAIL }}"
+                    git checkout -b auto/update
+                    git add .github/summary.yaml
+                    git commit -m "chore: Update summary after compiling the library"
+
+
+            -   name: Create Pull Request 🚀
+                if: steps.summary_check.outputs.changed == 'true'
+                uses: peter-evans/create-pull-request@v8.1.0
+                with:
+                    token: ${{ secrets.GITHUB_TOKEN }}
+                    branch: auto/update
+                    title: "chore(actions): Update summary after building this library"
+                    body: |
+                        > [!IMPORTANT]
+                        > There may be an issue with how the number of available sources for this library is currently counted
+                        >
+                        > Please review the summary if anything looks incorrect.
+
+                        🔄 Triggered after library build workflow completes
+
+                        🤖 Generated automatically via [GitHub Actions](https://github.com/features/actions)
+                    base: master
