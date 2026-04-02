@@ -27,14 +27,13 @@ private const val LOCALE_FALLBACK = "en"
 internal class WeebDex(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.WEEBDEX, 42) {
 
-	private val cdnDomain = "srv.notdelta.xyz"
 	override val configKeyDomain = ConfigKey.Domain("weebdex.org")
 	override val userAgentKey = ConfigKey.UserAgent(UserAgents.KOTATSU)
 
 	private val preferredCoverServerKey = ConfigKey.PreferredImageServer(
 		presetValues = mapOf(
-			SERVER_DATA to "High quality",
-			SERVER_DATA_SAVER to "Compressed quality",
+			SERVER_DATA to "High quality (512x)",
+			SERVER_DATA_SAVER to "Compressed quality (256x)",
 		),
 		defaultValue = SERVER_DATA,
 	)
@@ -68,6 +67,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
 			isMultipleTagsSupported = true,
+			isOriginalLocaleSupported = true,
 			isTagsExclusionSupported = true,
 			isYearRangeSupported = true,
 			isAuthorSearchSupported = true,
@@ -146,6 +146,12 @@ internal class WeebDex(context: MangaLoaderContext) :
 				Locale("ur"), // Urdu
 				Locale("uz"), // Uzbek
 				Locale("vi"), // Vietnamese
+			),
+			availableDemographics = EnumSet.of(
+				Demographic.SHOUNEN,
+				Demographic.SHOUJO,
+				Demographic.JOSEI,
+				Demographic.SEINEN,
 			),
 		)
 	}
@@ -232,6 +238,19 @@ internal class WeebDex(context: MangaLoaderContext) :
 			}
 		}
 
+		// Demographic
+		if (!filter.demographics.isEmpty()) {
+			filter.demographics.forEach {
+				when (it) {
+					Demographic.SHOUNEN -> url.addQueryParameter("demographic", "shounen")
+					Demographic.SHOUJO -> url.addQueryParameter("demographic", "shoujo")
+					Demographic.JOSEI -> url.addQueryParameter("demographic", "josei")
+					Demographic.SEINEN -> url.addQueryParameter("demographic", "seinen")
+					else -> {}
+				}
+			}
+		}
+
 		// Search by language (Translated languages)
 		filter.locale?.let {
 			val langCode = when {
@@ -242,6 +261,17 @@ internal class WeebDex(context: MangaLoaderContext) :
 			}
 			url.addQueryParameter("hasChapters", "true")
 			url.addQueryParameter("availableTranslatedLang", langCode)
+		}
+
+		// Search by original language
+		filter.originalLocale?.let {
+			val langCode = when {
+				it.language.equals("pt", true) && it.country.equals("BR", true) -> "pt-br"
+				it.language.equals("es", true) && it.country.equals("MX", true) -> "es-la"
+				it.language.equals("zh", true) && it.country.equals("HK", true) -> "zh-hk"
+				else -> it.language
+			}
+			url.addQueryParameter("lang", langCode)
 		}
 
 		// Search by Year (From - To)
@@ -282,8 +312,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 				url = id,
 				publicUrl = "https://$domain/title/$id/"
 					+ title.splitByWhitespace().joinToString("-") { it },
-				coverUrl = "https://$cdnDomain/covers/$id/$coverId.$quality.webp",
-				largeCoverUrl = "https://$cdnDomain/covers/$id/$coverId.webp",
+				coverUrl = "https://$domain/covers/$id/$coverId.$quality.webp",
+				largeCoverUrl = "https://$domain/covers/$id/$coverId.webp",
 				contentRating = when (jo.getString("content_rating")) {
 					"safe" -> ContentRating.SAFE
 					"suggestive" -> ContentRating.SUGGESTIVE
@@ -431,6 +461,7 @@ internal class WeebDex(context: MangaLoaderContext) :
 		}
 	}
 
+	// only has 1 page for it, need to handle more pages in future
 	private suspend fun fetchTags(): Set<MangaTag> {
 		val url = "https://api.$domain/manga/tag"
 		val response = webClient.httpGet(url).parseJson()

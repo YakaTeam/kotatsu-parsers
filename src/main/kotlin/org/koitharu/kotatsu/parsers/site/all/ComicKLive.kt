@@ -364,8 +364,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
         val array = optJSONArray("genres") ?: return emptySet()
         val res = ArraySet<MangaTag>(array.length())
         for (i in 0 until array.length()) {
-            val element = array.opt(i)
-            val tag = when (element) {
+			val tag = when (val element = array.opt(i)) {
                 is Int -> tags[element]
                 is JSONObject -> {
                     val slug = element.optString("slug")
