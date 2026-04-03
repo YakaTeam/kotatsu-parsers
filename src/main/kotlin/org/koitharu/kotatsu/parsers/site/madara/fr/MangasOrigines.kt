@@ -1,12 +1,15 @@
 package org.koitharu.kotatsu.parsers.site.madara.fr
 
+import okhttp3.Headers
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaChapter
 import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
@@ -15,7 +18,6 @@ import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseSafe
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -26,45 +28,82 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 	override val datePattern = "MMMM d, yyyy"
 	override val tagPrefix = "manga-genres/"
 	override val listUrl = "catalogues/"
+	override val selectTestAsync = "#manga-chapters-holder li.wp-manga-chapter"
+	override val selectChapter = "li.wp-manga-chapter, div.chapter-item"
+
+	private val chapterDateFormatFr = ThreadLocal.withInitial { SimpleDateFormat(datePattern, sourceLocale) }
+	private val chapterDateFormatEn = ThreadLocal.withInitial { SimpleDateFormat(datePattern, Locale.ENGLISH) }
+	private val chaptersCache = object : LinkedHashMap<String, List<MangaChapter>>(32, 0.75f, true) {
+		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<MangaChapter>>?): Boolean {
+			return size > CHAPTERS_CACHE_SIZE
+		}
+	}
 	private val pagesCache = object : LinkedHashMap<String, List<MangaPage>>(64, 0.75f, true) {
 		override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<MangaPage>>?): Boolean {
 			return size > PAGES_CACHE_SIZE
 		}
 	}
 
+	override fun getRequestHeaders(): Headers = super.getRequestHeaders().newBuilder()
+		.set(CommonHeaders.REFERER, "https://$domain/")
+		.set(CommonHeaders.ORIGIN, "https://$domain")
+		.build()
+
 	override suspend fun getChapters(manga: Manga, doc: Document): List<MangaChapter> {
-		return parseChapterList(doc.body().select(selectChapter), sourceOrderFallback = true)
+		val cacheKey = normalizeMangaUrl(manga.url)
+		synchronized(chaptersCache) {
+			chaptersCache[cacheKey]?.let { return it }
+		}
+		val chapters = parseChapterList(selectChapterItems(doc), sourceOrderFallback = true)
+		if (chapters.isNotEmpty()) {
+			synchronized(chaptersCache) {
+				chaptersCache[cacheKey] = chapters
+			}
+			return chapters
+		}
+		return loadChapters(manga.url, doc)
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		val cacheKey = chapter.url.substringBefore('?')
 		synchronized(pagesCache) {
-			pagesCache[chapter.url]?.let { return it }
+			pagesCache[cacheKey]?.let { return it }
 		}
 		val pages = super.getPages(chapter)
 		if (pages.isNotEmpty()) {
 			synchronized(pagesCache) {
-				pagesCache[chapter.url] = pages
+				pagesCache[cacheKey] = pages
 			}
 		}
 		return pages
 	}
 
 	override suspend fun loadChapters(mangaUrl: String, document: Document): List<MangaChapter> {
-		val doc = if (postReq) {
-			val mangaId = document.select("div#manga-chapters-holder").attr("data-id")
-			val url = "https://$domain/wp-admin/admin-ajax.php"
-			val postData = postDataReq + mangaId
-			webClient.httpPost(url, postData).parseHtml()
-		} else {
-			val url = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
-			webClient.httpPost(url, emptyMap()).parseHtml()
+		val cacheKey = normalizeMangaUrl(mangaUrl)
+		synchronized(chaptersCache) {
+			chaptersCache[cacheKey]?.let { return it }
 		}
-		return parseChapterList(doc.select(selectChapter), sourceOrderFallback = true)
+		val chaptersFromAsync = requestAsyncChapters(mangaUrl)
+		val chapters = if (chaptersFromAsync.isNotEmpty()) {
+			chaptersFromAsync
+		} else {
+			parseChapterList(selectChapterItems(document), sourceOrderFallback = true)
+		}
+		if (chapters.isNotEmpty()) {
+			synchronized(chaptersCache) {
+				chaptersCache[cacheKey] = chapters
+			}
+		}
+		return chapters
 	}
 
-	private fun parseChapterList(items: List<org.jsoup.nodes.Element>, sourceOrderFallback: Boolean): List<MangaChapter> {
-		val absoluteFrDate = SimpleDateFormat(datePattern, sourceLocale)
-		val absoluteEnDate = SimpleDateFormat(datePattern, Locale.ENGLISH)
+	private suspend fun requestAsyncChapters(mangaUrl: String): List<MangaChapter> {
+		val ajaxUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
+		val ajaxDoc = webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
+		return parseChapterList(selectChapterItems(ajaxDoc), sourceOrderFallback = true)
+	}
+
+	private fun parseChapterList(items: List<Element>, sourceOrderFallback: Boolean): List<MangaChapter> {
 		return items.mapChapters(reversed = true) { i, li ->
 			val a = li.selectFirstOrThrow("a")
 			val href = a.attrAsRelativeUrl("href")
@@ -78,7 +117,7 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 				number = parseChapterNumber(chapterTitle, href, fallback = if (sourceOrderFallback) i + 1f else 0f),
 				volume = 0,
 				url = href + stylePage,
-				uploadDate = parseUploadDate(dateText, absoluteFrDate, absoluteEnDate),
+				uploadDate = parseUploadDate(dateText),
 				source = source,
 				scanlator = null,
 				branch = null,
@@ -86,41 +125,42 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		}
 	}
 
-	private fun parseUploadDate(raw: String?, frDate: DateFormat, enDate: DateFormat): Long {
+	private fun parseUploadDate(raw: String?): Long {
 		val normalizedRaw = raw?.trim()?.replace('\u00a0', ' ')?.ifEmpty { return 0L } ?: return 0L
 		val date = normalizedRaw.lowercase(Locale.ROOT)
 		val number = DATE_NUMBER.find(date)?.groupValues?.getOrNull(1)?.toIntOrNull()
 		if (number != null) {
-			val cal = Calendar.getInstance()
+			val now = System.currentTimeMillis()
 			when {
-				DATE_SECONDS.containsMatchIn(date) -> return cal.apply { add(Calendar.SECOND, -number) }.timeInMillis
-				DATE_MINUTES.containsMatchIn(date) -> return cal.apply { add(Calendar.MINUTE, -number) }.timeInMillis
-				DATE_HOURS.containsMatchIn(date) -> return cal.apply { add(Calendar.HOUR, -number) }.timeInMillis
-				DATE_DAYS.containsMatchIn(date) -> return cal.apply { add(Calendar.DAY_OF_MONTH, -number) }.timeInMillis
-				DATE_WEEKS.containsMatchIn(date) -> return cal.apply { add(Calendar.WEEK_OF_YEAR, -number) }.timeInMillis
-				DATE_MONTHS.containsMatchIn(date) -> return cal.apply { add(Calendar.MONTH, -number) }.timeInMillis
-				DATE_YEARS.containsMatchIn(date) -> return cal.apply { add(Calendar.YEAR, -number) }.timeInMillis
+				DATE_SECONDS.containsMatchIn(date) -> return now - number * SECOND_MILLIS
+				DATE_MINUTES.containsMatchIn(date) -> return now - number * MINUTE_MILLIS
+				DATE_HOURS.containsMatchIn(date) -> return now - number * HOUR_MILLIS
+				DATE_DAYS.containsMatchIn(date) -> return now - number * DAY_MILLIS
+				DATE_WEEKS.containsMatchIn(date) -> return now - number * WEEK_MILLIS
+				DATE_MONTHS.containsMatchIn(date) -> return Calendar.getInstance().apply { add(Calendar.MONTH, -number) }.timeInMillis
+				DATE_YEARS.containsMatchIn(date) -> return Calendar.getInstance().apply { add(Calendar.YEAR, -number) }.timeInMillis
 			}
 		}
 		if ("hier" in date) {
-			return Calendar.getInstance().apply {
-				add(Calendar.DAY_OF_MONTH, -1)
-				set(Calendar.HOUR_OF_DAY, 0)
-				set(Calendar.MINUTE, 0)
-				set(Calendar.SECOND, 0)
-				set(Calendar.MILLISECOND, 0)
-			}.timeInMillis
+			return startOfDay(daysAgo = 1)
 		}
 		if ("aujourd" in date || "today" == date) {
-			return Calendar.getInstance().apply {
-				set(Calendar.HOUR_OF_DAY, 0)
-				set(Calendar.MINUTE, 0)
-				set(Calendar.SECOND, 0)
-				set(Calendar.MILLISECOND, 0)
-			}.timeInMillis
+			return startOfDay(daysAgo = 0)
 		}
-		val parsedFr = frDate.parseSafe(normalizedRaw)
-		return if (parsedFr != 0L) parsedFr else enDate.parseSafe(normalizedRaw)
+		val parsedFr = chapterDateFormatFr.get().parseSafe(normalizedRaw)
+		return if (parsedFr != 0L) parsedFr else chapterDateFormatEn.get().parseSafe(normalizedRaw)
+	}
+
+	private fun startOfDay(daysAgo: Int): Long {
+		return Calendar.getInstance().apply {
+			if (daysAgo != 0) {
+				add(Calendar.DAY_OF_MONTH, -daysAgo)
+			}
+			set(Calendar.HOUR_OF_DAY, 0)
+			set(Calendar.MINUTE, 0)
+			set(Calendar.SECOND, 0)
+			set(Calendar.MILLISECOND, 0)
+		}.timeInMillis
 	}
 
 	private fun parseChapterNumber(title: String?, href: String, fallback: Float): Float {
@@ -149,8 +189,24 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		return decimalToken.toFloatOrNull()
 	}
 
+	private fun normalizeMangaUrl(url: String): String {
+		return url.substringBefore('?').removeSuffix("/")
+	}
+
+	private fun selectChapterItems(document: Document): List<Element> {
+		return document.selectFirst(CHAPTERS_HOLDER_SELECTOR)?.select(selectChapter)
+			?: document.select(selectChapter)
+	}
+
 	private companion object {
+		private const val CHAPTERS_CACHE_SIZE = 100
 		private const val PAGES_CACHE_SIZE = 200
+		private const val CHAPTERS_HOLDER_SELECTOR = "div#manga-chapters-holder"
+		private const val SECOND_MILLIS = 1_000L
+		private const val MINUTE_MILLIS = 60 * SECOND_MILLIS
+		private const val HOUR_MILLIS = 60 * MINUTE_MILLIS
+		private const val DAY_MILLIS = 24 * HOUR_MILLIS
+		private const val WEEK_MILLIS = 7 * DAY_MILLIS
 
 		private val CHAPTER_TITLE_NUMBER = Regex("(?i)\\bchap(?:itre|ter)?\\.?\\s*([0-9]+(?:[.,][0-9]+)?)")
 		private val CHAPTER_URL_NUMBER = Regex("(?i)/(?:chapitre|chapter)-([0-9]+(?:-[0-9]+)?)(?:-|/|$)")
