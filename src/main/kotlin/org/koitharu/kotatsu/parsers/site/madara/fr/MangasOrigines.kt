@@ -18,7 +18,6 @@ import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseSafe
 import org.koitharu.kotatsu.parsers.util.selectFirstOrThrow
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
@@ -84,7 +83,7 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		synchronized(chaptersCache) {
 			chaptersCache[cacheKey]?.let { return it }
 		}
-		val chaptersFromAsync = requestAsyncChapters(mangaUrl, document)
+		val chaptersFromAsync = requestAsyncChapters(mangaUrl)
 		val chapters = if (chaptersFromAsync.isNotEmpty()) {
 			chaptersFromAsync
 		} else {
@@ -98,18 +97,13 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		return chapters
 	}
 
-	private suspend fun requestAsyncChapters(mangaUrl: String, document: Document): List<MangaChapter> {
+	private suspend fun requestAsyncChapters(mangaUrl: String): List<MangaChapter> {
 		val ajaxUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
 		val ajaxDoc = webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
 		return parseChapterList(selectChapterItems(ajaxDoc), sourceOrderFallback = true)
 	}
 
 	private fun parseChapterList(items: List<Element>, sourceOrderFallback: Boolean): List<MangaChapter> {
-		if (items.isEmpty()) {
-			return emptyList()
-		}
-		val absoluteFrDate = chapterDateFormatFr.get()
-		val absoluteEnDate = chapterDateFormatEn.get()
 		return items.mapChapters(reversed = true) { i, li ->
 			val a = li.selectFirstOrThrow("a")
 			val href = a.attrAsRelativeUrl("href")
@@ -123,7 +117,7 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 				number = parseChapterNumber(chapterTitle, href, fallback = if (sourceOrderFallback) i + 1f else 0f),
 				volume = 0,
 				url = href + stylePage,
-				uploadDate = parseUploadDate(dateText, absoluteFrDate, absoluteEnDate),
+				uploadDate = parseUploadDate(dateText),
 				source = source,
 				scanlator = null,
 				branch = null,
@@ -131,7 +125,7 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		}
 	}
 
-	private fun parseUploadDate(raw: String?, frDate: DateFormat, enDate: DateFormat): Long {
+	private fun parseUploadDate(raw: String?): Long {
 		val normalizedRaw = raw?.trim()?.replace('\u00a0', ' ')?.ifEmpty { return 0L } ?: return 0L
 		val date = normalizedRaw.lowercase(Locale.ROOT)
 		val number = DATE_NUMBER.find(date)?.groupValues?.getOrNull(1)?.toIntOrNull()
@@ -153,8 +147,8 @@ internal class MangasOrigines(context: MangaLoaderContext) :
 		if ("aujourd" in date || "today" == date) {
 			return startOfDay(daysAgo = 0)
 		}
-		val parsedFr = frDate.parseSafe(normalizedRaw)
-		return if (parsedFr != 0L) parsedFr else enDate.parseSafe(normalizedRaw)
+		val parsedFr = chapterDateFormatFr.get().parseSafe(normalizedRaw)
+		return if (parsedFr != 0L) parsedFr else chapterDateFormatEn.get().parseSafe(normalizedRaw)
 	}
 
 	private fun startOfDay(daysAgo: Int): Long {
