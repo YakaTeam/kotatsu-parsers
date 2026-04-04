@@ -62,7 +62,7 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 		synchronized(chaptersCache) {
 			chaptersCache[cacheKey]?.let { return it }
 		}
-		val chapters = parseChapterList(doc.body().select(selectChapter), sourceOrderFallback = true)
+		val chapters = parseChapterList(selectChapterItems(doc), sourceOrderFallback = true)
 		if (chapters.isNotEmpty()) {
 			synchronized(chaptersCache) {
 				chaptersCache[cacheKey] = chapters
@@ -78,12 +78,12 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 			chaptersCache[cacheKey]?.let { return it }
 		}
 
-		val asyncDoc = requestAsyncChapters(mangaUrl, document)
-		val chaptersFromAsync = parseChapterList(asyncDoc.select(selectChapter), sourceOrderFallback = true)
+		val asyncDoc = requestAsyncChapters(mangaUrl)
+		val chaptersFromAsync = parseChapterList(selectChapterItems(asyncDoc), sourceOrderFallback = true)
 		val chapters = if (chaptersFromAsync.isNotEmpty()) {
 			chaptersFromAsync
 		} else {
-			parseChapterList(document.body().select(selectChapter), sourceOrderFallback = true)
+			parseChapterList(selectChapterItems(document), sourceOrderFallback = true)
 		}
 		if (chapters.isNotEmpty()) {
 			synchronized(chaptersCache) {
@@ -93,23 +93,9 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 		return chapters
 	}
 
-	private suspend fun requestAsyncChapters(mangaUrl: String, document: Document): Document {
+	private suspend fun requestAsyncChapters(mangaUrl: String): Document {
 		val ajaxUrl = mangaUrl.toAbsoluteUrl(domain).removeSuffix("/") + "/ajax/chapters/"
-		val ajaxDoc = webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
-		if (ajaxDoc.select(selectChapter).isNotEmpty()) {
-			return ajaxDoc
-		}
-
-		val mangaId = document.select("div#manga-chapters-holder").attr("data-id").trim()
-		if (mangaId.isNotEmpty()) {
-			val url = "https://$domain/wp-admin/admin-ajax.php"
-			val postData = postDataReq + mangaId
-			val adminAjaxDoc = webClient.httpPost(url, postData).parseHtml()
-			if (adminAjaxDoc.select(selectChapter).isNotEmpty()) {
-				return adminAjaxDoc
-			}
-		}
-		return ajaxDoc
+		return webClient.httpPost(ajaxUrl, emptyMap()).parseHtml()
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
@@ -178,9 +164,15 @@ internal class HhentaiFr(context: MangaLoaderContext) :
 		return url.substringBefore('?').removeSuffix("/")
 	}
 
+	private fun selectChapterItems(document: Document): List<Element> {
+		return document.selectFirst(CHAPTERS_HOLDER_SELECTOR)?.select(selectChapter)
+			?: document.select(selectChapter)
+	}
+
 	private companion object {
 		private const val CHAPTERS_CACHE_SIZE = 100
 		private const val PAGES_CACHE_SIZE = 200
+		private const val CHAPTERS_HOLDER_SELECTOR = "div#manga-chapters-holder"
 
 		private val CHAPTER_TITLE_NUMBER = Regex("(?i)\\bchap(?:itre|ter)?\\.?\\s*([0-9]+(?:[.,][0-9]+)?)")
 		private val CHAPTER_URL_NUMBER = Regex("(?i)/(?:chapitre|chapter)-([0-9]+(?:-[0-9]+)?)(?:[^0-9]|$)")
