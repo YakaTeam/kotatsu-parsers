@@ -113,7 +113,6 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 			append("&sort=")
 			append(
 				when (order) {
-					SortOrder.UPDATED -> ""
 					SortOrder.UPDATED_ASC -> "&order=asc"
 					SortOrder.POPULARITY -> "popular"
 					SortOrder.POPULARITY_ASC -> "popular&order=asc"
@@ -123,7 +122,7 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 					SortOrder.ALPHABETICAL -> "name&order=asc"
 					SortOrder.NEWEST -> "newest"
 					SortOrder.NEWEST_ASC -> "newest&order=asc"
-					else -> ""
+					else -> "" // SortOrder.UPDATED
 				},
 			)
 		}
