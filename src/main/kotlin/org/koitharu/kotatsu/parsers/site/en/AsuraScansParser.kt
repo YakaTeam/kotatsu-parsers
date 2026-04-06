@@ -107,7 +107,7 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 
 			if (!filter.author.isNullOrEmpty()) {
 				append("&author=")
-				append(filter.author)
+				append(filter.author.urlEncoded())
 			}
 
 			append("&sort=")
