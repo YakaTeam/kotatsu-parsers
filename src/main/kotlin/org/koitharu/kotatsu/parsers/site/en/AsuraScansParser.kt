@@ -174,14 +174,11 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 		tagMap
 	}
 
+	// Need refactor
 	override suspend fun getDetails(manga: Manga): Manga {
 		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
-
 		val props = doc.selectFirst("astro-island[component-url*='DescriptionModal']")
 			?.attr("props")?.let { JSONObject(it) }
-
-		fun JSONObject.str(key: String) = optJSONArray(key)?.optString(1).orEmpty()
-		fun JSONObject.dbl(key: String) = optJSONArray(key)?.optDouble(1) ?: 0.0
 
 		val tagMap = getOrCreateTagMap()
 		val tags = props?.optJSONArray("genres")?.optJSONArray(1)?.let { arr ->
@@ -204,7 +201,8 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 		return manga.copy(
 			description = doc.getElementById("description-text")?.text().orEmpty(),
 			tags = tags,
-			authors = setOf(props?.str("author").orEmpty()),
+			authors = props?.str("author")?.takeIf { it.isNotEmpty() }
+				?.let { setOf(it) } ?: emptySet(),
 			state = when (props?.str("status")) {
 				"completed" -> MangaState.FINISHED
 				"hiatus"    -> MangaState.PAUSED
@@ -238,6 +236,7 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 		)
 	}
 
+	// Need refactor
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
 
@@ -263,4 +262,8 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 			)
 		}
 	}
+
+	/* Helpers */
+	private fun JSONObject.str(key: String) = optJSONArray(key)?.optString(1).orEmpty()
+	private fun JSONObject.dbl(key: String): Double? = optJSONArray(key)?.optDouble(1)
 }
