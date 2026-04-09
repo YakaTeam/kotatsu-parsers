@@ -1,4 +1,4 @@
-package org.koitharu.kotatsu.parsers.site.en
+package org.koitharu.kotatsu.parsers.site.en.comix
 
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -305,7 +305,7 @@ internal class Comix(context: MangaLoaderContext) :
 				if (scanlatorName != null) append(" [").append(scanlatorName).append("]")
 			}.trim()
 
-			val uid = if (chapterId != 0L) "$chapterId-$groupId" else UUID.randomUUID().toString()
+			val uid = "$chapterId-$groupId"
 
 			MangaChapter(
 				id = generateUid(uid),
