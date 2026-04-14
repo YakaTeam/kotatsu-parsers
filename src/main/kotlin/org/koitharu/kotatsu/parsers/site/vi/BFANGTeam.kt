@@ -4,7 +4,7 @@ import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
-import org.koitharu.kotatsu.parsers.core.SinglePageMangaParser
+import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.ContentRating
 import org.koitharu.kotatsu.parsers.model.Manga
 import org.koitharu.kotatsu.parsers.model.MangaChapter
@@ -33,7 +33,7 @@ import java.util.Locale
 
 @MangaSourceParser("BFANGTEAM", "Moè Truyện", "vi")
 internal class BFANGTeam (context: MangaLoaderContext) :
-	SinglePageMangaParser(context, MangaParserSource.BFANGTEAM) {
+	PagedMangaParser(context, MangaParserSource.BFANGTEAM, 24) {
 
 	override val configKeyDomain = ConfigKey.Domain("moetruyen.net")
 
@@ -54,13 +54,11 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 		)
 	}
 
-	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		val url = urlBuilder().addPathSegment("manga")
 
 		if (!filter.query.isNullOrEmpty()) {
-			url.addQueryParameter("q",
-				filter.query.splitByWhitespace().joinToString(separator = "+") { it }
-			)
+			url.addEncodedQueryParameter("q", filter.query)
 		}
 
 		// todo: need to use data-genre (num) instead of genre name
@@ -81,6 +79,11 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 			url.addQueryParameter("q",
 				filter.author.splitByWhitespace().joinToString(separator = "+") { it }
 			)
+		}
+
+		// paging
+		if (page > 1) {
+			url.addQueryParameter("page", page.toString())
 		}
 
 		val request = webClient.httpGet(url.build()).parseHtml()
@@ -140,7 +143,7 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 			doc = webClient.httpGet(nextUrl).parseHtml()
 		}
 
-		return chapters
+		return chapters.distinctBy { it.number }
 	}
 
 	private fun parseChapters(doc: Document): List<MangaChapter> =
