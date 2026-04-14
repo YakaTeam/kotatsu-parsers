@@ -59,7 +59,7 @@ internal class NHentaiToParser(context: MangaLoaderContext) :
 
 				else -> {
 					val tag = filter.tags.oneOrThrowIfMany()
-					val lang = filter.locale ?: Locale.ENGLISH
+					val lang = filter.locale
 					if (tag != null && lang != null) {
 						throw IllegalArgumentException(ErrorMessages.FILTER_BOTH_LOCALE_GENRES_NOT_SUPPORTED)
 					}
@@ -72,7 +72,7 @@ internal class NHentaiToParser(context: MangaLoaderContext) :
 						append(lang.toLanguagePath())
 						append("/?")
 					} else {
-						append("/?")
+						append("/go/?")
 					}
 				}
 			}
