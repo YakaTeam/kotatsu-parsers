@@ -94,9 +94,15 @@ internal abstract class NatsuParser(
     private var nonce: String? = null
 
     private suspend fun getNonce(): String {
+		val headers = Headers.Builder()
+			.add(CommonHeaders.USER_AGENT, config[userAgentKey])
+			.build()
+
         if (nonce == null) {
-            val json =
-                webClient.httpGet("https://${domain}/wp-admin/admin-ajax.php?type=search_form&action=get_nonce")
+            val json = webClient.httpGet(
+				"https://${domain}/wp-admin/admin-ajax.php?type=search_form&action=get_nonce",
+				headers
+			)
             val html = json.parseHtml()
             val nonceValue = html.select("input[name=search_nonce]").attr("value")
             nonce = nonceValue
