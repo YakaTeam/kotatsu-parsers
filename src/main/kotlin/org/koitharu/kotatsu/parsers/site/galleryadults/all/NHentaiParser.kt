@@ -19,13 +19,22 @@ internal class NHentaiParser(context: MangaLoaderContext) :
         EnumSet.of(SortOrder.UPDATED, SortOrder.POPULARITY, SortOrder.POPULARITY_TODAY, SortOrder.POPULARITY_WEEK)
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        val isSearch = !filter.query.isNullOrEmpty() || filter.tags.isNotEmpty() || order != SortOrder.UPDATED
-        
-        val apiUrl = if (isSearch) {
+        // Use galleries endpoint ONLY for the default homepage (Recent)
+        val isDefaultRecentHome = order == SortOrder.UPDATED && 
+                                  filter.query.isNullOrEmpty() && 
+                                  filter.tags.isEmpty() && 
+                                  filter.locale == null
+
+        val apiUrl = if (isDefaultRecentHome) {
+            "https://$domain/api/v2/galleries?page=$page"
+        } else {
             val query = buildString {
                 if (!filter.query.isNullOrEmpty()) append(filter.query).append(" ")
                 append(buildQuery(filter.tags, filter.locale))
-            }.trim().urlEncoded()
+            }.trim()
+
+            // Search requires at least one query; use pages:>0 to list all items for sorting
+            val finalQuery = if (query.isEmpty()) "pages:>0" else query
 
             val sort = when (order) {
                 SortOrder.POPULARITY -> "popular"
@@ -33,9 +42,7 @@ internal class NHentaiParser(context: MangaLoaderContext) :
                 SortOrder.POPULARITY_WEEK -> "popular-week"
                 else -> "date"
             }
-            "https://$domain/api/v2/search?query=$query&sort=$sort&page=$page"
-        } else {
-            "https://$domain/api/v2/galleries?page=$page"
+            "https://$domain/api/v2/search?query=${finalQuery.urlEncoded()}&sort=$sort&page=$page"
         }
 
         val response = webClient.httpGet(apiUrl).parseJson()
@@ -45,9 +52,9 @@ internal class NHentaiParser(context: MangaLoaderContext) :
         for (i in 0 until results.length()) {
             val obj = results.getJSONObject(i)
             val id = obj.getInt("id")
-            val mediaId = obj.getString("media_id")
             val titleObj = obj.optJSONObject("title")
             
+            // Safeguard: String must not be empty
             val rawTitle = titleObj?.optString("english")?.takeIf { it.isNotBlank() }
                 ?: titleObj?.optString("pretty")?.takeIf { it.isNotBlank() }
                 ?: obj.optString("english_title").takeIf { it.isNotBlank() }
@@ -64,7 +71,8 @@ internal class NHentaiParser(context: MangaLoaderContext) :
                 publicUrl = "https://$domain/g/$id/",
                 rating = RATING_UNKNOWN,
                 contentRating = ContentRating.ADULT,
-                coverUrl = "https://t.nhentai.net/galleries/$mediaId/thumb.webp",
+                // FIXED: 404 cover fix - using exact path from JSON
+                coverUrl = "https://t.nhentai.net/${obj.getThumbnailPath()}",
                 tags = emptySet(),
                 state = null,
                 authors = emptySet(),
@@ -90,33 +98,31 @@ internal class NHentaiParser(context: MangaLoaderContext) :
                 val slug = tagObj.optString("slug").takeIf { it.isNotBlank() } ?: name.urlEncoded()
                 
                 if (slug.isNotBlank()) {
-                    if (type == "artist") {
-                        authors.add(name.toTitleCase())
-                    }
+                    if (type == "artist") authors.add(name.toTitleCase())
                     tags.add(MangaTag(slug, name.toTitleCase(), source))
                 }
             }
         }
 
-        val chapters = listOf(
-            MangaChapter(
-                id = manga.id,
-                title = manga.title,
-                number = 1f,
-                volume = 0,
-                url = manga.url,
-                scanlator = null,
-                uploadDate = obj.optLong("upload_date") * 1000,
-                branch = null,
-                source = source
-            )
-        )
-
         return manga.copy(
             tags = tags,
             authors = authors,
             description = "Pages: ${obj.optInt("num_pages")}",
-            chapters = chapters
+            // FIXED: 404 cover fix - using exact path from detail JSON
+            coverUrl = "https://t.nhentai.net/${obj.getCoverPath()}",
+            chapters = listOf(
+                MangaChapter(
+                    id = manga.id,
+                    title = manga.title,
+                    number = 1f,
+                    volume = 0,
+                    url = manga.url,
+                    scanlator = null,
+                    uploadDate = obj.optLong("upload_date") * 1000,
+                    branch = null,
+                    source = source
+                )
+            )
         )
     }
 
@@ -143,10 +149,23 @@ internal class NHentaiParser(context: MangaLoaderContext) :
         return pages
     }
 
-    override suspend fun getPageUrl(page: MangaPage): String {
-        return page.url
+    // Overridden to return URL directly and prevent JSoup ValidationException (idImg must not be empty)
+    override suspend fun getPageUrl(page: MangaPage): String = page.url
+
+    // Helper functions for 404 cover fix
+    private fun JSONObject.getThumbnailPath(): String {
+        val thumbObj = optJSONObject("thumbnail")
+        return thumbObj?.optString("path") 
+            ?: optString("thumbnail").takeIf { it.isNotBlank() }
+            ?: "galleries/${optString("media_id")}/thumb.webp"
     }
 
+    private fun JSONObject.getCoverPath(): String {
+        val coverObj = optJSONObject("cover")
+        return coverObj?.optString("path") ?: getThumbnailPath()
+    }
+
+    // Mandatory overrides for GalleryAdultsParser
     override val selectGallery = ""
     override val selectGalleryLink = ""
     override val selectGalleryTitle = ""
