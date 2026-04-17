@@ -9,8 +9,8 @@ import java.util.*
 
 @MangaSourceParser("AINZSCANS", "AinzScans", "id")
 internal class AinzScans(context: MangaLoaderContext) :
-	MangaReaderParser(context, MangaParserSource.AINZSCANS, "ainzscans.net", pageSize = 20, searchPageSize = 10) {
-	override val listUrl = "/series"
+	MangaReaderParser(context, MangaParserSource.AINZSCANS, "v1.ainzscans01.com", pageSize = 20, searchPageSize = 10) {
+	override val listUrl = "/allcomic"
 	override val datePattern = "MMM d, yyyy"
 	override val sourceLocale: Locale = Locale.ENGLISH
 
