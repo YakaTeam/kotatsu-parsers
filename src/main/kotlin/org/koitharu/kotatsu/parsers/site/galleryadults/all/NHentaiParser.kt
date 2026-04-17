@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.site.galleryadults.GalleryAdultsParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@MangaSourceParser("NHENTAI", "NHentai.net", type = ContentType.Hentai)
+@MangaSourceParser("NHENTAI", "NHentai.net", type = ContentType.HENTAI)
 internal class NHentaiParser(context: MangaLoaderContext) :
     GalleryAdultsParser(context, MangaParserSource.NHENTAI, "nhentai.net", 25) {
 
@@ -92,8 +92,7 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 
     private suspend fun fetchMangaTitle(url: String): String {
         val doc = webClient.httpGet(url).parseHtml()
-        // The title is usually inside an h1 or a specific header class
-        return (doc.selectFirst("h1.title") ?: doc.selectFirst(".title")).text()
+        return (doc.selectFirst("h1.title") ?: doc.selectFirst(".title"))!!.text()
     }
 
     override fun parseMangaList(doc: Document): List<Manga> {
@@ -145,7 +144,7 @@ internal class NHentaiParser(context: MangaLoaderContext) :
         return joiner.complete()
     }
     
-    private fun Locale.toLanguagePath(): String = when (this) {
+    override fun Locale.toLanguagePath(): String = when (this) {
         Locale.ENGLISH -> "english"
         Locale.JAPANESE -> "japanese"
         Locale.CHINESE -> "chinese"
