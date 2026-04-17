@@ -56,10 +56,10 @@ jobs:
             -   name: Upload artifacts 🌐
                 uses: softprops/action-gh-release@v2
                 with:
-                    repository: mochi-plugins/repository
+                    repository: ${{ github.repository }}
                     tag_name: ${{ steps.meta.outputs.sha_short }}
                     name: ${{ steps.meta.outputs.sha_short }}
                     body: |
-                        Built from commit [`${{ steps.meta.outputs.sha_short }}`](https://github.com/YakaTeam/kotatsu-parsers/commit/${{ github.sha }})
+                        Built from commit [`${{ steps.meta.outputs.sha_short }}`](https://github.com/${{ github.repository }}/commit/${{ github.sha }})
                     files: ${{ env.D8_PATH }}
-                    token: ${{ secrets.ARTIFACT_REPO_TOKEN }}
+                    token: ${{ secrets.GITHUB_TOKEN }}
