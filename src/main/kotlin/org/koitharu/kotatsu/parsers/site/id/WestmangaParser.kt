@@ -2,6 +2,7 @@ package org.koitharu.kotatsu.parsers.site.id
 
 import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
+import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
@@ -87,7 +88,8 @@ internal class WestmangaParser(context: MangaLoaderContext) :
 
         return manga.copy(
             title = json.getString("title"),
-            description = json.optString("sinopsis", json.optString("synopsis", "")).let { Jsoup.parse(it).text() },
+            description = json.optString("sinopsis", json.optString("synopsis", ""))
+				.let { Jsoup.parse(it).text() },
             coverUrl = json.optString("cover").ifBlank { manga.coverUrl.orEmpty() },
             authors = setOfNotNull(json.optString("author").takeIf { it.isNotBlank() }),
             state = parseStatus(json.optString("status")),
@@ -100,13 +102,13 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         val url = "$apiUrl/api/v/$slug"
         val json = apiRequest(url).getJSONObject("data")
         return json.getJSONArray("images").asTypedList<String>().map {
-				MangaPage(
-					id = generateUid(it),
-					url = it,
-					preview = null,
-					source = source,
-				)
-			}
+			MangaPage(
+				id = generateUid(it),
+				url = it,
+				preview = null,
+				source = source,
+			)
+		}
     }
 
     private fun parseManga(json: JSONObject): Manga {
@@ -127,24 +129,22 @@ internal class WestmangaParser(context: MangaLoaderContext) :
         )
     }
 
-    private fun parseChapters(array: org.json.JSONArray): List<MangaChapter> {
-        val chapters = mutableListOf<MangaChapter>()
-        for (i in 0 until array.length()) {
-            val item = array.getJSONObject(i)
+    private fun parseChapters(array: JSONArray): List<MangaChapter> {
+		return array.mapChapters(reversed = true) { i, item ->
 			val chapterSlug = item.getString("slug")
-            chapters.add(MangaChapter(
-                id = chapterSlug.longHashCode(),
+			MangaChapter(
+				id = chapterSlug.longHashCode(),
                 title = "Chapter ${item.optString("number")}",
-                number = item.optString("number").toFloatOrNull() ?: 0f,
+                number = item.optString("number").toFloatOrNull()
+					?: (i + 1).toFloat(),
                 volume = 0,
                 url = "/view/$chapterSlug",
                 scanlator = null,
                 uploadDate = parseDate(item.optJSONObject("updated_at")),
                 branch = null,
                 source = source,
-            ))
-        }
-        return chapters.reversed()
+			)
+		}
     }
 
     private fun parseStatus(status: String): MangaState? {
