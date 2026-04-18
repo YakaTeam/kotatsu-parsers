@@ -25,16 +25,12 @@ internal class MangaPark(context: MangaLoaderContext) :
 	private val tagsMap = suspendLazy(initializer = ::fetchTags)
 
 	override val configKeyDomain = ConfigKey.Domain(
-		"mangapark.io",
 		"mangapark.net",
 		"mangapark.com",
 		"mangapark.org",
 		"mangapark.me",
 		"mangapark.to",
-		"comicpark.org",
 		"comicpark.to",
-		"readpark.org",
-		"readpark.net",
 		"parkmanga.com",
 		"parkmanga.net",
 		"parkmanga.org",
