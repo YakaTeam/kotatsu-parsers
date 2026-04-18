@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="io.github.pandier.intellijdiscordrp.settings.project.DiscordProjectSettingsComponent">
+    <option name="buttonEnabled" value="true" />
+    <option name="displayMode" value="FILE" />
+  </component>
+</project>

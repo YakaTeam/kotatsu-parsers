@@ -105,7 +105,7 @@ internal abstract class IkenParser(
 		return json.getJSONArray("posts").mapJSON {
 			val url = "/series/${it.getString("slug")}"
 			val isNsfwSource = it.getBooleanOrDefault("hot", false)
-			val author = it.getString("author")
+			val author = it.getStringOrNull("author")
 			Manga(
 				id = it.getLong("id"),
 				url = url,
