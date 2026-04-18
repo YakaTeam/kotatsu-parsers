@@ -7,6 +7,8 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.getDoubleOrDefault
+import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
@@ -19,7 +21,7 @@ internal class SssScanlator(context: MangaLoaderContext) :
 
 	override val configKeyDomain = ConfigKey.Domain("yomu.com.br")
 
-	private val sourceLocale: Locale = Locale("pt", "BR")
+	override val sourceLocale: Locale = Locale("pt", "BR")
 
 	override fun onCreateConfig(keys: MutableCollection<ConfigKey<*>>) {
 		super.onCreateConfig(keys)
