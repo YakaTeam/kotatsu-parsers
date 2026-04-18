@@ -176,7 +176,7 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 					coroutineScope {
 						val result = ArrayList(parseChapters(doc))
 						result.ensureCapacity(result.size * maxPageChapter)
-						(2 downTo maxPageChapter).map { i ->
+						(2..maxPageChapter).map { i ->
 							async {
 								loadChapters(mangaUrl, i)
 							}
