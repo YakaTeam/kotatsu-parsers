@@ -1,27 +1,49 @@
 package org.koitharu.kotatsu.parsers.site.en
 
 import androidx.collection.ArrayMap
-import org.json.JSONArray
 import org.json.JSONObject
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
-import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
-import org.koitharu.kotatsu.parsers.model.*
-import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.exception.ParseException
+import org.koitharu.kotatsu.parsers.model.ContentRating
+import org.koitharu.kotatsu.parsers.model.ContentType
+import org.koitharu.kotatsu.parsers.model.Favicon
+import org.koitharu.kotatsu.parsers.model.Favicons
+import org.koitharu.kotatsu.parsers.model.Manga
+import org.koitharu.kotatsu.parsers.model.MangaChapter
+import org.koitharu.kotatsu.parsers.model.MangaListFilter
+import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
+import org.koitharu.kotatsu.parsers.model.MangaListFilterOptions
+import org.koitharu.kotatsu.parsers.model.MangaPage
+import org.koitharu.kotatsu.parsers.model.MangaParserSource
+import org.koitharu.kotatsu.parsers.model.MangaState
+import org.koitharu.kotatsu.parsers.model.MangaTag
+import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
+import org.koitharu.kotatsu.parsers.model.SortOrder
+import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
+import org.koitharu.kotatsu.parsers.util.oneOrThrowIfMany
+import org.koitharu.kotatsu.parsers.util.parseHtml
+import org.koitharu.kotatsu.parsers.util.parseSafe
+import org.koitharu.kotatsu.parsers.util.src
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
+import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
+import org.koitharu.kotatsu.parsers.util.toTitleCase
+import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.text.SimpleDateFormat
-import java.util.*
+import java.util.EnumSet
+import java.util.Locale
+import java.util.TimeZone
 
 @MangaSourceParser("MANHWA18", "Manhwa18.net", "en", type = ContentType.HENTAI)
 internal class Manhwa18Parser(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.MANHWA18, pageSize = 18, searchPageSize = 18) {
+	PagedMangaParser(context, MangaParserSource.MANHWA18, 18, 18) {
 
 	override val configKeyDomain: ConfigKey.Domain = ConfigKey.Domain("manhwa18.net")
 
@@ -115,23 +137,31 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 
 		val page = webClient.httpGet(url).parseHtml().inertiaPage()
 		val mangas = page.getJSONObject("props").getJSONObject("mangas").getJSONArray("data")
-		return mangas.mapJSON { obj -> parseMangaCard(obj) }
+		return mangas.mapJSON(::parseMangaCard)
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
 		val page = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml().inertiaPage()
 		val props = page.getJSONObject("props")
 		val m = props.getJSONObject("manga")
+
 		val tags = m.optJSONArray("genres")?.mapJSONNotNullToSet { g ->
 			val id = g.optInt("id", -1).takeIf { it >= 0 } ?: return@mapJSONNotNullToSet null
 			val name = g.optString("name").ifEmpty { return@mapJSONNotNullToSet null }
-			MangaTag(title = name.toTitleCase(Locale.ENGLISH), key = id.toString(), source = source)
+			MangaTag(
+				title = name.toTitleCase(Locale.ENGLISH),
+				key = id.toString(),
+				source = source
+			)
 		}.orEmpty()
+
 		val artists = m.optJSONArray("artists")?.mapJSONNotNull { a ->
 			a.optString("name").ifEmpty { null }
 		}.orEmpty().toSet()
+
 		val description = m.optString("pilot").ifEmpty { null }
 			?.let { html -> Jsoup.parseBodyFragment(html).body().html() }
+
 		val chapters = props.optJSONArray("chapters")?.mapJSON { c ->
 			parseChapter(manga.url.removeSuffix("/"), c)
 		}.orEmpty().asReversed()
@@ -163,7 +193,7 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 				id = generateUid(url),
 				url = url,
 				preview = null,
-				source = MangaParserSource.MANHWA18,
+				source = source,
 			)
 		}
 	}
@@ -185,13 +215,6 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 			2 -> MangaState.FINISHED
 			else -> null
 		}
-		val contentRating = if (obj.optInt("is_adult_content", 0) == 1) {
-			ContentRating.ADULT
-		} else {
-			// The site itself is an 18+ portal; downgrading to SUGGESTIVE
-			// would over-claim safety, so the whole source stays ADULT.
-			ContentRating.ADULT
-		}
 		return Manga(
 			id = generateUid(relUrl),
 			title = title,
@@ -199,14 +222,14 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 			url = relUrl,
 			publicUrl = relUrl.toAbsoluteUrl(domain),
 			rating = rating,
-			contentRating = contentRating,
+			contentRating = ContentRating.ADULT,
 			coverUrl = coverUrl,
 			tags = emptySet(),
 			state = state,
 			authors = emptySet(),
 			largeCoverUrl = obj.optString("cover_url").ifEmpty { null },
 			description = null,
-			source = MangaParserSource.MANHWA18,
+			source = source,
 		)
 	}
 
@@ -217,7 +240,8 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 		val number = CHAPTER_NUMBER.find(name)?.groupValues?.getOrNull(1)?.toFloatOrNull()
 			?: obj.optInt("order", 0).toFloat().takeIf { it > 0f }
 			?: -1f
-		val uploadDate = ISO_DATE_FORMAT.parseSafe(obj.optString("created_at").replace("T", " ").substringBefore('.'))
+		val uploadDate = ISO_DATE_FORMAT.parseSafe(obj.optString("created_at")
+			.replace("T", " ").substringBefore('.'))
 		return MangaChapter(
 			id = generateUid(chapterRelUrl),
 			title = name,
@@ -227,7 +251,7 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 			scanlator = null,
 			uploadDate = uploadDate,
 			branch = null,
-			source = MangaParserSource.MANHWA18,
+			source = source,
 		)
 	}
 
@@ -240,6 +264,7 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 
 	private val tagsMap = suspendLazy(initializer = ::parseTags)
 
+	// need to refactor this func.
 	private suspend fun parseTags(): Map<String, MangaTag> {
 		val page = webClient.httpGet("https://$domain/tim-kiem").parseHtml().inertiaPage()
 		val genres = page.getJSONObject("props").optJSONArray("genres") ?: return emptyMap()
