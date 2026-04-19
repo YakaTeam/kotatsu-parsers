@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import java.util.Locale
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken("Not dead, changed template")
+@Broken("Site migrated to WP-Madara with wp-manga-chapter-images-protection plugin (CryptoJS-encrypted chapter images)")
 @MangaSourceParser("CATHARSISWORLD", "CatharsisWorld", "es")
 internal class CatharsisWorld(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.CATHARSISWORLD, "catharsisworld.dig-it.info", pageSize = 30, searchPageSize = 10) {
