@@ -34,4 +34,20 @@ public sealed class ConfigKey<T>(
 		public val presetValues: Map<String?, String?>,
 		override val defaultValue: String?,
 	) : ConfigKey<String?>("img_server")
+
+	/**
+	 * Transient value entered by the user in response to an
+	 * [org.koitharu.kotatsu.parsers.exception.InputRequiredException].
+	 *
+	 * The host app stores this in-memory (not in SharedPreferences) and the
+	 * parser reads it on the next call via [MangaSourceConfig.get].
+	 *
+	 * @param inputKey Arbitrary identifier matching the [key][org.koitharu.kotatsu.parsers.exception.InputRequiredException.key]
+	 *                 used when throwing the exception (e.g. "chapter_42_password").
+	 */
+	public class UserInput(
+		inputKey: String,
+	) : ConfigKey<String?>("user_input.$inputKey") {
+		override val defaultValue: String? = null
+	}
 }

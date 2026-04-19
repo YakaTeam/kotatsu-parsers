@@ -17,30 +17,32 @@ JVM and Android applications. It's a fork of [kotatsu-parsers](https://github.co
 	   }
    }
    ```
+   
+2. Add the dependency
 
-   2. Add the dependency
+   For Java/Kotlin project:
 
-      For Java/Kotlin project:
-       ```groovy
-       dependencies {
-           implementation("com.github.YakaTeam:kotatsu-parsers:$parsers_version")
-       }
-       ```
+    ```groovy
+    dependencies {
+        implementation("com.github.YakaTeam:kotatsu-parsers:$parsers_version")
+    }
+    ```
 
-      For Android project:
-       ```groovy
-       dependencies {
-           implementation("com.github.YakaTeam:kotatsu-parsers:$parsers_version") {
-               exclude group: 'org.json', module: 'json'
-           }
-       }
-       ```
+   For Android project:
 
-      Versions are available on [JitPack](https://jitpack.io/#YakaTeam/kotatsu-parsers)
+    ```groovy
+    dependencies {
+        implementation("com.github.YakaTeam:kotatsu-parsers:$parsers_version") {
+            exclude group: 'org.json', module: 'json'
+        }
+    }
+    ```
 
-      When used in Android
-      projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with
-      the [NIO specification](https://developer.android.com/studio/write/java11-nio-support-table) should be enabled to support Java 8+ features.
+   Versions are available on [JitPack](https://jitpack.io/#YakaTeam/kotatsu-parsers)
+
+   When used in Android
+   projects, [core library desugaring](https://developer.android.com/studio/write/java8-support#library-desugaring) with
+   the [NIO specification](https://developer.android.com/studio/write/java11-nio-support-table) should be enabled to support Java 8+ features.
 
 
 3. Usage in code
