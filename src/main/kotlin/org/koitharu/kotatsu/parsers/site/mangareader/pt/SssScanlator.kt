@@ -253,7 +253,7 @@ internal class SssScanlator(context: MangaLoaderContext) :
 		return decodeEscapes(m.groupValues[1]).takeUnless { it.isBlank() }
 	}
 
-	private fun extractJsonArray(text: String, key: String): org.json.JSONArray? {
+	private fun extractJsonArray(text: String): org.json.JSONArray? {
 		val keyPattern = "\"chapters\":["
 		val startIdx = text.indexOf(keyPattern)
 		if (startIdx < 0) return null
