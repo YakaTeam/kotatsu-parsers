@@ -57,7 +57,6 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 			isTagsExclusionSupported = false,
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
-			isAuthorSearchSupported = true,
 			isYearSupported = true,
 		)
 
@@ -117,9 +116,6 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 				TYPE_REVERSE[type]?.let {
 					append("&type=").append(it)
 				}
-			}
-			filter.author?.takeIf { it.isNotEmpty() }?.let {
-				append("&author=").append(it.urlEncoded())
 			}
 			filter.year.takeIf { it > 0 }?.let {
 				append("&year_start_min=").append(it)
@@ -335,3 +331,4 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 		)
 	}
 }
+
