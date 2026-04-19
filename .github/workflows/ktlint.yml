@@ -1,0 +1,43 @@
+name: ktlint
+
+on:
+    pull_request:
+        paths:
+            - 'src/**/*.kt'
+            - 'src/**/*.kts'
+            - '.editorconfig'
+            - 'config/ktlint/baseline.xml'
+            - '.github/workflows/ktlint.yml'
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+env:
+    # Keep in sync with the ktlint version the baseline was generated against.
+    # Bumping requires regenerating the baseline (see config/ktlint/README).
+    KTLINT_VERSION: 1.7.1
+    KTLINT_SHA256: b596a05f09364e1997b644152683af12fef58944f3acfabdf78071f5a490eb98
+
+jobs:
+    check:
+        name: Lint Kotlin (vs baseline)
+        runs-on: ubuntu-latest
+        timeout-minutes: 10
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
+
+            -   name: Install ktlint ${{ env.KTLINT_VERSION }} 🔧
+                run: |
+                    curl -sSLf -o ktlint "https://github.com/pinterest/ktlint/releases/download/${KTLINT_VERSION}/ktlint"
+                    echo "${KTLINT_SHA256}  ktlint" | sha256sum -c -
+                    chmod +x ktlint
+
+            -   name: Lint Kotlin sources against baseline 🔍
+                run: |
+                    ./ktlint \
+                      --editorconfig=.editorconfig \
+                      --baseline=config/ktlint/baseline.xml \
+                      --reporter=plain,group_by_file=true \
+                      "src/**/*.kt"
