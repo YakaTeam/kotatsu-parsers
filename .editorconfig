@@ -8,12 +8,14 @@ indent_size = 4
 max_line_length = 120
 insert_final_newline = true
 trim_trailing_whitespace = true
-# noinspection EditorConfigKeyCorrectness
-disabled_rules = no-wildcard-imports, no-unused-imports
 
 [*.{kt,kts}]
 ij_kotlin_allow_trailing_comma = true
 ij_kotlin_allow_trailing_comma_on_call_site = true
+# Disable two standard rules the project intentionally does not enforce.
+# Modern ktlint (>=0.49) replaces the old top-level `disabled_rules` key with per-rule properties.
+ktlint_standard_no-wildcard-imports = disabled
+ktlint_standard_no-unused-imports = disabled
 
 [*.md]
 indent_size = 2
