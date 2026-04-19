@@ -17,6 +17,8 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.util.generateUid
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullTo
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJsonArray
 import org.koitharu.kotatsu.parsers.util.parseSafe
@@ -97,13 +99,10 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
 				if (!query.isNullOrBlank()) addQueryParameter("search", query)
 			}
 			.build()
-		val response = webClient.httpGet(url).parseJsonArray()
-		val result = ArrayList<SeriesCategory>()
-		for (i in 0 until response.length()) {
-			val cat = response.getJSONObject(i)
+		return webClient.httpGet(url).parseJsonArray().mapJSONNotNull { cat ->
 			val parent = cat.optLong("parent")
-			if (parent !in seriesParents) continue
-			result += SeriesCategory(
+			if (parent !in seriesParents) return@mapJSONNotNull null
+			SeriesCategory(
 				id = cat.getLong("id"),
 				parent = parent,
 				slug = cat.getString("slug"),
@@ -111,7 +110,6 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
 				postCount = cat.optInt("count"),
 			)
 		}
-		return result
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
@@ -156,24 +154,19 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
 				break
 			}
 			if (arr.length() == 0) break
-			for (i in 0 until arr.length()) {
-				val item = arr.getJSONObject(i)
+			arr.mapJSONNotNullTo(all) { item ->
 				val link = item.getString("link").toRelativeUrl(domain)
-				if (!link.contains("capitulo", ignoreCase = true)) continue
-				val rendered = item.getJSONObject("title").getString("rendered")
-				val title = cleanTitle(rendered)
+				if (!link.contains("capitulo", ignoreCase = true)) return@mapJSONNotNullTo null
 				val slug = item.optString("slug")
-				val number = CHAPTER_REGEX.findAll(slug).lastOrNull()?.value?.toFloatOrNull()
-					?: (all.size + 1).toFloat()
-				val uploadDate = dateFormat.parseSafe(item.optString("date").take(10))
-				all += MangaChapter(
+				MangaChapter(
 					id = generateUid(link),
-					title = title,
-					number = number,
+					title = cleanTitle(item.getJSONObject("title").getString("rendered")),
+					number = CHAPTER_REGEX.findAll(slug).lastOrNull()?.value?.toFloatOrNull()
+						?: (all.size + 1).toFloat(),
 					volume = 0,
 					url = link,
 					scanlator = null,
-					uploadDate = uploadDate,
+					uploadDate = dateFormat.parseSafe(item.optString("date").take(10)),
 					branch = null,
 					source = source,
 				)
