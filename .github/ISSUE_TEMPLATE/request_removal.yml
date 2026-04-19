@@ -1,6 +1,6 @@
 name: 🗑 Source removal request
 description: Scanlators can request their site to be removed
-labels: [ source removal ]
+labels: [ "source: removal" ]
 body:
 
     -   type: input
