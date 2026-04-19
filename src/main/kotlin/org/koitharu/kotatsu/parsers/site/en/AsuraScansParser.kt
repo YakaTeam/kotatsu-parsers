@@ -18,7 +18,7 @@ import kotlin.collections.emptySet
 
 @MangaSourceParser("ASURASCANS", "AsuraScans", "en")
 internal class AsuraScansParser(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.ASURASCANS, pageSize = 30) {
+	PagedMangaParser(context, MangaParserSource.ASURASCANS, pageSize = 20) {
 
 	override val configKeyDomain = ConfigKey.Domain("asurascans.com")
 
@@ -110,19 +110,18 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 				append(filter.author.urlEncoded())
 			}
 
-			append("&sort=")
 			append(
 				when (order) {
 					SortOrder.UPDATED_ASC -> "&order=asc"
-					SortOrder.POPULARITY -> "popular"
-					SortOrder.POPULARITY_ASC -> "popular&order=asc"
-					SortOrder.RATING -> "rating"
-					SortOrder.RATING_ASC -> "rating&order=asc"
-					SortOrder.ALPHABETICAL_DESC -> "name"
-					SortOrder.ALPHABETICAL -> "name&order=asc"
-					SortOrder.NEWEST -> "newest"
-					SortOrder.NEWEST_ASC -> "newest&order=asc"
-					else -> "" // SortOrder.UPDATED
+					SortOrder.POPULARITY -> "&sort=popular"
+					SortOrder.POPULARITY_ASC -> "&sort=popular&order=asc"
+					SortOrder.RATING -> "&sort=rating"
+					SortOrder.RATING_ASC -> "&sort=rating&order=asc"
+					SortOrder.ALPHABETICAL_DESC -> "&sort=name"
+					SortOrder.ALPHABETICAL -> "&sort=name&order=asc"
+					SortOrder.NEWEST -> "&sort=newest"
+					SortOrder.NEWEST_ASC -> "&sort=newest&order=asc"
+					else -> "" // SortOrder.UPDATED is the site default
 				},
 			)
 		}
@@ -137,14 +136,14 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 				coverUrl = a.selectFirst("img")?.src(),
 				title = card.selectFirst("h3")?.text().orEmpty(),
 				altTitles = emptySet(),
-				rating = a.selectFirst("div > span")?.text()?.toFloatOrNull() ?: RATING_UNKNOWN,
+				rating = a.selectFirst("div > span")?.text()?.toFloatOrNull()?.div(10f) ?: RATING_UNKNOWN,
 				tags = emptySet(),
 				authors = emptySet(),
-				state = when (card.selectLast("span.capitalize")?.text()) {
-					"Ongoing" -> MangaState.ONGOING
-					"Completed" -> MangaState.FINISHED
-					"Hiatus" -> MangaState.PAUSED
-					"Dropped" -> MangaState.ABANDONED
+				state = when (card.selectLast("span.capitalize")?.text()?.lowercase()) {
+					"ongoing" -> MangaState.ONGOING
+					"completed" -> MangaState.FINISHED
+					"hiatus" -> MangaState.PAUSED
+					"dropped" -> MangaState.ABANDONED
 					else -> null
 				},
 				source = source,
