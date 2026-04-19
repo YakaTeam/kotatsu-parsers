@@ -30,8 +30,8 @@ jobs:
             -   name: Set up Java environment 🔧
                 uses: actions/setup-java@b622de1dfa918ecc0ab28f40cd42e3c3752cd6c5 # v5.2.0
                 with:
-                    # Should check with the lowest version that parsers library supports, no cache
-                    java-version: '11'
+                    # Gradle 9+ requires JVM 17 to run; compile target remains JVM 11 via jvmToolchain(11)
+                    java-version: '17'
                     distribution: 'temurin'
 
             -   name: Set up Gradle environment 📦
