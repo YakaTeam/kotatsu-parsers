@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kotatsu-parsers · source catalog</title>
+<meta name="description" content="Browse every manga source supported by kotatsu-parsers. Directory only — no content is hosted, cached, or proxied here.">
+<meta name="color-scheme" content="light dark">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23e8484d'/><text x='16' y='22' font-family='system-ui,sans-serif' font-weight='700' font-size='18' text-anchor='middle' fill='white'>K</text></svg>">
+<style>
+    /* ---------------------------------------------------------------
+       2026 CSS in use:
+       - light-dark() colour function (no @media prefers-color-scheme)
+       - color-mix() for accent tints
+       - CSS nesting
+       - @property for animatable custom properties
+       - @container for card-level responsive layout
+       - @starting-style for card entry animation
+       - View Transitions API for filter/sort re-layouts
+       - Scroll-driven animations (animation-timeline: scroll())
+       - text-wrap: balance / pretty
+       - :has() selector
+       --------------------------------------------------------------- */
+
+    @property --accent {
+        syntax: "<color>";
+        inherits: true;
+        initial-value: #e8484d;
+    }
+
+    :root {
+        color-scheme: light dark;
+        --accent: #e8484d;
+        --accent-soft: color-mix(in oklab, var(--accent) 18%, transparent);
+        --accent-border: color-mix(in oklab, var(--accent) 45%, transparent);
+        --bg: light-dark(#ffffff, #0d1117);
+        --surface: light-dark(#f6f8fa, #161b22);
+        --surface-2: light-dark(#ffffff, #1c2128);
+        --surface-hover: light-dark(#eef1f4, #20262f);
+        --border: light-dark(#d0d7de, #30363d);
+        --border-strong: light-dark(#afb8c1, #444c56);
+        --text: light-dark(#1f2328, #e6edf3);
+        --muted: light-dark(#59636e, #8b949e);
+        --ok: light-dark(#1a7f37, #3fb950);
+        --warn: light-dark(#9a6700, #d29922);
+        --bad: light-dark(#cf222e, #f85149);
+        --chip: light-dark(#eaeef2, #21262d);
+        --shadow: 0 1px 2px color-mix(in oklab, black 8%, transparent),
+                  0 4px 12px color-mix(in oklab, black 4%, transparent);
+    }
+
+    ::selection { background: var(--accent-soft); }
+
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+
+        /* View transitions root */
+        view-transition-name: root;
+    }
+
+    @view-transition { navigation: auto; }
+
+    a {
+        color: var(--accent);
+        text-decoration: none;
+        transition: color .15s;
+
+        &:hover { text-decoration: underline; }
+    }
+
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+
+    /* Header with subtle scroll-driven compress ---------------------- */
+    header {
+        border-bottom: 1px solid var(--border);
+        padding: 28px 0 22px;
+        background:
+            radial-gradient(1200px 200px at 50% -60px,
+                var(--accent-soft),
+                transparent 60%),
+            var(--surface);
+
+        animation: compress linear both;
+        animation-timeline: scroll(root);
+        animation-range: 0 140px;
+    }
+    @keyframes compress {
+        to { padding-block: 14px 12px; }
+    }
+
+    .brand {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin: 0 0 6px;
+    }
+    .k-mark {
+        display: inline-grid;
+        place-items: center;
+        width: 28px;
+        height: 28px;
+        border-radius: 8px;
+        background: var(--accent);
+        color: white;
+        font-weight: 700;
+        font-size: 15px;
+        box-shadow: 0 0 0 1px color-mix(in oklab, var(--accent) 50%, transparent) inset;
+    }
+    h1 {
+        font-size: 22px;
+        margin: 0;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        text-wrap: balance;
+
+        & .muted { color: var(--muted); font-weight: 400; }
+    }
+    .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+        text-wrap: pretty;
+    }
+    .disclaimer {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--warn);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--muted);
+
+        & b { color: var(--text); }
+    }
+
+    .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 16px 0 0;
+    }
+    .stat {
+        background: var(--chip);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 13px;
+
+        & b { color: var(--text); }
+        & .muted { color: var(--muted); }
+    }
+    .stat.working b { color: var(--ok); }
+    .stat.broken b { color: var(--bad); }
+
+    /* Sticky controls ------------------------------------------------ */
+    .controls {
+        background: color-mix(in oklab, var(--surface) 92%, transparent);
+        backdrop-filter: saturate(140%) blur(6px);
+        border-bottom: 1px solid var(--border);
+        padding: 12px 0;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+
+        & .wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+    }
+
+    .field {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--muted);
+    }
+
+    input[type="search"],
+    select,
+    button {
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 6px 10px;
+        font: inherit;
+        font-size: 14px;
+        transition: border-color .15s, background .15s;
+
+        &:hover { border-color: var(--border-strong); }
+        &:focus-visible {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-soft);
+        }
+    }
+
+    input[type="search"] {
+        flex: 1;
+        min-width: 220px;
+    }
+
+    button {
+        cursor: pointer;
+
+        &.primary {
+            background: var(--accent);
+            color: white;
+            border-color: color-mix(in oklab, var(--accent) 60%, black);
+
+            &:hover { background: color-mix(in oklab, var(--accent) 90%, black); }
+        }
+        &.ghost {
+            background: transparent;
+
+            &:hover { background: var(--surface-hover); }
+        }
+        &[aria-pressed="true"] {
+            background: var(--accent-soft);
+            border-color: var(--accent-border);
+            color: var(--text);
+        }
+    }
+
+    .status-tabs {
+        display: inline-flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+
+        & button {
+            background: transparent;
+            border: 0;
+            border-radius: 0;
+            padding: 6px 12px;
+
+            &[aria-pressed="true"] {
+                background: var(--accent-soft);
+                color: var(--text);
+            }
+            &:not(:last-child) {
+                border-right: 1px solid var(--border);
+            }
+        }
+    }
+
+    .spacer { flex: 1; }
+
+    .copied-toast {
+        position: fixed;
+        bottom: 24px;
+        left: 50%;
+        translate: -50% 0;
+        background: var(--text);
+        color: var(--bg);
+        padding: 8px 14px;
+        border-radius: 20px;
+        font-size: 13px;
+        box-shadow: var(--shadow);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity .2s;
+
+        &.show { opacity: 1; }
+    }
+
+    /* Grid ----------------------------------------------------------- */
+    main { padding: 20px 0 60px; }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 14px;
+        container-type: inline-size;
+    }
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        transition: border-color .15s, transform .15s, box-shadow .15s;
+        position: relative;
+
+        &:hover {
+            border-color: var(--border-strong);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        /* :has() — broken cards get a soft red border tint */
+        &:has(.broken-banner) {
+            border-color: color-mix(in oklab, var(--bad) 45%, var(--border));
+        }
+
+        /* Entry animation (only on first render) */
+        @starting-style {
+            opacity: 0;
+            translate: 0 6px;
+        }
+    }
+
+    .card-head {
+        display: flex;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 8px;
+    }
+    .card h3 {
+        margin: 0;
+        font-size: 15px;
+        font-weight: 600;
+        text-wrap: balance;
+        line-height: 1.35;
+
+        & .name {
+            display: block;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 400;
+            margin-top: 2px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        }
+    }
+    .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+    .tag {
+        font-size: 11px;
+        padding: 2px 8px;
+        background: var(--chip);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        color: var(--muted);
+
+        &.locale { color: var(--text); }
+        &.type {
+            background: var(--accent-soft);
+            border-color: var(--accent-border);
+            color: var(--text);
+        }
+    }
+    .broken-banner {
+        margin-top: 2px;
+        padding: 6px 10px;
+        background: color-mix(in oklab, var(--bad) 12%, transparent);
+        border: 1px solid color-mix(in oklab, var(--bad) 30%, transparent);
+        border-radius: 6px;
+        color: var(--bad);
+        font-size: 12px;
+        font-weight: 500;
+        text-wrap: pretty;
+
+        &::before { content: "⚠ "; }
+    }
+    .domain {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        word-break: break-all;
+    }
+    .actions {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+        margin-top: auto;
+        padding-top: 6px;
+    }
+    .actions button, .actions a.btn {
+        font-size: 12px;
+        padding: 4px 10px;
+        border-radius: 6px;
+        color: var(--text);
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+
+        &:hover { background: var(--surface-hover); }
+    }
+    .star-btn {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 28px;
+        height: 28px;
+        padding: 0;
+        display: grid;
+        place-items: center;
+        color: var(--muted);
+        background: transparent;
+        border: 0;
+        font-size: 16px;
+        border-radius: 6px;
+
+        &:hover { background: var(--surface-hover); color: var(--warn); }
+        &[aria-pressed="true"] { color: var(--warn); }
+    }
+
+    .empty {
+        grid-column: 1 / -1;
+        padding: 48px 20px;
+        text-align: center;
+        color: var(--muted);
+    }
+
+    #count-note {
+        margin: 18px 2px 0;
+        color: var(--muted);
+        font-size: 13px;
+    }
+    kbd {
+        display: inline-block;
+        padding: 1px 6px;
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        font-size: 11px;
+        color: var(--muted);
+        background: var(--surface-2);
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    }
+
+    footer {
+        border-top: 1px solid var(--border);
+        padding: 20px 0 40px;
+        color: var(--muted);
+        font-size: 12px;
+        text-wrap: pretty;
+
+        & a { color: var(--muted); text-decoration: underline; }
+    }
+
+    /* Container queries — tighten card content in narrow rows */
+    @container (max-width: 290px) {
+        .card .tags { gap: 3px; }
+        .card .tag { font-size: 10px; padding: 1px 6px; }
+    }
+
+    /* View transitions for filter / sort changes */
+    ::view-transition-old(root),
+    ::view-transition-new(root) {
+        animation-duration: 180ms;
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, ::before, ::after {
+            animation-duration: 0.001s !important;
+            transition-duration: 0.001s !important;
+        }
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <div class="brand">
+            <span class="k-mark" aria-hidden="true">K</span>
+            <h1>kotatsu-parsers <span class="muted">· source catalog</span></h1>
+        </div>
+        <p class="sub">
+            Searchable directory of every manga source supported by
+            <a href="https://github.com/YakaTeam/kotatsu-parsers">YakaTeam/kotatsu-parsers</a>.
+            Click a card to jump to its source file on GitHub.
+        </p>
+        <p class="disclaimer">
+            <b>Directory only.</b> No manga content is hosted, cached, or proxied here.
+            Visiting a source's site from a card takes you to the third-party site directly.
+        </p>
+        <div class="stats" id="stats"></div>
+    </div>
+</header>
+
+<div class="controls">
+    <div class="wrap">
+        <input id="q" type="search" placeholder='Search title, name, or domain — press "/" to focus' aria-label="Search parsers">
+        <label class="field">Lang
+            <select id="lang"><option value="">Any</option></select>
+        </label>
+        <label class="field">Type
+            <select id="type"><option value="">Any</option></select>
+        </label>
+        <label class="field">Sort
+            <select id="sort">
+                <option value="title">Title A-Z</option>
+                <option value="title-desc">Title Z-A</option>
+                <option value="type">Type</option>
+                <option value="locale">Language</option>
+                <option value="broken-first">Broken first</option>
+                <option value="working-first">Working first</option>
+            </select>
+        </label>
+        <div class="status-tabs" role="tablist" aria-label="Status filter">
+            <button role="tab" data-status="" aria-pressed="true">All</button>
+            <button role="tab" data-status="working">Working</button>
+            <button role="tab" data-status="broken">Broken</button>
+        </div>
+        <button id="starred-only" class="ghost" aria-pressed="false" title="Toggle starred-only view">★ Starred</button>
+        <span class="spacer"></span>
+        <button id="random" class="ghost" title="Open a random parser — press R">🎲 Random</button>
+        <button id="share" class="ghost" title="Copy a link that restores this view">🔗 Copy link</button>
+    </div>
+</div>
+
+<main class="wrap">
+    <div id="grid" class="grid" aria-live="polite"></div>
+    <p id="count-note"></p>
+</main>
+
+<footer>
+    <div class="wrap">
+        Prototype hosted on a contributor fork — not an official YakaTeam page.
+        Press <kbd>/</kbd> to search, <kbd>Esc</kbd> to clear, <kbd>R</kbd> for random.
+        Built from <a href="build_catalog.py">build_catalog.py</a>.
+    </div>
+</footer>
+
+<div id="toast" class="copied-toast" role="status"></div>
+
+<script>
+(() => {
+    const REPO = "YakaTeam/kotatsu-parsers";
+    const STAR_KEY = "kp-starred-v1";
+
+    const LANG_NAMES = {
+        "en": "English", "fr": "French", "es": "Spanish", "pt": "Portuguese",
+        "pt-BR": "Portuguese (BR)", "de": "German", "it": "Italian", "ru": "Russian",
+        "uk": "Ukrainian", "pl": "Polish", "tr": "Turkish", "ja": "Japanese",
+        "zh": "Chinese", "zh-CN": "Chinese (CN)", "zh-TW": "Chinese (TW)",
+        "ko": "Korean", "vi": "Vietnamese", "id": "Indonesian", "th": "Thai",
+        "ar": "Arabic", "fa": "Persian", "he": "Hebrew", "hi": "Hindi",
+        "bn": "Bengali", "ta": "Tamil", "ms": "Malay", "tl": "Filipino",
+        "nl": "Dutch", "sv": "Swedish", "no": "Norwegian", "da": "Danish",
+        "fi": "Finnish", "el": "Greek", "ro": "Romanian", "hu": "Hungarian",
+        "cs": "Czech", "bg": "Bulgarian",
+    };
+    const typeLabel = t => t.replace(/_/g, " ").toLowerCase()
+        .replace(/\b\w/g, c => c.toUpperCase());
+
+    // ---- state ----
+    const stars = new Set(JSON.parse(localStorage.getItem(STAR_KEY) || "[]"));
+    let data = null;
+    let filtered = [];
+
+    const state = {
+        q: "",
+        lang: "",
+        type: "",
+        status: "",
+        sort: "title",
+        starred: false,
+    };
+
+    // ---- DOM ----
+    const $ = s => document.querySelector(s);
+    const grid = $("#grid");
+    const countNote = $("#count-note");
+    const statsEl = $("#stats");
+    const toast = $("#toast");
+
+    // ---- helpers ----
+    const esc = s => (s ?? "").toString().replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+    const langName = l => l && LANG_NAMES[l] ? `${LANG_NAMES[l]} (${l})` : (l || "multi");
+
+    function showToast(msg) {
+        toast.textContent = msg;
+        toast.classList.add("show");
+        clearTimeout(showToast._t);
+        showToast._t = setTimeout(() => toast.classList.remove("show"), 1400);
+    }
+
+    function saveStars() {
+        localStorage.setItem(STAR_KEY, JSON.stringify([...stars]));
+    }
+
+    function updateURL() {
+        const p = new URLSearchParams();
+        if (state.q) p.set("q", state.q);
+        if (state.lang) p.set("lang", state.lang);
+        if (state.type) p.set("type", state.type);
+        if (state.status) p.set("status", state.status);
+        if (state.sort && state.sort !== "title") p.set("sort", state.sort);
+        if (state.starred) p.set("starred", "1");
+        const qs = p.toString();
+        const url = qs ? `?${qs}` : location.pathname;
+        history.replaceState(null, "", url);
+    }
+
+    function loadFromURL() {
+        const p = new URLSearchParams(location.search);
+        state.q = p.get("q") || "";
+        state.lang = p.get("lang") || "";
+        state.type = p.get("type") || "";
+        state.status = p.get("status") || "";
+        state.sort = p.get("sort") || "title";
+        state.starred = p.get("starred") === "1";
+
+        $("#q").value = state.q;
+        $("#sort").value = state.sort;
+        $("#starred-only").setAttribute("aria-pressed", state.starred);
+        document.querySelectorAll(".status-tabs button").forEach(b =>
+            b.setAttribute("aria-pressed", b.dataset.status === state.status));
+    }
+
+    // ---- rendering ----
+    function renderStats() {
+        const total = data.parsers.length;
+        const broken = data.parsers.filter(p => p.broken).length;
+        const working = total - broken;
+        statsEl.innerHTML = `
+            <span class="stat"><b>${total}</b> <span class="muted">parsers</span></span>
+            <span class="stat working"><b>${working}</b> <span class="muted">working</span></span>
+            <span class="stat broken"><b>${broken}</b> <span class="muted">flagged broken</span></span>
+            <span class="stat"><b>${Object.keys(data.by_type).length}</b> <span class="muted">content types</span></span>
+            <span class="stat"><b>${Object.keys(data.by_locale).length}</b> <span class="muted">languages</span></span>
+        `;
+    }
+
+    function populateFilters() {
+        const langSel = $("#lang");
+        const langs = Object.entries(data.by_locale).sort((a, b) => b[1] - a[1]);
+        for (const [l, n] of langs) {
+            const opt = document.createElement("option");
+            opt.value = l;
+            opt.textContent = `${langName(l)} — ${n}`;
+            if (l === state.lang) opt.selected = true;
+            langSel.appendChild(opt);
+        }
+
+        const typeSel = $("#type");
+        const types = Object.entries(data.by_type).sort((a, b) => b[1] - a[1]);
+        for (const [t, n] of types) {
+            const opt = document.createElement("option");
+            opt.value = t;
+            opt.textContent = `${typeLabel(t)} — ${n}`;
+            if (t === state.type) opt.selected = true;
+            typeSel.appendChild(opt);
+        }
+    }
+
+    function matchesStatus(p) {
+        if (state.status === "working") return !p.broken;
+        if (state.status === "broken") return p.broken;
+        return true;
+    }
+
+    function sortParsers(arr) {
+        const by = state.sort;
+        const cmp = {
+            "title": (a, b) => a.title.localeCompare(b.title),
+            "title-desc": (a, b) => b.title.localeCompare(a.title),
+            "type": (a, b) => a.type.localeCompare(b.type) || a.title.localeCompare(b.title),
+            "locale": (a, b) => (a.locale || "zz").localeCompare(b.locale || "zz") || a.title.localeCompare(b.title),
+            "broken-first": (a, b) => Number(b.broken) - Number(a.broken) || a.title.localeCompare(b.title),
+            "working-first": (a, b) => Number(a.broken) - Number(b.broken) || a.title.localeCompare(b.title),
+        }[by] || ((a, b) => a.title.localeCompare(b.title));
+        return arr.sort(cmp);
+    }
+
+    function applyFilters() {
+        const q = state.q.toLowerCase().trim();
+        filtered = data.parsers.filter(p => {
+            if (state.starred && !stars.has(p.name)) return false;
+            if (state.lang && p.locale !== state.lang) return false;
+            if (state.type && p.type !== state.type) return false;
+            if (!matchesStatus(p)) return false;
+            if (q) {
+                const hay = (p.title + " " + p.name + " " + p.domain).toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+        filtered = sortParsers(filtered);
+    }
+
+    function renderCard(p) {
+        const starred = stars.has(p.name);
+        const visit = p.domain ? `https://${p.domain}` : "";
+        return `
+            <article class="card" data-name="${esc(p.name)}">
+                <button class="star-btn" aria-pressed="${starred}" aria-label="Star ${esc(p.title)}" data-star="${esc(p.name)}">${starred ? "★" : "☆"}</button>
+                <div class="card-head">
+                    <h3>${esc(p.title)}<span class="name">${esc(p.name)}</span></h3>
+                </div>
+                <div class="tags">
+                    <span class="tag type">${esc(typeLabel(p.type))}</span>
+                    <span class="tag locale">${esc(langName(p.locale))}</span>
+                </div>
+                ${p.broken ? `<div class="broken-banner">Marked broken${p.broken_reason ? `: ${esc(p.broken_reason)}` : ""}</div>` : ""}
+                <div class="domain">${p.domain ? esc(p.domain) : '<span class="muted">— no domain literal —</span>'}</div>
+                <div class="actions">
+                    ${visit ? `<a class="btn" target="_blank" rel="noopener noreferrer nofollow" href="${esc(visit)}">Visit site ↗</a>` : ""}
+                    <a class="btn" target="_blank" rel="noopener" href="https://github.com/${REPO}/blob/master/${esc(p.file)}">Source ↗</a>
+                    <button class="copy-name" data-copy="${esc(p.name)}" title="Copy parser enum name">📋 Copy name</button>
+                </div>
+            </article>
+        `;
+    }
+
+    function render() {
+        applyFilters();
+
+        const run = () => {
+            if (!filtered.length) {
+                grid.innerHTML = `<div class="empty">No parsers match these filters.</div>`;
+            } else {
+                grid.innerHTML = filtered.map(renderCard).join("");
+            }
+            countNote.textContent =
+                `Showing ${filtered.length} of ${data.parsers.length} parsers` +
+                (state.starred ? ` · ${stars.size} starred total` : "");
+        };
+
+        if (document.startViewTransition) {
+            document.startViewTransition(run);
+        } else {
+            run();
+        }
+        updateURL();
+    }
+
+    // ---- event wiring ----
+    function debounce(fn, ms) {
+        let t;
+        return (...args) => {
+            clearTimeout(t);
+            t = setTimeout(() => fn(...args), ms);
+        };
+    }
+
+    function wire() {
+        $("#q").addEventListener("input", debounce(e => {
+            state.q = e.target.value;
+            render();
+        }, 80));
+
+        $("#lang").addEventListener("change", e => { state.lang = e.target.value; render(); });
+        $("#type").addEventListener("change", e => { state.type = e.target.value; render(); });
+        $("#sort").addEventListener("change", e => { state.sort = e.target.value; render(); });
+
+        document.querySelectorAll(".status-tabs button").forEach(btn => {
+            btn.addEventListener("click", () => {
+                state.status = btn.dataset.status;
+                document.querySelectorAll(".status-tabs button").forEach(b =>
+                    b.setAttribute("aria-pressed", b === btn));
+                render();
+            });
+        });
+
+        $("#starred-only").addEventListener("click", e => {
+            state.starred = !state.starred;
+            e.currentTarget.setAttribute("aria-pressed", state.starred);
+            render();
+        });
+
+        $("#random").addEventListener("click", openRandom);
+
+        $("#share").addEventListener("click", async () => {
+            try {
+                await navigator.clipboard.writeText(location.href);
+                showToast("Link copied");
+            } catch {
+                showToast("Copy failed");
+            }
+        });
+
+        grid.addEventListener("click", async e => {
+            const star = e.target.closest("[data-star]");
+            if (star) {
+                const name = star.dataset.star;
+                if (stars.has(name)) stars.delete(name); else stars.add(name);
+                saveStars();
+                star.setAttribute("aria-pressed", stars.has(name));
+                star.textContent = stars.has(name) ? "★" : "☆";
+                if (state.starred) render();
+                return;
+            }
+            const copy = e.target.closest("[data-copy]");
+            if (copy) {
+                try {
+                    await navigator.clipboard.writeText(copy.dataset.copy);
+                    showToast(`Copied “${copy.dataset.copy}”`);
+                } catch {
+                    showToast("Copy failed");
+                }
+            }
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener("keydown", e => {
+            const tag = e.target.tagName;
+            const editing = tag === "INPUT" || tag === "SELECT" || tag === "TEXTAREA";
+            if (e.key === "/" && !editing) {
+                e.preventDefault();
+                $("#q").focus();
+                $("#q").select();
+            } else if (e.key === "Escape" && editing && e.target.id === "q") {
+                e.target.value = "";
+                state.q = "";
+                render();
+                e.target.blur();
+            } else if ((e.key === "r" || e.key === "R") && !editing && !e.metaKey && !e.ctrlKey) {
+                openRandom();
+            }
+        });
+    }
+
+    function openRandom() {
+        applyFilters();
+        const pool = filtered.length ? filtered : data.parsers;
+        if (!pool.length) return;
+        const p = pool[Math.floor(Math.random() * pool.length)];
+        showToast(`→ ${p.title}`);
+        window.open(`https://github.com/${REPO}/blob/master/${p.file}`, "_blank", "noopener");
+    }
+
+    // ---- boot ----
+    fetch("parsers.json")
+        .then(r => r.json())
+        .then(json => {
+            data = json;
+            loadFromURL();
+            renderStats();
+            populateFilters();
+            wire();
+            render();
+        })
+        .catch(err => {
+            grid.innerHTML = `<div class="empty">Failed to load parsers.json — ${esc(err.message)}</div>`;
+        });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,49 @@
+name: Refresh parser catalog
+
+on:
+    push:
+        branches:
+            - master
+        paths:
+            - 'src/main/kotlin/**'
+            - 'docs/build_catalog.py'
+            - '.github/workflows/docs-catalog.yml'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+# Queue — never cancel an in-progress refresh. A second push that arrives
+# while the first run is still working waits for it to finish, then runs.
+# (If a third push arrives before the second has started, the queued run is
+# superseded so the newest HEAD is always what gets processed.)
+concurrency:
+    group: docs-catalog
+    cancel-in-progress: false
+
+jobs:
+    rebuild:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
+
+            -   name: Set up Python 🐍
+                uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+                with:
+                    python-version: '3.11'
+
+            -   name: Rebuild parsers.json 📇
+                run: python3 docs/build_catalog.py
+
+            -   name: Commit & push if changed 🚀
+                run: |
+                    if git diff --quiet -- docs/parsers.json; then
+                        echo "No parser changes — catalog is already up to date."
+                        exit 0
+                    fi
+                    git config user.name "github-actions[bot]"
+                    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+                    git add docs/parsers.json
+                    git commit -m "docs: refresh parser catalog"
+                    git push
