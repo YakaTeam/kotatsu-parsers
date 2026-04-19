@@ -14,7 +14,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken("Source is currently broken")
+@Broken("Domain inovascanmanga.com has no DNS records — site is gone")
 @MangaSourceParser("INOVASCANMANGA", "InovaScanManga", "fr", type = ContentType.HENTAI)
 internal class InovaScanManga(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.INOVASCANMANGA) {
