@@ -135,7 +135,7 @@ internal class SssScanlator(context: MangaLoaderContext) :
 		val artist = extractJsonString(rsc, "artist")
 		val coverImage = extractJsonString(rsc, "coverImage")
 
-		val chaptersJson = extractJsonArray(rsc, "chapters")
+		val chaptersJson = extractJsonArray(rsc)
 		val chapters = chaptersJson?.mapJSONNotNull { obj ->
 			val id = obj.getStringOrNull("id") ?: return@mapJSONNotNull null
 			val number = obj.getDoubleOrDefault("number", 0.0).toFloat()
@@ -254,7 +254,7 @@ internal class SssScanlator(context: MangaLoaderContext) :
 	}
 
 	private fun extractJsonArray(text: String, key: String): org.json.JSONArray? {
-		val keyPattern = "\"$key\":["
+		val keyPattern = "\"chapters\":["
 		val startIdx = text.indexOf(keyPattern)
 		if (startIdx < 0) return null
 		var i = startIdx + keyPattern.length - 1 // position at '['
