@@ -21,7 +21,9 @@ import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONTo
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
+import org.koitharu.kotatsu.parsers.util.json.toStringSet
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.text.SimpleDateFormat
@@ -156,12 +158,8 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 		val jo = json.getJSONObject("data")
 
 		val altTitles = buildSet {
-			jo.optJSONArray("alt_titles")?.let { arr ->
-				for (i in 0 until arr.length()) arr.optString(i).takeIf { it.isNotEmpty() }?.let(::add)
-			}
-			jo.optJSONArray("synonyms")?.let { arr ->
-				for (i in 0 until arr.length()) arr.optString(i).takeIf { it.isNotEmpty() }?.let(::add)
-			}
+			jo.optJSONArray("alt_titles")?.toStringSet()?.let(::addAll)
+			jo.optJSONArray("synonyms")?.toStringSet()?.let(::addAll)
 			jo.getStringOrNull("subtitle")?.takeIf { it.isNotEmpty() && it != manga.title }?.let(::add)
 		}
 
@@ -192,15 +190,12 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 			val url = "$apiUrl/single/manga/$slug/chapters?page=$page&postsPerPage=50&order=asc"
 			val json = webClient.httpGet(url).parseJson()
 			val data = json.getJSONObject("data")
-			val items = data.getJSONArray("items")
-			for (i in 0 until items.length()) {
-				val ch = items.getJSONObject(i)
+			data.getJSONArray("items").mapJSONTo(all) { ch ->
 				val chapterSlug = ch.getString("slug")
-				val number = ch.getStringOrNull("chapter_number")?.toFloatOrNull() ?: 0f
-				all += MangaChapter(
+				MangaChapter(
 					id = generateUid("$slug/$chapterSlug"),
 					title = ch.getStringOrNull("title"),
-					number = number,
+					number = ch.getStringOrNull("chapter_number")?.toFloatOrNull() ?: 0f,
 					volume = 0,
 					url = "$slug/$chapterSlug",
 					scanlator = null,
@@ -209,8 +204,7 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 					source = source,
 				)
 			}
-			val pagination = data.optJSONObject("pagination")
-			totalPages = pagination?.optInt("total_pages", 1) ?: 1
+			totalPages = data.optJSONObject("pagination")?.optInt("total_pages", 1) ?: 1
 			page++
 		} while (page <= totalPages)
 		return all.sortedBy { it.number }
@@ -234,23 +228,17 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 		}
 	}
 
-	private fun JSONArray.tagsFromIds(): Set<MangaTag> {
-		val out = HashSet<MangaTag>(length())
-		for (i in 0 until length()) {
-			val id = optInt(i, -1).takeIf { it >= 0 }?.toString() ?: continue
-			val name = GENRES[id] ?: continue
-			out += MangaTag(key = id, title = name, source = source)
+	private fun JSONArray.tagsFromIds(): Set<MangaTag> =
+		(0 until length()).mapNotNullTo(HashSet(length())) { i ->
+			val id = optInt(i, -1).takeIf { it >= 0 }?.toString() ?: return@mapNotNullTo null
+			val name = GENRES[id] ?: return@mapNotNullTo null
+			MangaTag(key = id, title = name, source = source)
 		}
-		return out
-	}
 
-	private fun JSONArray.firstStateFromIds(): MangaState? {
-		for (i in 0 until length()) {
-			val id = optInt(i, -1)
-			if (id >= 0) STATUS_MAP[id]?.let { return it }
+	private fun JSONArray.firstStateFromIds(): MangaState? =
+		(0 until length()).firstNotNullOfOrNull { i ->
+			optInt(i, -1).takeIf { it >= 0 }?.let(STATUS_MAP::get)
 		}
-		return null
-	}
 
 	private fun String?.parseDate(): Long {
 		if (this.isNullOrEmpty()) return 0L
