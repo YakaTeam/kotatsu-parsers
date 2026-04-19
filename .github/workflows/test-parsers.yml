@@ -6,6 +6,10 @@ on:
         paths:
             - 'src/main/kotlin/org/koitharu/kotatsu/parsers/**'
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+    cancel-in-progress: false
+
 permissions:
     contents: read
 
