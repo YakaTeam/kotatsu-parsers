@@ -32,7 +32,6 @@ internal class MangaKatana(context: MangaLoaderContext) :
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
 			isSearchSupported = true,
-			isMultipleTagsSupported = true,
 			isTagsExclusionSupported = true,
 		)
 
@@ -58,9 +57,7 @@ internal class MangaKatana(context: MangaLoaderContext) :
 				if (page > 1) append("/page/").append(page)
 				append("?filter=1")
 				append("&include=")
-				if (filter.tags.isNotEmpty()) {
-					append(filter.tags.joinToString(separator = "_") { it.key })
-				}
+				filter.tags.oneOrThrowIfMany()?.let { append(it.key) }
 				append("&exclude=")
 				if (filter.tagsExclude.isNotEmpty()) {
 					append(filter.tagsExclude.joinToString(separator = "_") { it.key })
