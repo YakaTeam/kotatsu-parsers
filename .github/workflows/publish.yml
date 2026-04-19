@@ -36,7 +36,7 @@ jobs:
                     gradle-version: '9.3.1'
 
             -   name: Setup Android SDK 🚀
-                uses: android-actions/setup-android@v3
+                uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3.2.2
 
             -   name: Run assemble tasks 🚀
                 run: ./gradlew assemble --rerun-tasks
@@ -54,7 +54,7 @@ jobs:
                 continue-on-error: true
 
             -   name: Upload artifacts 🌐
-                uses: softprops/action-gh-release@v2
+                uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65 # v2.6.2
                 with:
                     repository: mochi-plugins/repository
                     tag_name: ${{ steps.meta.outputs.sha_short }}

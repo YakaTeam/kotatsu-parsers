@@ -1,0 +1,41 @@
+name: 'Close stale issues and PRs'
+
+# Runs daily. Flags issues/PRs that have seen no activity in 90 days,
+# then closes them 14 days after that flag if still untouched.
+# Triage-critical labels are exempt so long-lived bug reports and PRs
+# that are actively being worked on don't get swept.
+
+on:
+    schedule:
+        -   cron: '30 1 * * *'   # daily at 01:30 UTC
+    workflow_dispatch:
+
+permissions:
+    issues: write
+    pull-requests: write
+
+jobs:
+    stale:
+        runs-on: ubuntu-latest
+        steps:
+            -   uses: actions/stale@5bef64f19d7facfb25b37b414482c7164d639639 # v9.1.0
+                with:
+                    days-before-stale: 90
+                    days-before-close: 14
+                    stale-issue-label: 'stale'
+                    stale-pr-label: 'stale'
+                    exempt-issue-labels: 'bug,help wanted,good first issue,pinned,parser: broken,source: request,source: removal'
+                    exempt-pr-labels: 'help wanted,pinned,work-in-progress'
+                    stale-issue-message: |
+                        This issue has been automatically marked as stale because it has not had any activity for 90 days.
+                        It will be closed in 14 days if no further activity occurs. If the issue is still relevant,
+                        please leave a comment with an updated reproduction or confirm the site is still affected.
+                    stale-pr-message: |
+                        This pull request has been automatically marked as stale because it has not had any activity for 90 days.
+                        It will be closed in 14 days if no further activity occurs. If you're still working on it,
+                        a comment or rebase on `master` is enough to keep it open.
+                    close-issue-message: |
+                        Closed as stale. Feel free to reopen or file a new issue if the problem still reproduces on the latest release.
+                    close-pr-message: |
+                        Closed as stale. Feel free to reopen and rebase on `master` if you want to continue the work.
+                    operations-per-run: 100
