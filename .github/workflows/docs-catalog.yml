@@ -1,25 +1,15 @@
 name: Refresh parser catalog
 
+# Manual trigger only. Repo rulesets require PRs for master, so the previous
+# push-on-merge variant of this workflow always failed at the push step with
+# "GH013: Repository rule violations". Rather than fight the ruleset, the
+# catalog is now refreshed on demand: dispatch this workflow when the
+# parsers.json under docs/ needs to catch up with the tree.
 on:
-    push:
-        branches:
-            - master
-        paths:
-            - 'src/main/kotlin/**'
-            - 'docs/build_catalog.py'
-            - '.github/workflows/docs-catalog.yml'
     workflow_dispatch:
 
 permissions:
-    contents: write
-
-# Queue — never cancel an in-progress refresh. A second push that arrives
-# while the first run is still working waits for it to finish, then runs.
-# (If a third push arrives before the second has started, the queued run is
-# superseded so the newest HEAD is always what gets processed.)
-concurrency:
-    group: docs-catalog
-    cancel-in-progress: false
+    contents: read
 
 jobs:
     rebuild:
@@ -36,14 +26,19 @@ jobs:
             -   name: Rebuild parsers.json 📇
                 run: python3 docs/build_catalog.py
 
-            -   name: Commit & push if changed 🚀
+            -   name: Show diff 🧾
                 run: |
                     if git diff --quiet -- docs/parsers.json; then
                         echo "No parser changes — catalog is already up to date."
-                        exit 0
+                    else
+                        echo "Catalog is stale. Download the artifact and open a PR with the regenerated docs/parsers.json:"
+                        git diff --stat -- docs/parsers.json
                     fi
-                    git config user.name "github-actions[bot]"
-                    git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-                    git add docs/parsers.json
-                    git commit -m "docs: refresh parser catalog"
-                    git push
+
+            -   name: Upload regenerated catalog 📎
+                if: always()
+                uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+                with:
+                    name: parsers-json
+                    path: docs/parsers.json
+                    retention-days: 14
