@@ -63,7 +63,6 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isMultipleTagsSupported = true,
 			isTagsExclusionSupported = true,
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
@@ -99,9 +98,9 @@ internal class Manhwa18Parser(context: MangaLoaderContext) :
 				append(it.urlEncoded())
 			}
 
-			if (filter.tags.isNotEmpty()) {
+			filter.tags.oneOrThrowIfMany()?.let {
 				append("&accept_genres=")
-				append(filter.tags.joinToString(",") { it.key })
+				append(it.key)
 			}
 
 			if (filter.tagsExclude.isNotEmpty()) {
