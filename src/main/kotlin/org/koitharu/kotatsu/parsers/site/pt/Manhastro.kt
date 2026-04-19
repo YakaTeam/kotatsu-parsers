@@ -9,6 +9,7 @@ import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
+import org.koitharu.kotatsu.parsers.util.json.asTypedList
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
@@ -41,7 +42,6 @@ internal class Manhastro(context: MangaLoaderContext) :
 		get() = MangaListFilterCapabilities(
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
-			isMultipleTagsSupported = false,
 		)
 
 	override suspend fun getFilterOptions() = MangaListFilterOptions(
@@ -124,24 +124,19 @@ internal class Manhastro(context: MangaLoaderContext) :
 		val chapterObj = data.optJSONObject("chapter") ?: return emptyList()
 		val baseUrl = chapterObj.getStringOrNull("baseUrl")?.trimEnd('/') ?: return emptyList()
 		val hash = chapterObj.getStringOrNull("hash")?.trim('/') ?: return emptyList()
-		val files = chapterObj.optJSONArray("data") ?: return emptyList()
-		val result = ArrayList<MangaPage>(files.length())
-		for (i in 0 until files.length()) {
-			val file = files.getString(i)
+		val files = chapterObj.optJSONArray("data")?.asTypedList<String>() ?: return emptyList()
+		return files.map { file ->
 			val url = "$baseUrl/$hash/$file"
-			result.add(
-				MangaPage(
-					id = generateUid(url),
-					url = url,
-					preview = null,
-					source = source,
-				),
+			MangaPage(
+				id = generateUid(url),
+				url = url,
+				preview = null,
+				source = source,
 			)
 		}
-		return result
 	}
 
-	private val allMangasCache = suspendLazy(initializer = ::loadAllMangas)
+	private val allMangasCache = suspendLazy(soft = true, initializer = ::loadAllMangas)
 
 	private suspend fun loadAllMangas(): List<JSONObject> {
 		val json = webClient.httpGet("$apiBase/dados").parseJson()
