@@ -13,6 +13,8 @@ import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullTo
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNullToSet
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
@@ -211,53 +213,34 @@ internal class AzoraMoon(context: MangaLoaderContext) :
 
 	private suspend fun loadAllPosts(): List<JSONObject> {
 		val json = webClient.httpGet("$apiBase/api/posts?page=1&perPage=5000").parseJson()
-		val arr = json.optJSONArray("posts") ?: return emptyList()
-		val list = ArrayList<JSONObject>(arr.length())
-		for (i in 0 until arr.length()) {
-			val p = arr.optJSONObject(i) ?: continue
-			if (p.optBoolean("isNovel", false)) continue
-			if (p.getStringOrNull("postStatus") != "PUBLIC") continue
-			list.add(p)
-		}
-		return list
+		return json.optJSONArray("posts")?.mapJSONNotNull { p ->
+			p.takeUnless {
+				it.optBoolean("isNovel", false) || it.getStringOrNull("postStatus") != "PUBLIC"
+			}
+		}.orEmpty()
 	}
 
 	private suspend fun loadTags(): Set<MangaTag> {
 		val json = runCatching { webClient.httpGet("$apiBase/api/genres").parseJsonArray() }.getOrNull()
 		val result = ArraySet<MangaTag>()
-		if (json != null) {
-			for (i in 0 until json.length()) {
-				val obj = json.optJSONObject(i) ?: continue
-				val id = obj.optInt("id", -1).takeIf { it >= 0 } ?: continue
-				val name = obj.getStringOrNull("name")?.takeUnless(String::isBlank) ?: continue
-				result.add(
-					MangaTag(
-						title = name.toTitleCase(sourceLocale),
-						key = id.toString(),
-						source = source,
-					),
-				)
-			}
-		}
+		json?.mapJSONNotNullTo(result, ::tagFromJson)
 		if (result.isEmpty()) {
 			// Fallback: derive tag set from the full posts catalogue
-			for (p in allPostsCache.get()) {
-				val genres = p.optJSONArray("genres") ?: continue
-				for (i in 0 until genres.length()) {
-					val g = genres.optJSONObject(i) ?: continue
-					val id = g.optInt("id", -1).takeIf { it >= 0 } ?: continue
-					val name = g.getStringOrNull("name")?.takeUnless(String::isBlank) ?: continue
-					result.add(
-						MangaTag(
-							title = name.toTitleCase(sourceLocale),
-							key = id.toString(),
-							source = source,
-						),
-					)
-				}
+			allPostsCache.get().forEach { p ->
+				p.optJSONArray("genres")?.mapJSONNotNullTo(result, ::tagFromJson)
 			}
 		}
 		return result
+	}
+
+	private fun tagFromJson(obj: JSONObject): MangaTag? {
+		val id = obj.optInt("id", -1).takeIf { it >= 0 } ?: return null
+		val name = obj.getStringOrNull("name")?.takeUnless(String::isBlank) ?: return null
+		return MangaTag(
+			title = name.toTitleCase(sourceLocale),
+			key = id.toString(),
+			source = source,
+		)
 	}
 
 	private fun mangaFromJson(obj: JSONObject): Manga {
@@ -274,22 +257,9 @@ internal class AzoraMoon(context: MangaLoaderContext) :
 			"COMPLETED" -> MangaState.FINISHED
 			else -> null
 		}
-		val tags = obj.optJSONArray("genres")?.let { arr ->
-			val set = ArraySet<MangaTag>(arr.length())
-			for (i in 0 until arr.length()) {
-				val g = arr.optJSONObject(i) ?: continue
-				val gid = g.optInt("id", -1).takeIf { it >= 0 } ?: continue
-				val name = g.getStringOrNull("name")?.takeUnless(String::isBlank) ?: continue
-				set.add(
-					MangaTag(
-						title = name.toTitleCase(sourceLocale),
-						key = gid.toString(),
-						source = source,
-					),
-				)
-			}
-			set
-		} ?: emptySet()
+		val tags = obj.optJSONArray("genres")
+			?.mapJSONNotNullToSet(::tagFromJson)
+			.orEmpty()
 		val rating = obj.getFloatOrDefault("averageRating", -1f).let {
 			if (it < 0f) RATING_UNKNOWN else (it / 10f).coerceIn(0f, 1f)
 		}
