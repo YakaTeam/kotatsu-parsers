@@ -20,6 +20,7 @@ import org.koitharu.kotatsu.parsers.model.SortOrder
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
+import org.koitharu.kotatsu.parsers.util.json.mapJSONNotNull
 import org.koitharu.kotatsu.parsers.util.mapChapters
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.parseJson
@@ -136,16 +137,10 @@ internal class TempleScan(context: MangaLoaderContext) :
 		val json = webClient.httpGet("https://$domain/api/comic/$slug").parseJson()
 		val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ENGLISH)
 		val seasons = json.optJSONArray("Season") ?: JSONArray()
-		val chapters = mutableListOf<JSONObject>()
-		for (i in 0 until seasons.length()) {
-			val s = seasons.optJSONObject(i) ?: continue
-			val chs = s.optJSONArray("Chapter") ?: continue
-			for (k in 0 until chs.length()) {
-				chs.optJSONObject(k)?.let(chapters::add)
-			}
-		}
 		// API returns chapters newest-first; reverse to oldest-first for numbering.
-		chapters.reverse()
+		val chapters = seasons.mapJSONNotNull { it.optJSONArray("Chapter") }
+			.flatMap { chs -> chs.mapJSON { it } }
+			.asReversed()
 		val author = json.getStringOrNull("author")
 		return manga.copy(
 			title = json.getStringOrNull("title") ?: manga.title,
