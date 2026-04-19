@@ -24,12 +24,30 @@ body:
         validations:
             required: true
 
-    -   type: input
+    -   type: dropdown
         id: language
         attributes:
             label: Language
-            placeholder: |
-                Example: "English"
+            description: Primary language the source publishes in. Pick "Other" and specify in the details box if your language isn't listed.
+            options:
+                - English
+                - Arabic
+                - Chinese
+                - French
+                - German
+                - Indonesian
+                - Italian
+                - Japanese
+                - Korean
+                - Portuguese (Brazil)
+                - Portuguese (Portugal)
+                - Russian
+                - Spanish
+                - Thai
+                - Turkish
+                - Vietnamese
+                - Multi (multiple languages on one site)
+                - Other (specify in the details box below)
         validations:
             required: true
 
