@@ -404,45 +404,37 @@ internal abstract class MangaFireParser(
     override suspend fun getRelatedManga(seed: Manga): List<Manga> {
         val document = webClient.httpGet(seed.url.toAbsoluteUrl(domain)).parseHtml()
 
+        // The .m-related section only contains title + URL (no cover / language data).
+        // The previous implementation made a full-page request per related manga to
+        // verify the language and fetch a cover, which fanned out to 16+ extra
+        // requests on popular titles and tripped the site's rate limiter (#152).
+        // We now trust the server's relation list as-is and drop the cover rather
+        // than hitting the site N more times.
+        val seen = HashSet<String>()
         val mangas = document.select("section.m-related a[href*=/manga/]").mapNotNull {
             val url = it.attrAsRelativeUrl("href")
-
-            try {
-                val mangaDocument = webClient
-                    .httpGet(url.toAbsoluteUrl(domain))
-                    .parseHtml()
-
-                val chaptersInManga = mangaDocument.select(".m-list div.tab-content .list-menu .dropdown-item")
-                    .map { i -> i.attr("data-code").lowercase() }
-
-
-                if (!chaptersInManga.contains(siteLang)) {
-                    return@mapNotNull null
-                }
-
-                Manga(
-                    id = generateUid(url),
-                    url = url,
-                    publicUrl = url.toAbsoluteUrl(domain),
-                    title = it.ownText(),
-                    coverUrl = mangaDocument.selectFirstOrThrow("div.manga-detail div.poster img")
-                        .attrAsAbsoluteUrl("src"),
-                    source = source,
-                    altTitles = emptySet(),
-                    largeCoverUrl = null,
-                    authors = emptySet(),
-                    contentRating = null,
-                    rating = RATING_UNKNOWN,
-                    state = null,
-                    tags = emptySet(),
-                )
-            } catch (_: Exception) {
-                null
-            }
+            if (!seen.add(url)) return@mapNotNull null
+            val title = it.ownText().ifBlank { return@mapNotNull null }
+            Manga(
+                id = generateUid(url),
+                url = url,
+                publicUrl = url.toAbsoluteUrl(domain),
+                title = title,
+                coverUrl = null,
+                source = source,
+                altTitles = emptySet(),
+                largeCoverUrl = null,
+                authors = emptySet(),
+                contentRating = null,
+                rating = RATING_UNKNOWN,
+                state = null,
+                tags = emptySet(),
+            )
         }.toMutableList()
 
         document.select(".side-manga:not(:has(.head:contains(trending))) .unit").forEach {
             val url = it.attrAsRelativeUrl("href")
+            if (!seen.add(url)) return@forEach
             mangas.add(
                 Manga(
                     id = generateUid(url),
