@@ -1,0 +1,44 @@
+name: Refresh parser catalog
+
+# Manual trigger only. Repo rulesets require PRs for master, so the previous
+# push-on-merge variant of this workflow always failed at the push step with
+# "GH013: Repository rule violations". Rather than fight the ruleset, the
+# catalog is now refreshed on demand: dispatch this workflow when the
+# parsers.json under docs/ needs to catch up with the tree.
+on:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    rebuild:
+        runs-on: ubuntu-latest
+        steps:
+            -   name: Checkout repository 🌏
+                uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
+
+            -   name: Set up Python 🐍
+                uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
+                with:
+                    python-version: '3.11'
+
+            -   name: Rebuild parsers.json 📇
+                run: python3 docs/build_catalog.py
+
+            -   name: Show diff 🧾
+                run: |
+                    if git diff --quiet -- docs/parsers.json; then
+                        echo "No parser changes — catalog is already up to date."
+                    else
+                        echo "Catalog is stale. Download the artifact and open a PR with the regenerated docs/parsers.json:"
+                        git diff --stat -- docs/parsers.json
+                    fi
+
+            -   name: Upload regenerated catalog 📎
+                if: always()
+                uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+                with:
+                    name: parsers-json
+                    path: docs/parsers.json
+                    retention-days: 14
