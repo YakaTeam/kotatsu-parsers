@@ -1,6 +1,6 @@
 name: 🌐 Source request
 description: Suggest a new source for Kotatsu
-labels: [ source request ]
+labels: [ "source: request" ]
 body:
 
     -   type: markdown
