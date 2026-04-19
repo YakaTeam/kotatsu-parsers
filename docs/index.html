@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>kotatsu-parsers · source catalog</title>
+<meta name="description" content="Browse every manga source supported by kotatsu-parsers. Directory only — no content is hosted or served here.">
+<style>
+    :root {
+        --bg: #0d1117;
+        --surface: #161b22;
+        --surface-2: #1c2128;
+        --border: #30363d;
+        --text: #e6edf3;
+        --muted: #8b949e;
+        --accent: #58a6ff;
+        --ok: #3fb950;
+        --warn: #d29922;
+        --bad: #f85149;
+        --chip: #21262d;
+    }
+    @media (prefers-color-scheme: light) {
+        :root {
+            --bg: #ffffff;
+            --surface: #f6f8fa;
+            --surface-2: #ffffff;
+            --border: #d0d7de;
+            --text: #1f2328;
+            --muted: #59636e;
+            --accent: #0969da;
+            --ok: #1a7f37;
+            --warn: #9a6700;
+            --bad: #cf222e;
+            --chip: #eaeef2;
+        }
+    }
+    * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
+    body {
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        min-height: 100vh;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+        border-bottom: 1px solid var(--border);
+        padding: 24px 20px 20px;
+        background: var(--surface);
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; }
+    h1 {
+        font-size: 22px;
+        margin: 0 0 6px;
+        font-weight: 600;
+    }
+    h1 .muted { color: var(--muted); font-weight: 400; }
+    .sub {
+        margin: 0;
+        color: var(--muted);
+        font-size: 14px;
+    }
+    .disclaimer {
+        margin: 14px 0 0;
+        padding: 10px 14px;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-left: 3px solid var(--warn);
+        border-radius: 6px;
+        font-size: 13px;
+        color: var(--muted);
+    }
+    .disclaimer b { color: var(--text); }
+
+    .stats {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 16px 0 0;
+    }
+    .stat {
+        background: var(--chip);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 4px 12px;
+        font-size: 13px;
+    }
+    .stat b { color: var(--text); }
+    .stat .muted { color: var(--muted); }
+
+    .controls {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 14px 20px;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    .controls-inner {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    input[type="search"], select {
+        background: var(--surface-2);
+        color: var(--text);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 7px 10px;
+        font: inherit;
+        outline: none;
+    }
+    input[type="search"] {
+        flex: 1 1 260px;
+        min-width: 220px;
+    }
+    input[type="search"]:focus, select:focus { border-color: var(--accent); }
+
+    .status-group {
+        display: inline-flex;
+        background: var(--surface-2);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+    .status-group label {
+        padding: 7px 12px;
+        cursor: pointer;
+        font-size: 13px;
+        color: var(--muted);
+        border-right: 1px solid var(--border);
+    }
+    .status-group label:last-child { border-right: 0; }
+    .status-group input { display: none; }
+    .status-group input:checked + span { color: var(--text); background: var(--chip); }
+    .status-group label:hover span { color: var(--text); }
+    .status-group span {
+        display: inline-block;
+        margin: -7px -12px;
+        padding: 7px 12px;
+    }
+
+    main { padding: 20px; }
+    .count-line {
+        color: var(--muted);
+        font-size: 13px;
+        margin: 0 0 12px;
+    }
+
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 12px;
+    }
+
+    .card {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        min-height: 128px;
+    }
+    .card.broken { opacity: 0.75; }
+
+    .card-head {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 8px;
+        margin: 0 0 6px;
+    }
+    .card-title {
+        font-weight: 600;
+        font-size: 15px;
+        word-break: break-word;
+        line-height: 1.3;
+    }
+    .card-name {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 11px;
+        color: var(--muted);
+        margin-top: 2px;
+    }
+    .tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin: 4px 0 8px;
+    }
+    .tag {
+        font-size: 11px;
+        padding: 2px 8px;
+        border-radius: 10px;
+        background: var(--chip);
+        color: var(--muted);
+        border: 1px solid var(--border);
+    }
+    .tag.lang { text-transform: uppercase; }
+    .tag.type-HENTAI { color: var(--bad); border-color: var(--bad); }
+    .tag.type-COMICS { color: var(--accent); border-color: var(--accent); }
+    .tag.type-NOVEL { color: var(--warn); border-color: var(--warn); }
+
+    .broken-banner {
+        font-size: 12px;
+        color: var(--bad);
+        background: color-mix(in srgb, var(--bad) 12%, transparent);
+        border: 1px solid color-mix(in srgb, var(--bad) 45%, transparent);
+        border-radius: 4px;
+        padding: 4px 8px;
+        margin: 0 0 8px;
+    }
+    .card-domain {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+        font-size: 12px;
+        color: var(--muted);
+        margin: 0 0 10px;
+        word-break: break-all;
+    }
+    .card-actions {
+        margin-top: auto;
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .btn {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 13px;
+        border: 1px solid var(--border);
+        background: var(--surface-2);
+        color: var(--text);
+        cursor: pointer;
+    }
+    .btn:hover { background: var(--chip); text-decoration: none; }
+    .btn.primary { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .btn.primary:hover { filter: brightness(1.08); }
+    .btn.ghost { background: transparent; color: var(--muted); }
+    .btn.ghost:hover { color: var(--text); }
+    .btn[disabled] { opacity: 0.5; cursor: not-allowed; }
+
+    .empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--muted);
+    }
+    footer {
+        border-top: 1px solid var(--border);
+        padding: 20px;
+        color: var(--muted);
+        font-size: 13px;
+        background: var(--surface);
+    }
+    footer a { color: var(--muted); }
+    footer a:hover { color: var(--accent); }
+
+    @media (max-width: 520px) {
+        input[type="search"] { flex-basis: 100%; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <div class="wrap">
+        <h1>kotatsu-parsers <span class="muted">· source catalog</span></h1>
+        <p class="sub">
+            Browse every manga source supported by
+            <a href="https://github.com/YakaTeam/kotatsu-parsers" target="_blank" rel="noopener">kotatsu-parsers</a>.
+            Click through to the original site &mdash; this page is a directory, not a reader.
+        </p>
+        <div class="disclaimer">
+            <b>Directory only.</b> No manga content is hosted, cached, or proxied here. Every
+            &ldquo;Visit site&rdquo; button opens the original publisher&rsquo;s website in a new
+            tab. Each parser is a scraper; links may break when sites change or go offline.
+        </div>
+        <div class="stats" id="stats"></div>
+    </div>
+</header>
+
+<div class="controls">
+    <div class="wrap controls-inner">
+        <input type="search" id="q" placeholder="Search by title, domain, or name…" autocomplete="off">
+        <select id="lang"><option value="">All languages</option></select>
+        <select id="type">
+            <option value="">All types</option>
+        </select>
+        <div class="status-group" role="radiogroup" aria-label="Status">
+            <label><input type="radio" name="status" value="all" checked><span>All</span></label>
+            <label><input type="radio" name="status" value="working"><span>Working</span></label>
+            <label><input type="radio" name="status" value="broken"><span>Broken</span></label>
+        </div>
+    </div>
+</div>
+
+<main>
+    <div class="wrap">
+        <p class="count-line" id="count"></p>
+        <div class="grid" id="grid"></div>
+        <div class="empty" id="empty" hidden>No sources match the current filters.</div>
+    </div>
+</main>
+
+<footer>
+    <div class="wrap">
+        Generated from the <a href="https://github.com/YakaTeam/kotatsu-parsers" target="_blank" rel="noopener">kotatsu-parsers</a> source tree.
+        Prototype hosted on a contributor fork &mdash; not an official YakaTeam page.
+        &middot; Regenerate with <code>python3 docs/build_catalog.py</code>.
+    </div>
+</footer>
+
+<script>
+(async function () {
+    const grid = document.getElementById("grid");
+    const emptyEl = document.getElementById("empty");
+    const countEl = document.getElementById("count");
+    const statsEl = document.getElementById("stats");
+    const q = document.getElementById("q");
+    const langSel = document.getElementById("lang");
+    const typeSel = document.getElementById("type");
+
+    let data;
+    try {
+        const resp = await fetch("parsers.json");
+        if (!resp.ok) throw new Error(resp.status);
+        data = await resp.json();
+    } catch (e) {
+        countEl.innerHTML = 'Failed to load <code>parsers.json</code>: ' + e.message;
+        return;
+    }
+
+    const parsers = data.parsers;
+
+    // Human-readable locale names
+    const LANG_NAMES = {
+        ar: "Arabic", de: "German", en: "English", es: "Spanish", fa: "Persian",
+        fr: "French", he: "Hebrew", id: "Indonesian", it: "Italian", ja: "Japanese",
+        ko: "Korean", ms: "Malay", nl: "Dutch", pl: "Polish", pt: "Portuguese",
+        ro: "Romanian", ru: "Russian", th: "Thai", tr: "Turkish", uk: "Ukrainian",
+        vi: "Vietnamese", zh: "Chinese", hi: "Hindi", bn: "Bengali", ta: "Tamil",
+        sv: "Swedish", no: "Norwegian", fi: "Finnish", da: "Danish", cs: "Czech",
+        hu: "Hungarian", el: "Greek",
+    };
+    const langLabel = (code) => code ? (LANG_NAMES[code] ? LANG_NAMES[code] + " (" + code + ")" : code) : "Multi";
+
+    // Stats
+    const working = data.total - data.broken;
+    const typeBreak = Object.entries(data.by_type)
+        .sort((a, b) => b[1] - a[1])
+        .map(([k, v]) => `<span class="stat"><b>${v}</b> <span class="muted">${k.toLowerCase()}</span></span>`)
+        .join("");
+    statsEl.innerHTML =
+        `<span class="stat"><b>${data.total}</b> <span class="muted">sources total</span></span>` +
+        `<span class="stat"><b>${working}</b> <span class="muted">working</span></span>` +
+        `<span class="stat"><b>${data.broken}</b> <span class="muted">@Broken</span></span>` +
+        typeBreak;
+
+    // Populate language select (sorted by count desc, then name)
+    const langEntries = Object.entries(data.by_locale)
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+    for (const [code, n] of langEntries) {
+        const opt = document.createElement("option");
+        opt.value = code === "multi" ? "" : code;
+        opt.textContent = `${langLabel(code === "multi" ? "" : code)} · ${n}`;
+        langSel.appendChild(opt);
+    }
+    // Populate type select
+    const typeEntries = Object.entries(data.by_type).sort((a, b) => b[1] - a[1]);
+    for (const [t, n] of typeEntries) {
+        const opt = document.createElement("option");
+        opt.value = t;
+        opt.textContent = `${t.toLowerCase()} · ${n}`;
+        typeSel.appendChild(opt);
+    }
+
+    const escape = (s) => String(s).replace(/[&<>"']/g, (c) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    })[c]);
+
+    function render() {
+        const needle = q.value.trim().toLowerCase();
+        const lang = langSel.value;  // "" means any (no filter)
+        const type = typeSel.value;
+        const status = document.querySelector('input[name="status"]:checked').value;
+        const needsLang = lang !== "" || (lang === "" && langSel.selectedIndex !== 0);
+
+        let html = "";
+        let shown = 0;
+
+        for (const p of parsers) {
+            if (needle) {
+                const hay = (p.title + " " + p.name + " " + (p.domain || "")).toLowerCase();
+                if (!hay.includes(needle)) continue;
+            }
+            if (status === "working" && p.broken) continue;
+            if (status === "broken" && !p.broken) continue;
+            if (type && p.type !== type) continue;
+            if (langSel.selectedIndex !== 0) {
+                // The "all languages" option has value "" and index 0.
+                // Any selection past that should match exactly.
+                if (p.locale !== lang) continue;
+            }
+
+            shown++;
+            const brokenBanner = p.broken
+                ? `<div class="broken-banner" title="${escape(p.broken_reason || "")}">
+                       ⚠ Broken${p.broken_reason ? ": " + escape(p.broken_reason) : ""}
+                   </div>`
+                : "";
+
+            const visitDisabled = !p.domain;
+            const visitHref = p.domain ? `https://${p.domain}` : "#";
+            const visitBtn = visitDisabled
+                ? `<span class="btn" aria-disabled="true" style="opacity:.5;cursor:not-allowed">No domain</span>`
+                : `<a class="btn primary" href="${escape(visitHref)}" target="_blank" rel="noopener noreferrer nofollow">Visit site ↗</a>`;
+
+            const srcHref = `https://github.com/YakaTeam/kotatsu-parsers/blob/master/${escape(p.file)}`;
+
+            html +=
+                `<article class="card${p.broken ? " broken" : ""}">
+                    <div class="card-head">
+                        <div>
+                            <div class="card-title">${escape(p.title)}</div>
+                            <div class="card-name">${escape(p.name)}</div>
+                        </div>
+                    </div>
+                    <div class="tags">
+                        <span class="tag lang">${escape(p.locale || "multi")}</span>
+                        <span class="tag type-${escape(p.type)}">${escape(p.type.toLowerCase())}</span>
+                    </div>
+                    ${brokenBanner}
+                    <div class="card-domain">${p.domain ? escape(p.domain) : "—"}</div>
+                    <div class="card-actions">
+                        ${visitBtn}
+                        <a class="btn ghost" href="${srcHref}" target="_blank" rel="noopener">Source ↗</a>
+                    </div>
+                </article>`;
+        }
+
+        grid.innerHTML = html;
+        emptyEl.hidden = shown > 0;
+        countEl.textContent = shown === parsers.length
+            ? `${shown} sources`
+            : `${shown} of ${parsers.length} sources`;
+    }
+
+    // Debounce search input
+    let t;
+    q.addEventListener("input", () => { clearTimeout(t); t = setTimeout(render, 80); });
+    langSel.addEventListener("change", render);
+    typeSel.addEventListener("change", render);
+    document.querySelectorAll('input[name="status"]').forEach(r => r.addEventListener("change", render));
+
+    render();
+})();
+</script>
+</body>
+</html>
