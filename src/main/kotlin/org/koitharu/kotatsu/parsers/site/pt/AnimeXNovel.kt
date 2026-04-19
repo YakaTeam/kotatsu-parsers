@@ -1,9 +1,7 @@
 package org.koitharu.kotatsu.parsers.site.pt
 
-import okhttp3.Headers
 import okhttp3.HttpUrl.Companion.toHttpUrl
 import org.json.JSONArray
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.config.ConfigKey
@@ -18,225 +16,201 @@ import org.koitharu.kotatsu.parsers.model.MangaPage
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.model.RATING_UNKNOWN
 import org.koitharu.kotatsu.parsers.model.SortOrder
-import org.koitharu.kotatsu.parsers.network.CommonHeaders
-import org.koitharu.kotatsu.parsers.util.attrAsRelativeUrl
 import org.koitharu.kotatsu.parsers.util.generateUid
 import org.koitharu.kotatsu.parsers.util.parseHtml
-import org.koitharu.kotatsu.parsers.util.parseJson
+import org.koitharu.kotatsu.parsers.util.parseJsonArray
 import org.koitharu.kotatsu.parsers.util.parseSafe
 import org.koitharu.kotatsu.parsers.util.src
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import org.koitharu.kotatsu.parsers.util.toRelativeUrl
-import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.text.SimpleDateFormat
-import java.util.ArrayList
 import java.util.EnumSet
 import java.util.Locale
 
-@Broken("Need to refactor fetchChaptersApi function")
 @MangaSourceParser("ANIMEXNOVEL", "AnimeXNovel", "pt")
 internal class AnimeXNovel(context: MangaLoaderContext) :
-    PagedMangaParser(context, MangaParserSource.ANIMEXNOVEL, 24) {
+	PagedMangaParser(context, MangaParserSource.ANIMEXNOVEL, pageSize = 24) {
 
-    override val configKeyDomain = ConfigKey.Domain("animexnovel.com")
+	override val configKeyDomain = ConfigKey.Domain("animexnovel.com")
 
-    override val availableSortOrders: Set<SortOrder> = EnumSet.of(
+	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.UPDATED,
 		SortOrder.POPULARITY,
+		SortOrder.ALPHABETICAL,
 	)
 
-    override val filterCapabilities: MangaListFilterCapabilities
-        get() = MangaListFilterCapabilities(
-            isSearchSupported = true,
-        )
+	override val filterCapabilities: MangaListFilterCapabilities
+		get() = MangaListFilterCapabilities(
+			isSearchSupported = true,
+		)
 
-    override suspend fun getFilterOptions() = MangaListFilterOptions()
+	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
-    // ---------------------------------------------------------------
-    // 1. List / Search (Hybrid: HTML for Popular, AJAX for Search)
-    // ---------------------------------------------------------------
-    override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        return if (!filter.query.isNullOrEmpty()) {
-            searchManga(filter.query)
-        } else {
-            // Popular/Latest from HTML
-            val endpoint = if (order == SortOrder.POPULARITY) "/mangas" else "/"
-            val url = "https://$domain$endpoint".toHttpUrl()
+	// Top-level WP category IDs that contain the series we expose.
+	// Parent 21 = "Mangá", parent 337 = "Manhua".
+	private val seriesParents = setOf(21L, 337L)
 
-            val selector = if (order == SortOrder.POPULARITY) {
-                ".eael-post-grid-container article"
-            } else {
-                "div:contains(Últimos Mangás) + div .manga-card"
-            }
+	private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
-            val doc = webClient.httpGet(url).parseHtml()
-            doc.select(selector).mapNotNull { element ->
-                val link = element.selectFirst("a") ?: return@mapNotNull null
-                val href = link.attrAsRelativeUrl("href")
-                Manga(
-                    id = generateUid(href),
-                    title = element.selectFirst("h2, h3, .search-content")?.text() ?: "Unknown",
-                    altTitles = emptySet(),
-                    url = href,
-                    publicUrl = href.toAbsoluteUrl(domain),
-                    rating = RATING_UNKNOWN,
-                    contentRating = null,
-                    coverUrl = element.selectFirst("img")?.src(),
-                    tags = emptySet(),
-                    state = null,
-                    authors = emptySet(),
-                    source = source,
-                )
-            }
-        }
-    }
+	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val all = fetchAllSeries(filter.query)
+		val sorted = when (order) {
+			SortOrder.POPULARITY -> all.sortedByDescending { it.postCount }
+			SortOrder.ALPHABETICAL -> all.sortedBy { it.name.lowercase(Locale.ROOT) }
+			else -> all.sortedByDescending { it.id } // UPDATED proxy: newest series first
+		}
+		val from = (page - 1) * pageSize
+		if (from >= sorted.size) return emptyList()
+		return sorted.subList(from, minOf(from + pageSize, sorted.size)).map { it.toManga() }
+	}
 
-    private suspend fun searchManga(query: String): List<Manga> {
-        val url = "https://$domain/wp-admin/admin-ajax.php".toHttpUrl()
-        val payload = "action=newscrunch_live_search&keyword=${query.urlEncoded()}"
+	private data class SeriesCategory(
+		val id: Long,
+		val parent: Long,
+		val slug: String,
+		val name: String,
+		val postCount: Int,
+	) {
+		val typeSegment: String get() = if (parent == 337L) "manhua" else "manga"
+		val relativeUrl: String get() = "/$typeSegment/$slug/"
+	}
 
-        // FIX 2: Construct headers manually
-        val searchHeaders = Headers.Builder()
-            .add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
-            .build()
+	private fun SeriesCategory.toManga(): Manga = Manga(
+		id = generateUid(relativeUrl),
+		title = name,
+		altTitles = emptySet(),
+		url = relativeUrl,
+		publicUrl = relativeUrl.toAbsoluteUrl(domain),
+		rating = RATING_UNKNOWN,
+		contentRating = null,
+		coverUrl = null,
+		tags = emptySet(),
+		state = null,
+		authors = emptySet(),
+		source = source,
+	)
 
-        val doc = webClient.httpPost(
-            url = url,
-            payload = payload,
-            extraHeaders = searchHeaders
-        ).parseHtml()
+	private suspend fun fetchAllSeries(query: String?): List<SeriesCategory> {
+		val url = "https://$domain/wp-json/wp/v2/categories".toHttpUrl().newBuilder()
+			.addQueryParameter("per_page", "100")
+			.apply {
+				if (!query.isNullOrBlank()) addQueryParameter("search", query)
+			}
+			.build()
+		val response = webClient.httpGet(url).parseJsonArray()
+		val result = ArrayList<SeriesCategory>()
+		for (i in 0 until response.length()) {
+			val cat = response.getJSONObject(i)
+			val parent = cat.optLong("parent")
+			if (parent !in seriesParents) continue
+			result += SeriesCategory(
+				id = cat.getLong("id"),
+				parent = parent,
+				slug = cat.getString("slug"),
+				name = cat.getString("name"),
+				postCount = cat.optInt("count"),
+			)
+		}
+		return result
+	}
 
-        return doc.select(".search-wrapper").mapNotNull { element ->
-            val link = element.selectFirst("a") ?: return@mapNotNull null
-            var href = link.attrAsRelativeUrl("href")
+	override suspend fun getDetails(manga: Manga): Manga {
+		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
 
-            if (href.contains("capitulo")) {
-                href = href.substringBeforeLast("capitulo")
-            }
+		val categoryId = doc.selectFirst(".axn-chapters-container[data-categoria]")
+			?.attr("data-categoria")
+			?.takeIf { it.isNotBlank() }
+			?: throw ParseException("Could not find chapter category ID", manga.url)
 
-            val rawTitle = element.selectFirst(".search-content")?.text() ?: "Unknown"
-            val title = rawTitle.replace(Regex("""[-–][^-–]*$"""), "").trim()
+		val cover = doc.selectFirst("meta[property=og:image]")?.attr("content")
+			?: doc.selectFirst(".spnc-entry-content img")?.src()
+		val description = doc.selectFirst("meta[property=og:description]")?.attr("content")
+			?: doc.selectFirst("meta[name=description]")?.attr("content")
+		val author = doc.selectFirst("li:contains(Autor:)")?.text()
+			?.substringAfter(":")?.trim()
+		val artist = doc.selectFirst("li:contains(Arte:)")?.text()
+			?.substringAfter(":")?.trim()
 
-            Manga(
-                id = generateUid(href),
-                title = title,
-                altTitles = emptySet(),
-                url = href,
-                publicUrl = href.toAbsoluteUrl(domain),
-                rating = RATING_UNKNOWN,
-                contentRating = null,
-                coverUrl = element.selectFirst("img")?.src(),
-                tags = emptySet(),
-                state = null,
-                authors = emptySet(),
-                source = source,
-            )
-        }.distinctBy { it.url }
-    }
+		return manga.copy(
+			coverUrl = cover,
+			description = description,
+			authors = setOfNotNull(author?.takeIf { it.isNotBlank() }, artist?.takeIf { it.isNotBlank() }),
+			chapters = fetchChapters(categoryId),
+		)
+	}
 
-    // ---------------------------------------------------------------
-    // 2. Details
-    // ---------------------------------------------------------------
-    override suspend fun getDetails(manga: Manga): Manga {
-        val doc = webClient.httpGet(manga.url.toAbsoluteUrl(domain)).parseHtml()
+	private suspend fun fetchChapters(categoryId: String): List<MangaChapter> {
+		val all = ArrayList<MangaChapter>()
+		var page = 1
+		while (true) {
+			val url = "https://$domain/wp-json/wp/v2/posts".toHttpUrl().newBuilder()
+				.addQueryParameter("categories", categoryId)
+				.addQueryParameter("orderby", "date")
+				.addQueryParameter("order", "asc")
+				.addQueryParameter("per_page", "100")
+				.addQueryParameter("page", page.toString())
+				.build()
+			val arr: JSONArray = try {
+				webClient.httpGet(url).parseJsonArray()
+			} catch (_: Exception) {
+				break
+			}
+			if (arr.length() == 0) break
+			for (i in 0 until arr.length()) {
+				val item = arr.getJSONObject(i)
+				val link = item.getString("link").toRelativeUrl(domain)
+				if (!link.contains("capitulo", ignoreCase = true)) continue
+				val rendered = item.getJSONObject("title").getString("rendered")
+				val title = cleanTitle(rendered)
+				val slug = item.optString("slug")
+				val number = CHAPTER_REGEX.findAll(slug).lastOrNull()?.value?.toFloatOrNull()
+					?: (all.size + 1).toFloat()
+				val uploadDate = dateFormat.parseSafe(item.optString("date").take(10))
+				all += MangaChapter(
+					id = generateUid(link),
+					title = title,
+					number = number,
+					volume = 0,
+					url = link,
+					scanlator = null,
+					uploadDate = uploadDate,
+					branch = null,
+					source = source,
+				)
+			}
+			if (arr.length() < 100) break
+			page++
+		}
+		return all
+	}
 
-        val author = doc.selectFirst("li:contains(Autor:)")?.text()?.substringAfter(":")?.trim()
-        val artist = doc.selectFirst("li:contains(Arte:)")?.text()?.substringAfter(":")?.trim()
-        val description = doc.selectFirst("meta[itemprop='description']")?.attr("content")
+	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
+		val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
+		val container = doc.selectFirst(".spice-block-img-gallery")
+			?: doc.selectFirst(".wp-block-gallery")
+			?: doc.selectFirst(".spnc-entry-content")
+			?: throw ParseException("Page container not found", chapter.url)
+		return container.select("img").mapNotNull { img ->
+			val url = img.src() ?: img.attr("data-src").takeIf { it.isNotBlank() } ?: return@mapNotNull null
+			MangaPage(
+				id = generateUid(url),
+				url = url,
+				preview = null,
+				source = source,
+			)
+		}
+	}
 
-        val categoryId = doc.selectFirst("#container-capitulos")?.attr("data-categoria")
-            ?: throw ParseException("Could not find category ID for chapters", manga.url)
+	private fun cleanTitle(rendered: String): String {
+		val decoded = rendered
+			.replace("&#8211;", "–")
+			.replace("&#8217;", "'")
+			.replace("&amp;", "&")
+			.replace("&quot;", "\"")
+		return decoded.substringAfter("–").trim().ifBlank { decoded.trim() }
+	}
 
-        val chapters = fetchChaptersApi(categoryId)
-
-        return manga.copy(
-            title = doc.selectFirst("h2.spnc-entry-title")?.text() ?: manga.title,
-            authors = setOfNotNull(author, artist),
-            description = description,
-            chapters = chapters,
-            tags = emptySet()
-        )
-    }
-
-    // ---------------------------------------------------------------
-    // 3. Chapters
-    // ---------------------------------------------------------------
-    private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
-
-    private suspend fun fetchChaptersApi(categoryId: String): List<MangaChapter> {
-        val allChapters = ArrayList<MangaChapter>()
-        var page = 1
-
-        while (true) {
-            val apiUrl = "https://$domain/wp-json/wp/v2/posts".toHttpUrl().newBuilder()
-                .addQueryParameter("categories", categoryId)
-                .addQueryParameter("orderby", "date")
-                .addQueryParameter("order", "desc")
-                .addQueryParameter("per_page", "100")
-                .addQueryParameter("page", page.toString())
-                .build()
-
-            val response = try {
-                webClient.httpGet(apiUrl).parseJson()
-            } catch (_: Exception) {
-                break
-            }
-
-            if (response !is JSONArray) break
-            if (response.length() == 0) break
-
-            for (i in 0 until response.length()) {
-                val item = response.getJSONObject(i)
-                val link = item.getString("link").toRelativeUrl(domain)
-
-                if (!link.contains("capitulo")) continue
-
-                val titleObj = item.getJSONObject("title")
-                val rawTitle = titleObj.getString("rendered")
-                val cleanTitle = rawTitle.substringAfter(";").takeIf { it.isNotBlank() } ?: rawTitle
-
-                val dateStr = item.optString("date").take(10)
-
-                val slug = item.optString("slug")
-                val number = Regex("""(\d+(\.\d+)?)""").findAll(slug).lastOrNull()?.value?.toFloatOrNull() ?: 0f
-
-                allChapters.add(
-                    MangaChapter(
-                        id = generateUid(link),
-                        title = cleanTitle,
-                        number = number,
-                        volume = 0,
-                        url = link,
-                        scanlator = null,
-                        uploadDate = dateFormat.parseSafe(dateStr),
-                        branch = null,
-                        source = source
-                    )
-                )
-            }
-            page++
-        }
-
-        return allChapters
-    }
-
-    // ---------------------------------------------------------------
-    // 4. Pages
-    // ---------------------------------------------------------------
-    override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-        val doc = webClient.httpGet(chapter.url.toAbsoluteUrl(domain)).parseHtml()
-
-        val container = doc.selectFirst(".spice-block-img-gallery, .wp-block-gallery, .spnc-entry-content")
-            ?: throw ParseException("Page container not found", chapter.url)
-
-        return container.select("img").map { img ->
-            val url = img.src() ?: img.attr("data-src")
-            MangaPage(
-                id = generateUid(url),
-                url = url,
-                preview = null,
-                source = source
-            )
-        }
-    }
+	private companion object {
+		private val CHAPTER_REGEX = Regex("""\d+(\.\d+)?""")
+	}
 }
