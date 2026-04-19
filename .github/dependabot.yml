@@ -15,9 +15,9 @@ updates:
             prefix: "chore(deps)"
         ignore:
             # Dependabot serialises the gradle-wrapper jar as Base64 text, producing
-            # a wrapper that fails with "Invalid or corrupt jarfile" (see PR #302).
+            # a wrapper that fails with "Invalid or corrupt jarfile" (see PRs #302, #309).
             # Wrapper bumps must be done manually via `./gradlew wrapper --gradle-version X`.
-            -   dependency-name: "gradle"
+            -   dependency-name: "gradle-wrapper"
             # Major-version bumps for Kotlin / KSP / JUnit / etc. need coordinated testing
             # (Kotlin+KSP must move together, JUnit 6 forces JVM 17, etc.). Keep them
             # out of the auto-PR queue; open them manually when we're ready to validate.
@@ -36,3 +36,4 @@ updates:
             - "github-actions"
         commit-message:
             prefix: "chore(deps)"
+
