@@ -181,25 +181,25 @@ internal class TopTruyen(context: MangaLoaderContext) :
 		return when {
 			dateText.contains("phút trước") -> {
 				val match = relativeTimePattern.find(dateText)
-				val minutes = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				val minutes = match?.groups?.get(1)?.value?.toLongOrNull() ?: 0L
 				System.currentTimeMillis() - minutes * 60 * 1000
 			}
 
 			dateText.contains("giờ trước") -> {
 				val match = relativeTimePattern.find(dateText)
-				val hours = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				val hours = match?.groups?.get(1)?.value?.toLongOrNull() ?: 0L
 				System.currentTimeMillis() - hours * 3600 * 1000
 			}
 
 			dateText.contains("ngày trước") -> {
 				val match = relativeTimePattern.find(dateText)
-				val days = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				val days = match?.groups?.get(1)?.value?.toLongOrNull() ?: 0L
 				System.currentTimeMillis() - days * 86400 * 1000
 			}
 
 			dateText.contains("tuần trước") -> {
 				val match = relativeTimePattern.find(dateText)
-				val weeks = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
+				val weeks = match?.groups?.get(1)?.value?.toLongOrNull() ?: 0L
 				System.currentTimeMillis() - weeks * 7 * 86400 * 1000
 			}
 
