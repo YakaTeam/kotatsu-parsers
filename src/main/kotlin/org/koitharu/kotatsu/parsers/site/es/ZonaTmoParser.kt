@@ -24,6 +24,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.json.mapJSONTo
 import org.koitharu.kotatsu.parsers.util.json.mapJSONToSet
 import org.koitharu.kotatsu.parsers.util.json.toStringSet
+import org.koitharu.kotatsu.parsers.util.oneOrThrowIfMany
 import org.koitharu.kotatsu.parsers.util.parseJson
 import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.text.SimpleDateFormat
@@ -53,11 +54,8 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = MangaListFilterCapabilities(
-			isMultipleTagsSupported = true,
-			isTagsExclusionSupported = false,
 			isSearchSupported = true,
 			isSearchWithFiltersSupported = true,
-			isAuthorSearchSupported = true,
 			isYearSupported = true,
 		)
 
@@ -103,10 +101,8 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 			filter.query?.takeIf { it.isNotEmpty() }?.let {
 				append("&search=").append(it.urlEncoded())
 			}
-			if (filter.tags.isNotEmpty()) {
-				append("&genres=")
-				filter.tags.joinTo(this, separator = ",") { it.key }
-				append("&genres_mode=all")
+			filter.tags.oneOrThrowIfMany()?.let {
+				append("&genres=").append(it.key)
 			}
 			filter.states.firstOrNull()?.let { state ->
 				STATUS_REVERSE[state]?.let {
@@ -117,9 +113,6 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 				TYPE_REVERSE[type]?.let {
 					append("&type=").append(it)
 				}
-			}
-			filter.author?.takeIf { it.isNotEmpty() }?.let {
-				append("&author=").append(it.urlEncoded())
 			}
 			filter.year.takeIf { it > 0 }?.let {
 				append("&year_start_min=").append(it)
@@ -335,3 +328,4 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 		)
 	}
 }
+

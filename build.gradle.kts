@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "org.koitharu"
-version = "1.0"
+version = "1.2.5"
 
 tasks.test {
     useJUnitPlatform()

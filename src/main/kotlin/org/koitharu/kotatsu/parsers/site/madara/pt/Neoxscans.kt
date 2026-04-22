@@ -9,9 +9,11 @@ import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 
-@MangaSourceParser("NEOX_SCANS", "NeoxScans", "pt")
+@MangaSourceParser("NEOX_SCANS", "MangaLivre", "pt")
 internal class Neoxscans(context: MangaLoaderContext) :
-	MadaraParser(context, MangaParserSource.NEOX_SCANS, "mangalivre.net", 18) {
+	MadaraParser(context, MangaParserSource.NEOX_SCANS, "mangalivre.tv", 18) {
+
+	override val withoutAjax = true
 	override val datePattern = "dd/MM/yyyy"
 
 	override suspend fun loadChapters(mangaUrl: String, document: Document): List<MangaChapter> {

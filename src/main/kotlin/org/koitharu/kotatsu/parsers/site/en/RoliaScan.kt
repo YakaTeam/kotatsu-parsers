@@ -94,7 +94,7 @@ internal class RoliaScan(context: MangaLoaderContext) : PagedMangaParser(context
 					else -> "release_desc"
 				},
 			)
-			put("genreMatchMode", "any")
+			put("genreMatchMode", "all")
 		}
 		val array = webClient.httpPost("https://$domain/wp-json/manga/v1/load", body).parseJsonArray()
 		return array.mapJSON { obj ->

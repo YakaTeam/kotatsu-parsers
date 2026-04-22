@@ -506,7 +506,7 @@ internal abstract class MadaraParser(
 
 	protected open fun parseMangaList(doc: Document): List<Manga> {
 		val elements = doc.select("div.row.c-tabs-item__content").ifEmpty {
-			doc.select("div.page-item-detail")
+			doc.select("div.page-item-detail, div.manga__item")
 		}
 
 		// Avoid "Content not found or removed" errors
@@ -523,7 +523,8 @@ internal abstract class MadaraParser(
 				url = href,
 				publicUrl = href.toAbsoluteUrl(div.host ?: domain),
 				coverUrl = div.selectFirst("img")?.src(),
-				title = (summary?.selectFirst("h3, h4") ?: div.selectFirst(".manga-name, .post-title"))?.text()
+				title = (summary?.selectFirst("h3, h4")
+					?: div.selectFirst(".manga-name, .post-title h2 a, .post-title"))?.text()
 					.orEmpty(),
 				altTitles = emptySet(),
 				rating = div.selectFirst("span.total_votes")?.ownText()?.toFloatOrNull()?.div(5f) ?: RATING_UNKNOWN,
