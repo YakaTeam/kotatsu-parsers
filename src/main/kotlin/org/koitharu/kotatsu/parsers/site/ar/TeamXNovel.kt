@@ -239,31 +239,31 @@ internal class TeamXNovel(context: MangaLoaderContext) :
 			dateText.contains("minute") -> {
 				val match = relativeTimePattern.find(dateText)
 				val minutes = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - minutes * 60 * 1000
+				System.currentTimeMillis() - minutes * 60_000L
 			}
 
 			dateText.contains("hour") -> {
 				val match = relativeTimePattern.find(dateText)
 				val hours = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - hours * 3600 * 1000
+				System.currentTimeMillis() - hours * 3_600_000L
 			}
 
 			dateText.contains("day") -> {
 				val match = relativeTimePattern.find(dateText)
 				val days = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - days * 86400 * 1000
+				System.currentTimeMillis() - days * 86_400_000L
 			}
 
 			dateText.contains("week") -> {
 				val match = relativeTimePattern.find(dateText)
 				val weeks = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - weeks * 7 * 86400 * 1000
+				System.currentTimeMillis() - weeks * 604_800_000L
 			}
 
 			dateText.contains("year") -> {
 				val match = relativeTimePattern.find(dateText)
 				val years = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - years * 365L * 86400 * 1000
+				System.currentTimeMillis() - years * 31_536_000_000L
 			}
 
 			absoluteTimePattern.matches(dateText) -> {

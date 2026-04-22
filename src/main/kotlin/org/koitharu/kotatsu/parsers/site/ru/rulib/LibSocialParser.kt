@@ -261,7 +261,6 @@ internal abstract class LibSocialParser(
 
 	private fun parseManga(jo: JSONObject): Manga {
 		val cover = jo.getJSONObject("cover")
-		val isNsfwSource = jo.getJSONObject("ageRestriction").getIntOrDefault("id", 0) >= 3
 		return Manga(
 			id = generateUid(jo.getLong("id")),
 			title = jo.getString("rus_name").ifEmpty { jo.getString("name") },

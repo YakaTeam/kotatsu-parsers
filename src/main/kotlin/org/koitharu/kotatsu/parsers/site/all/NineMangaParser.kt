@@ -236,7 +236,7 @@ internal abstract class NineMangaParser(
 			if (dateWords[1].contains(",")) {
 				SimpleDateFormat("MMM d, yyyy", Locale.ENGLISH).parseSafe(date)
 			} else {
-				val timeAgo = Integer.parseInt(dateWords[0])
+				val timeAgo = dateWords[0].toIntOrNull() ?: 0
 				return Calendar.getInstance().apply {
 					when (dateWords[1]) {
 						"minutes" -> Calendar.MINUTE // EN-FR

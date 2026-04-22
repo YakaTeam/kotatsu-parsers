@@ -83,7 +83,7 @@ public fun String.splitTwoParts(delimiter: Char): Pair<String, String>? {
 			indices += i
 		}
 	}
-	if (indices.isEmpty() || indices.size and 1 == 0) {
+	if (indices.isEmpty() || (indices.size and 1) == 0) {
 		return null
 	}
 	val index = indices[indices.size / 2]

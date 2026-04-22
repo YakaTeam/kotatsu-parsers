@@ -28,7 +28,7 @@ internal class MaidId(context: MangaLoaderContext) :
 			MangaChapter(
 				id = generateUid(href),
 				title = null,
-				number = i + 1f,
+				number = numChapter.toFloatOrNull() ?: (i + 1f),
 				volume = 0,
 				url = href,
 				uploadDate = parseChapterDate(

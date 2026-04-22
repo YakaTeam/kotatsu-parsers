@@ -335,9 +335,7 @@ internal class ExHentaiParser(
         return response
     }
 
-    private fun Locale.toLanguagePath() = when (language) {
-        else -> getDisplayLanguage(Locale.ENGLISH).lowercase()
-    }
+    private fun Locale.toLanguagePath() = getDisplayLanguage(Locale.ENGLISH).lowercase()
 
     override suspend fun getUsername(): String {
         val doc = webClient.httpGet("https://forums.$DOMAIN_UNAUTHORIZED/").parseHtml().body()

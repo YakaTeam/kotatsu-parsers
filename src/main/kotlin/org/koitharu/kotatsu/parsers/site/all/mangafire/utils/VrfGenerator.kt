@@ -88,7 +88,7 @@ public object VrfGenerator {
 		var j = 0
 
 		for (i in 0..255) {
-			j = (j + s[i] + key[i % key.size].toInt().and(0xFF)) and 0xFF
+			j = (j + s[i] + (key[i % key.size].toInt() and 0xFF)) and 0xFF
 			val temp = s[i]
 			s[i] = s[j]
 			s[j] = temp

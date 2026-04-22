@@ -777,7 +777,7 @@ internal abstract class MadaraParser(
 				chapterProtectorHtml.substringAfter("chapter_data='").substringBefore("';").replace("\\/", "/"),
 			)
 			val unsaltedCiphertext = context.decodeBase64(chapterData.getString("ct"))
-			val salt = chapterData.getString("s").toString().decodeHex()
+			val salt = chapterData.getString("s").decodeHex()
 			val ciphertext = "Salted__".toByteArray(Charsets.UTF_8) + salt + unsaltedCiphertext
 
 			val rawImgArray = CryptoAES(context).decrypt(context.encodeBase64(ciphertext), password)

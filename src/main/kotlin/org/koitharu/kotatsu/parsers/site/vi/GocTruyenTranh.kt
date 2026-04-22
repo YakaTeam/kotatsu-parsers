@@ -222,15 +222,15 @@ internal class GocTruyenTranh(context: MangaLoaderContext) :
 
 		return when {
 			dateText.contains("phút trước") -> {
-				now - (number * 60 * 1000L)
+				now - (number * 60_000L)
 			}
 
 			dateText.contains("giờ trước") -> {
-				now - (number * 60 * 60 * 1000L)
+				now - (number * 3_600_000L)
 			}
 
 			dateText.contains("ngày trước") -> {
-				now - (number * 24 * 60 * 60 * 1000L)
+				now - (number * 86_400_000L)
 			}
 
 			else -> 0L

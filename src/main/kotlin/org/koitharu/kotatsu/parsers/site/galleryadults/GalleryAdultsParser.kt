@@ -218,7 +218,5 @@ internal abstract class GalleryAdultsParser(
 		.replace(regexSpaces, " ")
 		.trim()
 
-	protected open fun Locale.toLanguagePath() = when (language) {
-		else -> getDisplayLanguage(Locale.ENGLISH).lowercase()
-	}
+	protected open fun Locale.toLanguagePath() = getDisplayLanguage(Locale.ENGLISH).lowercase()
 }

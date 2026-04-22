@@ -83,7 +83,6 @@ internal class RemangaParser(
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		copyCookies()
-		val domain = domain
 		val urlBuilder = urlBuilder(subdomain = "api")
 			.addPathSegment("api")
 			.addPathSegment("v2")

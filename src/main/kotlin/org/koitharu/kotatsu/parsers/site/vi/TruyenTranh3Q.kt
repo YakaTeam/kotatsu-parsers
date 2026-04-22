@@ -196,25 +196,25 @@ internal class TruyenTranh3Q(context: MangaLoaderContext) :
 			dateText.contains("phút trước") -> {
 				val match = relativeTimePattern.find(dateText)
 				val minutes = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - minutes * 60 * 1000
+				System.currentTimeMillis() - minutes * 60_000L
 			}
 
 			dateText.contains("giờ trước") -> {
 				val match = relativeTimePattern.find(dateText)
 				val hours = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - hours * 3600 * 1000
+				System.currentTimeMillis() - hours * 3_600_000L
 			}
 
 			dateText.contains("ngày trước") -> {
 				val match = relativeTimePattern.find(dateText)
 				val days = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - days * 86400 * 1000
+				System.currentTimeMillis() - days * 86_400_000L
 			}
 
 			dateText.contains("tuần trước") -> {
 				val match = relativeTimePattern.find(dateText)
 				val weeks = match?.groups?.get(1)?.value?.toIntOrNull() ?: 0
-				System.currentTimeMillis() - weeks * 7 * 86400 * 1000
+				System.currentTimeMillis() - weeks * 604_800_000L
 			}
 
 			absoluteTimePattern.matches(dateText) -> {
