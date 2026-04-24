@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Cloudflare origin TLS error (5xx) — site misconfigured or dead")
 @MangaSourceParser("TECNOPROJECTS", "TecnoProjects", "es")
 internal class TecnoProjects(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.TECNOPROJECTS, "tecnoprojects.xyz") {

@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("FRSCAN", "Fr-Scan", "fr")
 internal class FrScan(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.FRSCAN, "fr-scan.com") {

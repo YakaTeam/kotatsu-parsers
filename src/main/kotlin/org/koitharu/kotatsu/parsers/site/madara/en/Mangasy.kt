@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("MANGASY", "Mangasy", "en")
 internal class Mangasy(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGASY, "www.mangasy.com") {

@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mmrcms.MmrcmsParser
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("JPSCANVF", "LireScanVf.com", "fr")
 internal class JpScanVf(context: MangaLoaderContext) :
 	MmrcmsParser(context, MangaParserSource.JPSCANVF, "lirescanvf.com") {

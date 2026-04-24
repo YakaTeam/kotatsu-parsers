@@ -11,7 +11,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Connection refused — server offline")
 @MangaSourceParser("LERMANGA", "LerManga", "pt")
 internal class LerManga(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.LERMANGA, 24) {
 

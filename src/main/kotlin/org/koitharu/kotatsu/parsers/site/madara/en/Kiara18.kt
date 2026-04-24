@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("KIARA18", "Kiara18", "en", ContentType.HENTAI)
 internal class Kiara18(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.KIARA18, "18.kiara.cool")

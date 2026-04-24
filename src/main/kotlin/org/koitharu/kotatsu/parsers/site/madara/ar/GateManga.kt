@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken("Original site closed")
+@Broken("Site is online but layout changed — parser no longer matches page structure")
 @MangaSourceParser("GATEMANGA", "GateManga", "ar")
 internal class GateManga(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.GATEMANGA, "gatemanga.com") {

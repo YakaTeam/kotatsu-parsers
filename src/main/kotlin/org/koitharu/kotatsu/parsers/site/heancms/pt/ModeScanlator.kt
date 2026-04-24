@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.site.heancms.HeanCms
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("MODESCANLATOR", "ModeScanlator", "pt")
 internal class ModeScanlator(context: MangaLoaderContext) :
 	HeanCms(context, MangaParserSource.MODESCANLATOR, "site.modescanlator.net") {

@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.sinmh.SinmhParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Server not responding — connection times out")
 @MangaSourceParser("GUFENGMH", "Gufengmh", "zh")
 internal class Gufengmh(context: MangaLoaderContext) :
 	SinmhParser(context, MangaParserSource.GUFENGMH, "www.gufengmh.com")

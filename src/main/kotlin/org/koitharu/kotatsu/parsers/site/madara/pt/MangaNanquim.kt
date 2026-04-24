@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("MANGANANQUIM", "MangaNanquim", "pt")
 internal class MangaNanquim(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGANANQUIM, "mangananquim.site", 10) {

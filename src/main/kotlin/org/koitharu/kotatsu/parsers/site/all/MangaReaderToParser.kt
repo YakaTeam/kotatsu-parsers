@@ -22,7 +22,7 @@ import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
 import kotlin.math.min
 
-@Broken
+@Broken("Cloudflare reports origin server unreachable")
 @MangaSourceParser("MANGAREADERTO", "MangaReader.To")
 internal class MangaReaderToParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.MANGAREADERTO, 16),

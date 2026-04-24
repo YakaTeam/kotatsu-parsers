@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("LUNARSCANS", "LunarScans", "fr")
 internal class LunarScans(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.LUNARSCANS, "lunarscans.fr", pageSize = 20, searchPageSize = 10) {

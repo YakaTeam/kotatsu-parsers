@@ -13,7 +13,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.Broken
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("ACOMICS", "AComics", "ru", ContentType.COMICS)
 internal class AComics(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.ACOMICS, pageSize = 10) {

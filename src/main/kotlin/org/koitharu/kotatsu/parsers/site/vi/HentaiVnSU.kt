@@ -17,7 +17,7 @@ import org.koitharu.kotatsu.parsers.util.json.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("HENTAIVNSU", "HentaiVN.su", "vi", type = ContentType.HENTAI)
 internal class HentaiVnSU(context: MangaLoaderContext) :
     PagedMangaParser(context, MangaParserSource.HENTAIVNSU, 24), MangaParserAuthProvider {

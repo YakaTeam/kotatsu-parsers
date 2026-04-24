@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("RAGNARSCANS", "Ragnarscans", "tr")
 internal class Ragnarscans(context: MangaLoaderContext) :
     MadaraParser(context, MangaParserSource.RAGNARSCANS, "ragnarscans.com", pageSize = 10) {

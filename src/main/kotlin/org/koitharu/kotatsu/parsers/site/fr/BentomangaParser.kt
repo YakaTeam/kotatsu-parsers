@@ -17,7 +17,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getIntOrDefault
 import java.util.*
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("BENTOMANGA", "BentoManga", "fr")
 internal class BentomangaParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.BENTOMANGA, 10) {

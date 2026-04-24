@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.keyoapp.KeyoappParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("REAPERSCANS_FR", "ReaperScans.fr", "fr")
 internal class ReaperScansFr(context: MangaLoaderContext) :
 	KeyoappParser(context, MangaParserSource.REAPERSCANS_FR, "reaper-scans.fr")

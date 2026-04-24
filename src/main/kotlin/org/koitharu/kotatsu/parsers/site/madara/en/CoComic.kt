@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("COCOMIC", "CoComic", "en", ContentType.HENTAI)
 internal class CoComic(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.COCOMIC, "cocomic.co")

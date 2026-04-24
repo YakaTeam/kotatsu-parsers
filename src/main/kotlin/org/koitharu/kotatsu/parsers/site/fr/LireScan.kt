@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("LIRESCAN", "LireScan", "fr")
 internal class LireScan(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.LIRESCAN, 20) {
 

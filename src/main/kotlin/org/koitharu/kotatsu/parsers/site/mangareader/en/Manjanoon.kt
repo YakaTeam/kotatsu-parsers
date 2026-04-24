@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("MANJANOON_EN", "NoonScan.net", "en")
 internal class Manjanoon(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.MANJANOON_EN, "noonscan.net", pageSize = 20, searchPageSize = 10) {

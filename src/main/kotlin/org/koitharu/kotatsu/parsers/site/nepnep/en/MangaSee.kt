@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.nepnep.NepnepParser
 
 // site closed in favour of weeb central
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("MANGASEE", "MangaSee", "en")
 internal class MangaSee(context: MangaLoaderContext) :
 	NepnepParser(context, MangaParserSource.MANGASEE, "mangasee123.com")

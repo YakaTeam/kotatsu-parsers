@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.foolslide.FoolSlideParser
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("POWERMANGA", "PowerManga", "it")
 internal class PowerManga(context: MangaLoaderContext) :
 	FoolSlideParser(context, MangaParserSource.POWERMANGA, "reader.powermanga.org") {

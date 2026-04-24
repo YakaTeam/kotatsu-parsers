@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import java.util.*
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("EROMANHWA", "EroManhwa", "", ContentType.HENTAI)
 internal class EroManhwa(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.EROMANHWA, "eromanhwa.org") {

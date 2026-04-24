@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.zmanga.ZMangaParser
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("YURAMANGA", "YuraManga", "id")
 internal class YuraManga(context: MangaLoaderContext) :
 	ZMangaParser(context, MangaParserSource.YURAMANGA, "www.yuramanga.my.id")

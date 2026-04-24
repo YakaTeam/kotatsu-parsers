@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken // The website is broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads") // The website is broken
 @MangaSourceParser("CONSTELLARCOMIC", "ConstellarComic", "en", ContentType.HENTAI)
 internal class Constellarcomic(context: MangaLoaderContext) :
 	MangaReaderParser(

@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("MANGA68", "Manga68", "en")
 internal class Manga68(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGA68, "manga68.com") {

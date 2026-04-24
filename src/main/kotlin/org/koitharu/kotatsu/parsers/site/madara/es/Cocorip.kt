@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("COCORIP", "Cocorip", "es")
 internal class Cocorip(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.COCORIP, "cocorip.net", 16) {

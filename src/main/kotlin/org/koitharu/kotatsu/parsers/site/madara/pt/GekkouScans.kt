@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import java.util.*
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("GEKKOUSCANS", "GekkouScans", "pt", ContentType.HENTAI)
 internal class GekkouScans(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.GEKKOUSCANS, "gekkou.site") {

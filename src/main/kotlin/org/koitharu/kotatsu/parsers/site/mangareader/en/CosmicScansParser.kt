@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("COSMICSCANS", "CosmicScans.com", "en")
 internal class CosmicScansParser(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.COSMICSCANS, "cosmic-scans.com", pageSize = 20, searchPageSize = 10) {

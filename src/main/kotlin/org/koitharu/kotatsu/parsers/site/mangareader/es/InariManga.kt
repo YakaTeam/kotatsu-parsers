@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("INARIMANGA", "InariManga", "es")
 internal class InariManga(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.INARIMANGA, "clubinari.org", pageSize = 20, searchPageSize = 10) {

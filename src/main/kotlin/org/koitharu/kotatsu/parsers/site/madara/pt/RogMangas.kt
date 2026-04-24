@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("ROGMANGAS", "RogMangas", "pt")
 internal class RogMangas(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.ROGMANGAS, "rogmangas.com", 51) {

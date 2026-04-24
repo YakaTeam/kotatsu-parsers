@@ -14,7 +14,7 @@ import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import org.koitharu.kotatsu.parsers.Broken
 import java.util.*
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("RIZZCOMIC", "RizzComic", "en")
 internal class RizzComic(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.RIZZCOMIC, "rizzfables.com", pageSize = 50, searchPageSize = 20) {

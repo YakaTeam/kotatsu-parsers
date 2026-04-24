@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("NYXMANGA", "NyxManga", "tr")
 internal class NyxManga(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.NYXMANGA, "nyxmanga.com", pageSize = 14, searchPageSize = 10) {

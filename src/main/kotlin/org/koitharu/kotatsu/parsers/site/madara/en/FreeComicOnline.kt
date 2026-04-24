@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Site is gone — root redirects to an unrelated domain")
 @MangaSourceParser("FREECOMICONLINE", "FreeComicOnline", "en", ContentType.HENTAI)
 internal class FreeComicOnline(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.FREECOMICONLINE, "freecomiconline.me") {

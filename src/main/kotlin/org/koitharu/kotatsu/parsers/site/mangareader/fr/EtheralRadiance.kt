@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.util.insertCookies
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("ETHERALRADIANCE", "EtheralRadiance", "fr")
 internal class EtheralRadiance(context: MangaLoaderContext) :
 	MangaReaderParser(

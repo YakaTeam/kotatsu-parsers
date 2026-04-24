@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("REVOLUTIONSCANTRAD", "RevolutionScantrad", "fr")
 internal class RevolutionScantrad(context: MangaLoaderContext) :
 	MangaReaderParser(

@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.model.MangaTag
 import org.koitharu.kotatsu.parsers.site.zeistmanga.ZeistMangaParser
 import org.koitharu.kotatsu.parsers.util.*
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("MIKOROKU", "Mikoroku", "id", ContentType.HENTAI)
 internal class Mikoroku(context: MangaLoaderContext) :
 	ZeistMangaParser(context, MangaParserSource.MIKOROKU, "www.mikoroku.web.id") {

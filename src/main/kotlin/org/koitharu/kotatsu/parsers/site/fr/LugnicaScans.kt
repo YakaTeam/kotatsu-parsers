@@ -16,7 +16,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Root returns HTTP 404 — site gone or restructured")
 @MangaSourceParser("LUGNICASCANS", "LugnicaScans", "fr")
 internal class LugnicaScans(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.LUGNICASCANS, 10) {

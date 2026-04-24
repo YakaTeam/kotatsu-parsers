@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("SCANTRADVF", "Scantrad-Vf", "fr")
 internal class ScantradVf(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.SCANTRADVF, "scantrad-vf.me") {

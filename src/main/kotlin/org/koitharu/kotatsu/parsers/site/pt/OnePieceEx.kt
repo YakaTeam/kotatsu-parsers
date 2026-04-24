@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken
+@Broken("Site is gone — root redirects to an unrelated domain")
 @MangaSourceParser("ONEPIECEEX", "OnePieceEx", "pt")
 internal class OnePieceEx(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.ONEPIECEEX) {

@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.site.scan.ScanParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 
-@Broken
+@Broken("Server not responding — connection times out")
 @MangaSourceParser("MANGAFR", "MangaFr", "fr")
 internal class MangaFr(context: MangaLoaderContext) :
 	ScanParser(context, MangaParserSource.MANGAFR, "www.mangafr.org") {

@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mmrcms.MmrcmsParser
 import java.util.*
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("SCANMANGAVF_WS", "ScanMangaVf.ws", "fr")
 internal class ScanMangaVfWs(context: MangaLoaderContext) :
 	MmrcmsParser(context, MangaParserSource.SCANMANGAVF_WS, "scanmanga-vf.me") {

@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Site is gone — root redirects to an unrelated domain")
 @MangaSourceParser("MANGA_QUEEN", "MangaQueen", "en")
 internal class MangaQueen(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGA_QUEEN, "mangaqueen.com", 16)

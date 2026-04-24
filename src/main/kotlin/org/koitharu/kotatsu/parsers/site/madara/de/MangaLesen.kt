@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken
+@Broken("Domain parked — Parking/1.0 HTTP 436")
 @MangaSourceParser("MANGALESEN", "MangaLesen", "de")
 internal class MangaLesen(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGALESEN, "mangalesen.net")

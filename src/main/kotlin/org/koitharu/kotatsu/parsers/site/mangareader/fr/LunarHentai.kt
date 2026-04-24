@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("LUNARHENTAI", "GloryScans", "fr")
 internal class LunarHentai(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.LUNARHENTAI, "gloryscans.fr", pageSize = 40, searchPageSize = 10) {

@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import java.util.*
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("MANGASHIRO", "MangaShiro", "id")
 internal class MangaShiro(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.MANGASHIRO, "mangashiro.me", pageSize = 20, searchPageSize = 10) {

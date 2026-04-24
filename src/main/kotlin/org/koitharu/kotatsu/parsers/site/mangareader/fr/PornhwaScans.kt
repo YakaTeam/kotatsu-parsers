@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("PORNHWASCANS", "PornhwaScans", "fr")
 internal class PornhwaScans(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.PORNHWASCANS, "pornhwascans.fr", pageSize = 24, searchPageSize = 10) {

@@ -12,7 +12,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.EnumSet
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("KOMIKINDO_MOE", "KomikIndo.org", "id", ContentType.HENTAI)
 internal class KomikIndo(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.KOMIKINDO_MOE, "komikindo.ch", pageSize = 30, searchPageSize = 30) {

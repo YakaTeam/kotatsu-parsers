@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("MANGAFENXI", "MangaFenxi", "ja")
 internal class MangaFenxi(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGAFENXI, "mangafenxi.net", 40) {

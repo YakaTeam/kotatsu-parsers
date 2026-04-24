@@ -11,7 +11,7 @@ import org.koitharu.kotatsu.parsers.util.*
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("LERMANGAONLINE", "LerMangaOnline", "pt")
 internal class LerMangaOnline(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.LERMANGAONLINE, 20) {

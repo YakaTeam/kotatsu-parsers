@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.keyoapp.KeyoappParser
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("LUASCANS", "luaComic.net", "en")
 internal class LuaScans(context: MangaLoaderContext) :
 	KeyoappParser(context, MangaParserSource.LUASCANS, "luacomic.org")

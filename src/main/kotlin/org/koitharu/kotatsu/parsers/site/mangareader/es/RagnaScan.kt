@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("RAGNASCAN", "RagnaScan", "es")
 internal class RagnaScan(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.RAGNASCAN, "ragnascan.com", pageSize = 5, searchPageSize = 10) {

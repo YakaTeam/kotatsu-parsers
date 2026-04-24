@@ -9,7 +9,7 @@ import org.koitharu.kotatsu.parsers.util.styleValueOrNull
 import org.koitharu.kotatsu.parsers.util.cssUrl
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken // It seems like the site is dead.
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite") // It seems like the site is dead.
 @MangaSourceParser("AGSCOMICS", "AgsComics", "en")
 internal class AgsComics(context: MangaLoaderContext) :
 	KeyoappParser(context, MangaParserSource.AGSCOMICS, "agrcomics.com") {

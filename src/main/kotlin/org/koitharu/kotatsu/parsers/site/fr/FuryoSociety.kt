@@ -15,7 +15,7 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("FURYOSOCIETY", "FuryoSociety", "fr")
 internal class FuryoSociety(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.FURYOSOCIETY) {

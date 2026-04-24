@@ -19,7 +19,7 @@ import org.koitharu.kotatsu.parsers.util.nullIfEmpty
 import org.koitharu.kotatsu.parsers.util.toAbsoluteUrl
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("ANIBEL", "Anibel", "be")
 internal class AnibelParser(context: MangaLoaderContext) : AbstractMangaParser(context, MangaParserSource.ANIBEL) {
 

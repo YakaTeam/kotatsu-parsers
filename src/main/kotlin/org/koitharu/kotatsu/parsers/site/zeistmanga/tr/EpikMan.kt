@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.requireElementById
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("EPIKMAN", "EpikMan", "tr")
 internal class EpikMan(context: MangaLoaderContext) :
 	ZeistMangaParser(context, MangaParserSource.EPIKMAN, "www.epikman.ga") {

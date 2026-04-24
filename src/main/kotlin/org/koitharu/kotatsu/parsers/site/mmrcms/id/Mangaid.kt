@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mmrcms.MmrcmsParser
 import java.util.*
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("MANGAID", "MangaId", "id")
 internal class Mangaid(context: MangaLoaderContext) :
 	MmrcmsParser(context, MangaParserSource.MANGAID, "mangaid.click") {

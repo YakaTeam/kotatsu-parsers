@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.scan.ScanParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("SCANTRAD", "ScanTrad", "fr")
 internal class ScanTrad(context: MangaLoaderContext) :
 	ScanParser(context, MangaParserSource.SCANTRAD, "scan-trad.com")

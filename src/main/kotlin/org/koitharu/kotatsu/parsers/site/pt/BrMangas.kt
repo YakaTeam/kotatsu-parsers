@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("BRMANGAS", "BrMangas", "pt")
 internal class BrMangas(context: MangaLoaderContext) : PagedMangaParser(context, MangaParserSource.BRMANGAS, 25) {
 

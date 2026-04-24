@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.keyoapp.KeyoappParser
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("STARBOUNDSCANS", "StarboundScans", "fr")
 internal class StarboundScans(context: MangaLoaderContext) :
 	KeyoappParser(context, MangaParserSource.STARBOUNDSCANS, "starboundscans.com")

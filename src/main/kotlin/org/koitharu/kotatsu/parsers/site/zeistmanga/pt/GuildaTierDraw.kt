@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.util.mapToSet
 import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.requireElementById
 
-@Broken
+@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("GUILDATIERDRAW", "GuildaTierDraw", "pt")
 internal class GuildaTierDraw(context: MangaLoaderContext) :
 	ZeistMangaParser(context, MangaParserSource.GUILDATIERDRAW, "www.guildatierdraw.top") {

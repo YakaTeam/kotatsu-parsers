@@ -17,7 +17,7 @@ import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("BLOGTRUYENVN", "BlogTruyen.vn (Unofficial)", "vi")
 internal class BlogTruyenVN(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.BLOGTRUYENVN, pageSize = 20) {

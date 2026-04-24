@@ -21,7 +21,7 @@ import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Root returns HTTP 404 — site gone or restructured")
 @MangaSourceParser("ZENMANGA", "ZenManga", "ru")
 internal class ZenMangaParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.ZENMANGA, 30),

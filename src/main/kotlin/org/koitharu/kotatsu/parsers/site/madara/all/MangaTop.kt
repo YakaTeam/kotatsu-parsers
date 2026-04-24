@@ -8,7 +8,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import java.util.*
 
-@Broken
+@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("MANGATOP", "MangaTop", "", ContentType.HENTAI)
 internal class MangaTop(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANGATOP, "mangatop.site") {

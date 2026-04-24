@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaListFilterCapabilities
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("BIRDMANGA", "BirdManga", "en")
 internal class BirdManga(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.BIRDMANGA, "birdmanga.com", pageSize = 20, searchPageSize = 10) {

@@ -13,7 +13,7 @@ import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("SCANS_MANGAS_ME", "ScansMangas.me", "fr")
 internal class ScansMangasMe(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.SCANS_MANGAS_ME) {

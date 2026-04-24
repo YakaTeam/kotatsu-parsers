@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.zeistmanga.ZeistMangaParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Domain parked — landing page only, no manga content")
 @MangaSourceParser("NEKOSCANS", "NekoScans", "es")
 internal class NekoScans(context: MangaLoaderContext) :
 	ZeistMangaParser(context, MangaParserSource.NEKOSCANS, "www.nekoscans.org")

@@ -17,7 +17,7 @@ import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken
+@Broken("Domain hijacked — now serves a JS redirect to spam/ads")
 @MangaSourceParser("FLIXSCANSORG", "FlixScans.org", "en")
 internal class FlixScansOrg(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.FLIXSCANSORG, 18) {

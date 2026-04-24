@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import java.util.*
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("MANGASTORM", "MangaStorm", "ar")
 internal class MangaStorm(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.MANGASTORM, 30) {

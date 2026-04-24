@@ -12,7 +12,7 @@ import java.util.ArrayList
 import java.util.Base64
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken
+@Broken("Domain has no DNS records — site is gone")
 @MangaSourceParser("CATHARSISFANTASY", "CatharsisFantasy", "es")
 internal class CatharsisFantasy(context: MangaLoaderContext) :
 	MangaReaderParser(

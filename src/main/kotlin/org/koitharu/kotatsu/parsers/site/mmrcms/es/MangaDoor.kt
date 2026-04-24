@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mmrcms.MmrcmsParser
 import java.util.*
 
-@Broken
+@Broken("Origin server returns HTTP 406")
 @MangaSourceParser("MANGADOOR", "MangaDoor", "es")
 internal class MangaDoor(context: MangaLoaderContext) :
 	MmrcmsParser(context, MangaParserSource.MANGADOOR, "mangadoor.com") {
