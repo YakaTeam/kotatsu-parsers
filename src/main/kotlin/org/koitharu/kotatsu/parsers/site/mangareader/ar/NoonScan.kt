@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 
-@Broken("Origin server returns HTTP 503")
+@Broken("Cloudflare returns HTTP 521 — origin TLS handshake rejected for months; site appears abandoned")
 @MangaSourceParser("NOONSCAN", "NoonScan.com", "ar")
 internal class NoonScan(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.NOONSCAN, "noonscan.com", pageSize = 20, searchPageSize = 10)

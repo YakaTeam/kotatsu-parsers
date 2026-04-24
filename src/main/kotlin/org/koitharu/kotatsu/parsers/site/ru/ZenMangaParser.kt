@@ -21,7 +21,7 @@ import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken("Root returns HTTP 404 — site gone or restructured")
+@Broken("Operator migrated to inkstory.net — listing + detail APIs work, but auth flow still references legacy sso.inuko.me (404); needs auth rewrite before re-enabling")
 @MangaSourceParser("ZENMANGA", "ZenManga", "ru")
 internal class ZenMangaParser(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.ZENMANGA, 30),
@@ -34,7 +34,7 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 		setFirstPage(0)
 	}
 
-	override val configKeyDomain = ConfigKey.Domain("inkstory.me")
+	override val configKeyDomain = ConfigKey.Domain("inkstory.net")
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.POPULARITY,

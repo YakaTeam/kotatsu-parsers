@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken("HTTP 403 — access blocked")
+@Broken("Origin Apache returns HTTP 403 on every path (no CDN WAF in front) — site unreachable from any client")
 @MangaSourceParser("NABISCANS", "NabiScans", "tr")
 internal class NabiScans(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.NABISCANS, "nabiscans.com") {
