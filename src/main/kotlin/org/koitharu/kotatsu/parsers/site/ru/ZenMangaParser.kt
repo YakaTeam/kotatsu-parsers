@@ -43,8 +43,6 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities = MangaListFilterCapabilities(
 		isSearchSupported = true,
-		isMultipleTagsSupported = true,
-		isTagsExclusionSupported = true,
 		isYearRangeSupported = true,
 		isSearchWithFiltersSupported = true,
 		isAuthorSearchSupported = true,
@@ -72,12 +70,8 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 			urlBuilder.addQueryParameter("search", filter.query)
 		}
 
-		filter.tags.forEach { tag ->
-			urlBuilder.addQueryParameter("labelsInclude", tag.key)
-		}
-
-		filter.tagsExclude.forEach { tag ->
-			urlBuilder.addQueryParameter("labelsExclude", tag.key)
+		filter.tags.oneOrThrowIfMany()?.let {
+			urlBuilder.addQueryParameter("labelsInclude", it.key)
 		}
 
 		filter.states.forEach { state ->
