@@ -11,10 +11,8 @@ import org.koitharu.kotatsu.parsers.util.json.getFloatOrDefault
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
 import org.koitharu.kotatsu.parsers.util.suspendlazy.suspendLazy
-import org.koitharu.kotatsu.parsers.Broken
 import java.util.*
 
-@Broken("Blocked by Cloudflare challenge")
 @MangaSourceParser("RIZZCOMIC", "RizzComic", "en")
 internal class RizzComic(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.RIZZCOMIC, "rizzfables.com", pageSize = 50, searchPageSize = 20) {
@@ -31,7 +29,7 @@ internal class RizzComic(context: MangaLoaderContext) :
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = super.filterCapabilities.copy(
-			isMultipleTagsSupported = true,
+			isMultipleTagsSupported = false,
 			isSearchSupported = true,
 			isTagsExclusionSupported = false,
 		)
@@ -78,14 +76,12 @@ internal class RizzComic(context: MangaLoaderContext) :
 			else -> {
 				val state = filter.states.oneOrThrowIfMany()?.toPayloadValue() ?: "all"
 
-				val genres = filter.tags.map { it.key }
-
 				val form = ArrayMap<String, String>()
 				form["StatusValue"] = state
 				form["TypeValue"] = "all"
 				form["OrderValue"] = order.toPayloadValue()
 
-				genres.forEach { genre ->
+				filter.tags.oneOrThrowIfMany()?.key?.let { genre ->
 					form["genres_checked[]"] = genre
 				}
 				form
