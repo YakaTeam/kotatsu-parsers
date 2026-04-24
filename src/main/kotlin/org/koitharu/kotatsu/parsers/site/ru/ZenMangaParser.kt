@@ -6,7 +6,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
-import org.koitharu.kotatsu.parsers.MangaParserAuthProvider
 import org.koitharu.kotatsu.parsers.config.ConfigKey
 import org.koitharu.kotatsu.parsers.core.PagedMangaParser
 import org.koitharu.kotatsu.parsers.exception.ParseException
@@ -16,16 +15,13 @@ import org.koitharu.kotatsu.parsers.network.UserAgents
 import org.koitharu.kotatsu.parsers.util.*
 import org.koitharu.kotatsu.parsers.util.json.getStringOrNull
 import org.koitharu.kotatsu.parsers.util.json.mapJSON
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken("Root returns HTTP 404 — site gone or restructured")
 @MangaSourceParser("ZENMANGA", "ZenManga", "ru")
 internal class ZenMangaParser(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.ZENMANGA, 30),
-	MangaParserAuthProvider {
+	PagedMangaParser(context, MangaParserSource.ZENMANGA, 30) {
 
 	private val astroJsonParser = AstroJsonParser()
 	private val dateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.US)
@@ -34,7 +30,7 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 		setFirstPage(0)
 	}
 
-	override val configKeyDomain = ConfigKey.Domain("inkstory.me")
+	override val configKeyDomain = ConfigKey.Domain("inkstory.net")
 
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(
 		SortOrder.POPULARITY,
@@ -54,36 +50,7 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 		isAuthorSearchSupported = true,
 	)
 
-	override val authUrl: String
-		get() = "https://sso.inuko.me/account/sign-in"
-
 	private val apiDomain = if (domain.startsWith("v1.")) domain.replace("v1.", "api.") else "api.$domain"
-
-	private fun checkAuth(): Boolean {
-		val authCookieName = "__otaku_session"
-		return context.cookieJar.getCookies("zenmanga.io").any { it.name == authCookieName } ||
-			context.cookieJar.getCookies("v1.zenmanga.one").any { it.name == authCookieName } ||
-			context.cookieJar.getCookies("v1.zenmanga.me").any { it.name == authCookieName }
-	}
-
-	override suspend fun isAuthorized(): Boolean {
-		return checkAuth()
-	}
-
-	override suspend fun getUsername(): String {
-		val libraryUrl = "/library"
-		val data = fetchAstroData(libraryUrl)
-			?: throw ParseException("Не удалось получить Astro JSON для получения имени пользователя", libraryUrl)
-
-		val session = data["session"] as? Map<*, *>
-			?: throw ParseException("Ключ 'session' не найден", libraryUrl)
-
-		val currentUser = session["currentUser"] as? Map<*, *>
-			?: throw ParseException("Ключ 'currentUser' не найден", libraryUrl)
-
-		return currentUser["username"] as? String
-			?: throw ParseException("Ключ 'username' не найден", libraryUrl)
-	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
 		if (!filter.author.isNullOrBlank()) {
