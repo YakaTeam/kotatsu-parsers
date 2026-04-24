@@ -2,7 +2,6 @@ package org.koitharu.kotatsu.parsers.site.fr
 
 import kotlinx.coroutines.coroutineScope
 import org.jsoup.nodes.Document
-import org.koitharu.kotatsu.parsers.Broken
 import org.koitharu.kotatsu.parsers.ErrorMessages
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
@@ -15,7 +14,6 @@ import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
-@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
 @MangaSourceParser("FURYOSOCIETY", "FuryoSociety", "fr")
 internal class FuryoSociety(context: MangaLoaderContext) :
 	SinglePageMangaParser(context, MangaParserSource.FURYOSOCIETY) {
