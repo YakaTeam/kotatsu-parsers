@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.ContentType
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken("Site is gone — root redirects to an unrelated domain")
+@Broken("Domain moved to manga18.app but /manga/ path returns 404 — URL structure changed, parser needs path and selector rewrite")
 @MangaSourceParser("MANHWA18APP", "Manhwa18.app", "en", ContentType.HENTAI)
 internal class Manhwa18App(context: MangaLoaderContext) :
 	MadaraParser(context, MangaParserSource.MANHWA18APP, "manhwa18.app") {

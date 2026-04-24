@@ -6,10 +6,10 @@ import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.madara.MadaraParser
 
-@Broken("Site is gone — root redirects to an unrelated domain")
+@Broken("Domain moved from manga-spark.com to manga-spark.net — /manga/ listing returns 403, parser needs verification before enabling")
 @MangaSourceParser("MANGASPARK", "Manga-Spark", "ar")
 internal class Mangaspark(context: MangaLoaderContext) :
-	MadaraParser(context, MangaParserSource.MANGASPARK, "manga-spark.com", pageSize = 10) {
+	MadaraParser(context, MangaParserSource.MANGASPARK, "manga-spark.net", pageSize = 10) {
 	override val postReq = true
 	override val datePattern = "d MMMM، yyyy"
 }
