@@ -29,6 +29,51 @@ and improved error messages.
 
 ## Writing your parser
 
+### Before you start — check the site isn't a scam dump
+
+A small but real category of "manga sites" you may encounter aren't real sites
+at all — they're paid-service static dumps that masquerade as live manga sites
+to monetise via demo paywalls or ad redirects. A parser submitted against one
+of these will work for the first few chapters and then fall over (or worse,
+funnel users to a scam page). Two patterns we've seen in this repo:
+
+- **Wayback Machine Downloader (WBMD) demo dumps** — the homepage looks like a
+  perfectly normal Madara/MangaReader/etc. site (real `wp-content`,
+  `page-item-detail` cards, looking-correct `/manga/<slug>/` URLs), but the
+  per-chapter HTML files are static `capitulo-N.html` / `chapter-N.html`
+  documents that contain the literal string `The DEMO version only includes 4 pages`
+  with a link to `waybackmachinedownloader.com/en/buy-wayback-machine-downloader-recover/`.
+  Three parsers in this repo (Manhuasy, Daprob, ManhwaPlus) hit this pattern
+  in 2026 after their original domains were abandoned by the legitimate
+  operators — the contributors who originally added those parsers were not at
+  fault; the domains rotted out from under them.
+- **Domain parking with Madara skin** — a sales-park or ad-redirector renders
+  what looks like a Madara homepage (10-20 stub items with `page-item-detail`
+  cards), but every `/page/N/`, `/wp-admin/admin-ajax.php`, search and filter
+  query 404s or returns identical bytes regardless of input. Detail pages are
+  1-2 KB stubs with no chapter list.
+
+**Before opening a PR for a new parser:**
+
+1. Hit the proposed reader URL for at least one chapter. If the response body
+   contains the string `wayback machine downloader`, **do not submit**.
+2. Open `/page/2/` (or whatever the parser's pagination URL is). If it
+   returns the same bytes as `/page/1/`, or 404s, the site is a frozen
+   snapshot — don't submit.
+3. Issue a query that you know should change the result-set (e.g.
+   `?s=zzznoresults`). If the response is byte-identical to the unfiltered
+   homepage, the search is silently ignored — don't claim
+   `isSearchSupported = true`.
+4. Look at the network panel for an Apache `mod_autoindex` listing
+   (`<title>Index of /...</title>`) anywhere in the chapter delivery path.
+   That's a static file dump, not a working CMS.
+
+If you find one of these patterns on a parser that's already merged, open an
+issue rather than silently disabling it — historical context matters for
+deciding whether to remove or annotate `@Broken`.
+
+### Live-API check
+
 So, you want to create a parser, that will provide access to manga from a website.
 First, you should explore a website to learn about API availability.
 If it does not contain any documentation about
