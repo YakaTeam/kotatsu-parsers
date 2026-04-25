@@ -18,6 +18,24 @@ jobs:
             -   name: Checkout repository 🌏
                 uses: actions/checkout@0c366fd6a839edf440554fa01a7085ccba70ac98 # v6.0.2
 
+            -   name: Set up Java environment 🔧
+                uses: actions/setup-java@b622de1dfa918ecc0ab28f40cd42e3c3752cd6c5 # v5.2.0
+                with:
+                    # Gradle 9+ requires JVM 17 to run; compile target remains JVM 11 via jvmToolchain(11)
+                    java-version: '17'
+                    distribution: 'temurin'
+
+            -   name: Set up Gradle environment 📦
+                uses: gradle/actions/setup-gradle@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6.1.0
+                with:
+                    gradle-version: '9.3.1'
+
+            -   name: Generate MangaParserSource enum 🚀
+                # build_catalog.py reads the KSP-generated enum as the single
+                # source of truth for parser identity (per Draken's review).
+                run: ./gradlew kspKotlin --rerun-tasks
+                continue-on-error: true
+
             -   name: Set up Python 🐍
                 uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
                 with:
