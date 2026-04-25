@@ -1,6 +1,7 @@
 package org.koitharu.kotatsu.parsers.site.mangareader.id
 
 import org.jsoup.nodes.Document
+import org.jsoup.nodes.Element
 import org.koitharu.kotatsu.parsers.MangaLoaderContext
 import org.koitharu.kotatsu.parsers.MangaSourceParser
 import org.koitharu.kotatsu.parsers.model.*
@@ -11,21 +12,24 @@ import java.util.EnumSet
 
 @MangaSourceParser("KOMIKU", "Komiku", "id")
 internal class Komiku(context: MangaLoaderContext) :
-	MangaReaderParser(context, MangaParserSource.KOMIKU, "komiku.org", pageSize = 60, searchPageSize = 60) {
+	MangaReaderParser(context, MangaParserSource.KOMIKU, "komiku.org", pageSize = 10, searchPageSize = 10) {
+
+	private val apiDomain = "api.komiku.org"
 
 	override val datePattern = "dd/MM/yyyy"
 	override val selectPage = "#Baca_Komik img"
 	override val selectTestScript = "script:containsData(thisIsNeverFound)"
-	override val listUrl = "/daftar-komik/"
-	override val selectMangaList = "article.manga-card"
-	override val selectMangaListImg = "img"
-	override val selectMangaListTitle = "h4"
+	override val listUrl = "/manga/"
+	override val selectMangaList = "div.bge"
+	override val selectMangaListImg = "div.bgei img"
+	override val selectMangaListTitle = "div.kan h3"
 	override val selectChapter = "#Daftar_Chapter tr:has(td.judulseries)"
 	override val detailsDescriptionSelector = "#Sinopsis > p"
 
 	override val filterCapabilities: MangaListFilterCapabilities
 		get() = super.filterCapabilities.copy(
 			isTagsExclusionSupported = false,
+			isMultipleTagsSupported = true,
 			isSearchSupported = true,
 		)
 
@@ -40,81 +44,88 @@ internal class Komiku(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		// komiku.org's /pustaka/, /?s=, and /genre/ pages are htmx shells whose data is
-		// fetched client-side from api.komiku.org. With direct (no-JS) HTML scraping we
-		// can only reliably read /daftar-komik/, which is fully server-rendered.
-		// We therefore base listing on /daftar-komik/ and apply best-effort client-side
-		// filtering for query / state / type. Genre filter and ordering are not exposed
-		// by /daftar-komik/ and are silently ignored.
-		val tipe = filter.types.oneOrThrowIfMany()?.let {
-			when (it) {
-				ContentType.MANGA -> "manga"
-				ContentType.MANHWA -> "manhwa"
-				ContentType.MANHUA -> "manhua"
-				else -> null
-			}
-		}
-
+		val query = filter.query?.trim().orEmpty()
 		val url = buildString {
 			append("https://")
-			append(domain)
-			append(listUrl)
-			if (page > 1) {
-				append("page/")
-				append(page.toString())
+			append(apiDomain)
+			if (query.isNotEmpty()) {
+				append("/?post_type=manga&s=")
+				append(query.urlEncoded())
+				if (page > 1) {
+					append("&page=")
+					append(page)
+				}
+			} else {
+				append("/manga/page/")
+				append(page)
 				append("/")
-			}
-			if (tipe != null) {
-				append("?tipe=")
-				append(tipe)
+				val params = mutableListOf<String>()
+				val genres = filter.tags.map { it.key }
+				genres.getOrNull(0)?.let { params += "genre=$it" }
+				genres.getOrNull(1)?.let { params += "genre2=$it" }
+				val orderParam = when (order) {
+					SortOrder.UPDATED -> "modified"
+					SortOrder.NEWEST -> "date"
+					SortOrder.POPULARITY -> "meta_value_num"
+					SortOrder.ALPHABETICAL -> "title"
+					else -> null
+				}
+				if (orderParam != null) params += "orderby=$orderParam"
+				filter.types.oneOrThrowIfMany()?.let {
+					when (it) {
+						ContentType.MANGA -> "manga"
+						ContentType.MANHWA -> "manhwa"
+						ContentType.MANHUA -> "manhua"
+						else -> null
+					}
+				}?.let { params += "tipe=$it" }
+				filter.states.oneOrThrowIfMany()?.let {
+					when (it) {
+						MangaState.ONGOING -> "ongoing"
+						MangaState.FINISHED -> "end"
+						else -> null
+					}
+				}?.let { params += "status=$it" }
+				if (params.isNotEmpty()) {
+					append("?")
+					append(params.joinToString("&"))
+				}
 			}
 		}
-
-		val all = parseMangaList(webClient.httpGet(url).parseHtml())
-
-		// Best-effort client-side filtering for the fields /daftar-komik/ does not
-		// support natively. State is rendered inline in p.meta as "Status: Ongoing/End".
-		val state = filter.states.oneOrThrowIfMany()
-		val query = filter.query?.trim().orEmpty()
-		return all.filter { manga ->
-			val matchesQuery = query.isEmpty() ||
-				manga.title.contains(query, ignoreCase = true) ||
-				manga.altTitles.any { it.contains(query, ignoreCase = true) }
-			val matchesState = state == null || manga.state == state
-			matchesQuery && matchesState
-		}
+		return parseMangaList(webClient.httpGet(url).parseHtml())
 	}
 
 	override fun parseMangaList(docs: Document): List<Manga> {
 		return docs.select(selectMangaList).mapNotNull { element ->
-			val a = element.selectFirst("a[href*=/manga/]") ?: return@mapNotNull null
-			val relativeUrl = a.attrAsRelativeUrl("href").toRelativeUrl(domain)
+			val a = element.selectFirst("div.bgei a[href*=/manga/]")
+				?: element.selectFirst("a[href*=/manga/]")
+				?: return@mapNotNull null
+			val href = a.attr("href")
+			val relativeUrl = href.toRelativeUrl(domain)
 
 			val thumbnailUrl = element.selectFirst(selectMangaListImg)?.let { img ->
 				img.attr("data-src").ifBlank { img.attr("src") }
 			}?.substringBeforeLast("?")
 
-			val meta = element.selectFirst("p.meta")?.text().orEmpty()
-			val state = when {
-				meta.contains("Ongoing", ignoreCase = true) -> MangaState.ONGOING
-				meta.contains("End", ignoreCase = true) -> MangaState.FINISHED
-				meta.contains("Tamat", ignoreCase = true) -> MangaState.FINISHED
-				else -> null
-			}
+			val typeInfo = element.selectFirst("div.tpe1_inf")?.text()?.trim().orEmpty()
+
+			val title = element.selectFirst(selectMangaListTitle)?.text()?.trim()
+				?: return@mapNotNull null
 
 			Manga(
 				id = generateUid(relativeUrl),
 				url = relativeUrl,
-				title = element.selectFirst(selectMangaListTitle)?.text()?.trim() ?: return@mapNotNull null,
+				title = title,
 				altTitles = emptySet(),
-				publicUrl = a.attrAsAbsoluteUrl("href"),
+				publicUrl = href.toAbsoluteUrl(domain),
 				rating = RATING_UNKNOWN,
 				contentRating = if (isNsfwSource) ContentRating.ADULT else null,
 				coverUrl = thumbnailUrl,
 				tags = emptySet(),
-				state = state,
+				state = null,
 				authors = emptySet(),
 				source = source,
+				description = element.selectFirst("div.kan p")?.text()?.trim(),
 			)
 		}
 	}
@@ -180,7 +191,7 @@ internal class Komiku(context: MangaLoaderContext) :
 
 		return manga.copy(
 			altTitles = altTitles,
-			description = docs.selectFirst(detailsDescriptionSelector)?.text()?.trim(),
+			description = docs.selectFirst(detailsDescriptionSelector)?.text()?.trim() ?: manga.description,
 			state = state ?: manga.state,
 			authors = setOfNotNull(author),
 			contentRating = if (manga.contentRating == ContentRating.ADULT) ContentRating.ADULT else ContentRating.SAFE,
@@ -191,8 +202,6 @@ internal class Komiku(context: MangaLoaderContext) :
 	}
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
-		// The full genre <select> is rendered server-side on the /pustaka/ shell page.
-		// We only need the option keys/titles, not the htmx-loaded results below it.
 		val doc = webClient.httpGet("https://$domain/pustaka/").parseHtml()
 		val tags = mutableSetOf<MangaTag>()
 
