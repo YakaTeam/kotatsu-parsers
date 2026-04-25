@@ -1,23 +1,23 @@
 {
   "generated_by": "docs/build_catalog.py",
-  "total": 1187,
-  "broken": 375,
+  "total": 1163,
+  "broken": 346,
   "by_type": {
-    "HENTAI": 254,
-    "MANGA": 922,
+    "HENTAI": 251,
+    "MANGA": 901,
     "COMICS": 11
   },
   "by_locale": {
-    "en": 363,
+    "en": 354,
     "fr": 101,
-    "ar": 61,
-    "pt": 139,
+    "ar": 56,
+    "pt": 140,
     "ru": 18,
-    "tr": 120,
-    "id": 117,
-    "es": 116,
+    "tr": 114,
+    "id": 115,
+    "es": 114,
     "be": 1,
-    "th": 30,
+    "th": 29,
     "zh": 9,
     "it": 17,
     "vi": 53,
@@ -107,7 +107,7 @@
       "type": "COMICS",
       "domain": "acomics.ru",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ru/AComics.kt"
     },
     {
@@ -147,7 +147,7 @@
       "type": "MANGA",
       "domain": "afroditscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/AfroditScans.kt"
     },
     {
@@ -157,7 +157,7 @@
       "type": "MANGA",
       "domain": "agrcomics.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/en/AgsComics.kt"
     },
     {
@@ -177,7 +177,7 @@
       "type": "MANGA",
       "domain": "www.aiyumanhua.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/es/AiyuMangaScanlation.kt"
     },
     {
@@ -187,7 +187,7 @@
       "type": "MANGA",
       "domain": "alceacomic.my.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/AlceaScan.kt"
     },
     {
@@ -197,7 +197,7 @@
       "type": "HENTAI",
       "domain": "alliedfansub.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/AlliedFansub.kt"
     },
     {
@@ -221,16 +221,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/AloneScanlator.kt"
     },
     {
-      "name": "ALTAYSCANS",
-      "title": "AltayScans",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "altayscans.com",
-      "broken": true,
-      "broken_reason": "Original site closed",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/AltayScans.kt"
-    },
-    {
       "name": "ALTERKAISCANS",
       "title": "AlterkaiScans",
       "locale": "id",
@@ -247,7 +237,7 @@
       "type": "MANGA",
       "domain": "alucardscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/AlucardScans.kt"
     },
     {
@@ -257,7 +247,7 @@
       "type": "MANGA",
       "domain": "ancientcomics.com.br",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/AncientComics.kt"
     },
     {
@@ -267,7 +257,7 @@
       "type": "MANGA",
       "domain": "anibel.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/be/AnibelParser.kt"
     },
     {
@@ -277,7 +267,7 @@
       "type": "MANGA",
       "domain": "anigliscans.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/AnigliScans.kt"
     },
     {
@@ -287,7 +277,7 @@
       "type": "MANGA",
       "domain": "anikiga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Anikiga.kt"
     },
     {
@@ -306,8 +296,8 @@
       "locale": "pt",
       "type": "MANGA",
       "domain": "animexnovel.com",
-      "broken": true,
-      "broken_reason": "Need to refactor fetchChaptersApi function",
+      "broken": false,
+      "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/pt/AnimeXNovel.kt"
     },
     {
@@ -317,7 +307,7 @@
       "type": "MANGA",
       "domain": "anisamanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/AnisaManga.kt"
     },
     {
@@ -337,7 +327,7 @@
       "type": "MANGA",
       "domain": "anshscans.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/AnshScans.kt"
     },
     {
@@ -347,7 +337,7 @@
       "type": "MANGA",
       "domain": "anteikuscan.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/fr/AnteikuScan.kt"
     },
     {
@@ -441,16 +431,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/ArabToons.kt"
     },
     {
-      "name": "ARAREASCANS",
-      "title": "ArAreaScans",
-      "locale": "ar",
-      "type": "MANGA",
-      "domain": "ar.kenmanga.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/ArAreaScans.kt"
-    },
-    {
       "name": "ARAZNOVEL",
       "title": "ArazNovel",
       "locale": "tr",
@@ -477,7 +457,7 @@
       "type": "MANGA",
       "domain": "arcanescans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ArcaneScans.kt"
     },
     {
@@ -517,7 +497,7 @@
       "type": "MANGA",
       "domain": "argoscomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/ArgosComics.kt"
     },
     {
@@ -537,7 +517,7 @@
       "type": "MANGA",
       "domain": "artessupremas.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/ArtesSupremas.kt"
     },
     {
@@ -577,7 +557,7 @@
       "type": "MANGA",
       "domain": "ascalonscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/AscalonScans.kt"
     },
     {
@@ -627,7 +607,7 @@
       "type": "MANGA",
       "domain": "astrames.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/fr/Astrames.kt"
     },
     {
@@ -647,7 +627,7 @@
       "type": "MANGA",
       "domain": "www.asupankomik.my.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/id/AsupanKomik.kt"
     },
     {
@@ -687,7 +667,7 @@
       "type": "MANGA",
       "domain": "atemporal.cloud",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Connection refused — server offline",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Atemporal.kt"
     },
     {
@@ -717,7 +697,7 @@
       "type": "MANGA",
       "domain": "scansatlanticos.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/AtlantisScan.kt"
     },
     {
@@ -748,7 +728,7 @@
       "domain": "azoramoon.com",
       "broken": false,
       "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/AzoraMoon.kt"
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ar/AzoraMoon.kt"
     },
     {
       "name": "BABELWUXIA",
@@ -767,7 +747,7 @@
       "type": "MANGA",
       "domain": "bakaman.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/th/BakaMan.kt"
     },
     {
@@ -777,7 +757,7 @@
       "type": "MANGA",
       "domain": "bakamh.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/zh/Bakamh.kt"
     },
     {
@@ -797,7 +777,7 @@
       "type": "MANGA",
       "domain": "banana-scan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/BananaScan.kt"
     },
     {
@@ -877,7 +857,7 @@
       "type": "MANGA",
       "domain": "bentomanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/BentomangaParser.kt"
     },
     {
@@ -887,7 +867,7 @@
       "type": "MANGA",
       "domain": "bentoscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/BentoScan.kt"
     },
     {
@@ -907,7 +887,7 @@
       "type": "MANGA",
       "domain": "bestmanga.club",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ru/BestManga.kt"
     },
     {
@@ -917,7 +897,7 @@
       "type": "MANGA",
       "domain": "bestmanhua.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/BestManhuaCom.kt"
     },
     {
@@ -937,7 +917,7 @@
       "type": "HENTAI",
       "domain": "bibimanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/BibiManga.kt"
     },
     {
@@ -957,7 +937,7 @@
       "type": "MANGA",
       "domain": "birdmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/BirdManga.kt"
     },
     {
@@ -987,7 +967,7 @@
       "type": "MANGA",
       "domain": "blogtruyenvn.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/vi/BlogTruyenVN.kt"
     },
     {
@@ -1047,7 +1027,7 @@
       "type": "HENTAI",
       "domain": "boyslove.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/BoysLove.kt"
     },
     {
@@ -1057,7 +1037,7 @@
       "type": "MANGA",
       "domain": "brakeout.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancmsalt/es/Brakeout.kt"
     },
     {
@@ -1067,7 +1047,7 @@
       "type": "MANGA",
       "domain": "www.brmangas.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/pt/BrMangas.kt"
     },
     {
@@ -1087,7 +1067,7 @@
       "type": "MANGA",
       "domain": "burningscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/BurningScans.kt"
     },
     {
@@ -1117,7 +1097,7 @@
       "type": "MANGA",
       "domain": "cartelmanhwas.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/CartelDeManhwas.kt"
     },
     {
@@ -1137,7 +1117,7 @@
       "type": "MANGA",
       "domain": "catharsisfantasy.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/CatharsisFantasy.kt"
     },
     {
@@ -1166,9 +1146,9 @@
       "locale": "es",
       "type": "MANGA",
       "domain": "legionscans.com",
-      "broken": true,
-      "broken_reason": "Not dead, changed template",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancmsalt/es/CerberuSeries.kt"
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/CerberuSeries.kt"
     },
     {
       "name": "CERISE_SCANS",
@@ -1201,16 +1181,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/CloneMangaParser.kt"
     },
     {
-      "name": "CLOVERMANGA",
-      "title": "CloverManga",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "webtoonhatti.me",
-      "broken": true,
-      "broken_reason": "Redirect to @WEBTOONHATTI",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/CloverManga.kt"
-    },
-    {
       "name": "CMANGA",
       "title": "CManga",
       "locale": "vi",
@@ -1227,7 +1197,7 @@
       "type": "HENTAI",
       "domain": "cocomic.co",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/CoComic.kt"
     },
     {
@@ -1237,7 +1207,7 @@
       "type": "MANGA",
       "domain": "cocorip.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Cocorip.kt"
     },
     {
@@ -1257,7 +1227,7 @@
       "type": "MANGA",
       "domain": "coloredmanga.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ColoredManga.kt"
     },
     {
@@ -1277,7 +1247,7 @@
       "type": "MANGA",
       "domain": "comic1000.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/manga18/en/Comic1000.kt"
     },
     {
@@ -1287,7 +1257,7 @@
       "type": "MANGA",
       "domain": "comic21.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Comic21.kt"
     },
     {
@@ -1309,6 +1279,16 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Comicaso.kt"
+    },
+    {
+      "name": "COMICAZEN",
+      "title": "Comicazen",
+      "locale": "id",
+      "type": "MANGA",
+      "domain": "comicazen.com",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/Comicazen.kt"
     },
     {
       "name": "COMICEXTRA",
@@ -1367,7 +1347,7 @@
       "type": "HENTAI",
       "domain": "constellarcomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Constellarcomic.kt"
     },
     {
@@ -1377,7 +1357,7 @@
       "type": "MANGA",
       "domain": "copypastescan.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Copypastescan.kt"
     },
     {
@@ -1387,7 +1367,7 @@
       "type": "MANGA",
       "domain": "cosmic-scans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/CosmicScansParser.kt"
     },
     {
@@ -1407,7 +1387,7 @@
       "type": "MANGA",
       "domain": "creepyscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/CreepyScans.kt"
     },
     {
@@ -1447,7 +1427,7 @@
       "type": "MANGA",
       "domain": "culturesubs.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare origin TLS error (5xx) — site misconfigured or dead",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/CultureSubs.kt"
     },
     {
@@ -1507,7 +1487,7 @@
       "type": "MANGA",
       "domain": "daprob.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Daprob.kt"
     },
     {
@@ -1517,7 +1497,7 @@
       "type": "MANGA",
       "domain": "dark-scan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/DarkScan.kt"
     },
     {
@@ -1587,7 +1567,7 @@
       "type": "HENTAI",
       "domain": "fuchscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/DeccalScans.kt"
     },
     {
@@ -1627,7 +1607,7 @@
       "type": "MANGA",
       "domain": "cabaredowatame.site",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Cabaredowatame.kt"
     },
     {
@@ -1717,7 +1697,7 @@
       "type": "MANGA",
       "domain": "domalfansb.com.tr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/DomalFansb.kt"
     },
     {
@@ -1767,7 +1747,7 @@
       "type": "HENTAI",
       "domain": "doujins.lat",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/Doujins.kt"
     },
     {
@@ -1789,16 +1769,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/th/Doujinza.kt"
-    },
-    {
-      "name": "DRAGONTRANSLATION",
-      "title": "Dragon Translation",
-      "locale": "es",
-      "type": "MANGA",
-      "domain": "dragontranslation.net",
-      "broken": true,
-      "broken_reason": "Redirect to DragonTranslation.org source",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/es/DragonTranslationParser.kt"
     },
     {
       "name": "DRAGONMANGA",
@@ -1837,7 +1807,7 @@
       "type": "MANGA",
       "domain": "drakecomic.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/DrakeScans.kt"
     },
     {
@@ -1877,7 +1847,7 @@
       "type": "HENTAI",
       "domain": "duckmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/DuckManga.kt"
     },
     {
@@ -1887,7 +1857,7 @@
       "type": "HENTAI",
       "domain": "duniakomik.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Duniakomik.kt"
     },
     {
@@ -1947,7 +1917,7 @@
       "type": "MANGA",
       "domain": "elarctoon.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Elarcpage.kt"
     },
     {
@@ -1987,7 +1957,7 @@
       "type": "MANGA",
       "domain": "www.beinmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/EliteManga.kt"
     },
     {
@@ -2007,7 +1977,7 @@
       "type": "MANGA",
       "domain": "en.huntersscan.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/HuntersScanEn.kt"
     },
     {
@@ -2017,7 +1987,7 @@
       "type": "MANGA",
       "domain": "www.enlignemanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/cupfox/fr/EnLigneManga.kt"
     },
     {
@@ -2047,7 +2017,7 @@
       "type": "MANGA",
       "domain": "www.epikman.ga",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/tr/EpikMan.kt"
     },
     {
@@ -2087,7 +2057,7 @@
       "type": "HENTAI",
       "domain": "eromanhwa.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/all/EroManhwa.kt"
     },
     {
@@ -2107,7 +2077,7 @@
       "type": "MANGA",
       "domain": "esomanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/EsoManga.kt"
     },
     {
@@ -2117,7 +2087,7 @@
       "type": "MANGA",
       "domain": "www.etheralradiance.eu",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/EtheralRadiance.kt"
     },
     {
@@ -2169,6 +2139,26 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/FactManga.kt"
+    },
+    {
+      "name": "TENKAISCAN",
+      "title": "FalcoScan",
+      "locale": "es",
+      "type": "HENTAI",
+      "domain": "falcoscan.net",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/TenkaiScan.kt"
+    },
+    {
+      "name": "FANFOX",
+      "title": "FanFox",
+      "locale": "en",
+      "type": "MANGA",
+      "domain": "fanfox.net",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/FanFoxParser.kt"
     },
     {
       "name": "FAYSCANS",
@@ -2267,7 +2257,7 @@
       "type": "MANGA",
       "domain": "flixscans.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ar/FlixScans.kt"
     },
     {
@@ -2277,7 +2267,7 @@
       "type": "MANGA",
       "domain": "flixscans.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/FlixScansOrg.kt"
     },
     {
@@ -2317,7 +2307,7 @@
       "type": "MANGA",
       "domain": "foxwhite.com.br",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/FoxWhite.kt"
     },
     {
@@ -2327,7 +2317,7 @@
       "type": "MANGA",
       "domain": "fr-scan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/fr/FrScan.kt"
     },
     {
@@ -2337,7 +2327,7 @@
       "type": "MANGA",
       "domain": "franxxmangas.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/pt/FranxxMangas.kt"
     },
     {
@@ -2347,7 +2337,7 @@
       "type": "MANGA",
       "domain": "freakcomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/FreakComic.kt"
     },
     {
@@ -2357,7 +2347,7 @@
       "type": "MANGA",
       "domain": "freakscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/FreakScans.kt"
     },
     {
@@ -2367,7 +2357,7 @@
       "type": "HENTAI",
       "domain": "freecomiconline.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/FreeComicOnline.kt"
     },
     {
@@ -2397,7 +2387,7 @@
       "type": "MANGA",
       "domain": "freewebtooncoins.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/FreeWebtoonCoins.kt"
     },
     {
@@ -2407,7 +2397,7 @@
       "type": "MANGA",
       "domain": "www.frmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/cupfox/fr/FrManga.kt"
     },
     {
@@ -2417,7 +2407,7 @@
       "type": "MANGA",
       "domain": "frscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/FrScansCom.kt"
     },
     {
@@ -2427,7 +2417,7 @@
       "type": "MANGA",
       "domain": "furyosociety.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/FuryoSociety.kt"
     },
     {
@@ -2497,7 +2487,7 @@
       "type": "MANGA",
       "domain": "gatemanga.com",
       "broken": true,
-      "broken_reason": "Original site closed",
+      "broken_reason": "Site is online but layout changed — parser no longer matches page structure",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/GateManga.kt"
     },
     {
@@ -2527,7 +2517,7 @@
       "type": "HENTAI",
       "domain": "gekkou.site",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/GekkouScans.kt"
     },
     {
@@ -2539,16 +2529,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/en/SuryaScans.kt"
-    },
-    {
-      "name": "GHOSTFANSUB",
-      "title": "GhostFansub",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "ghostfansub.co",
-      "broken": true,
-      "broken_reason": "Redirect to @GRIMELEK",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/GhostFansub.kt"
     },
     {
       "name": "GHOSTSCAN",
@@ -2571,23 +2551,13 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/es/GistamisHouseFansub.kt"
     },
     {
-      "name": "GLORYMANGA",
-      "title": "GloryManga",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "mangagezgini.site",
-      "broken": true,
-      "broken_reason": "Redirect to @MANGAGEZGINI",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/GloryManga.kt"
-    },
-    {
       "name": "LUNARHENTAI",
       "title": "GloryScans",
       "locale": "fr",
       "type": "MANGA",
       "domain": "gloryscans.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/LunarHentai.kt"
     },
     {
@@ -2617,7 +2587,7 @@
       "type": "MANGA",
       "domain": "goodgirls.moe",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/GoodGirls.kt"
     },
     {
@@ -2657,7 +2627,7 @@
       "type": "MANGA",
       "domain": "gremorymangas.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/GremoryMangas.kt"
     },
     {
@@ -2677,7 +2647,7 @@
       "type": "MANGA",
       "domain": "www.gufengmh.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/sinmh/zh/Gufengmh.kt"
     },
     {
@@ -2687,7 +2657,7 @@
       "type": "MANGA",
       "domain": "www.guildatierdraw.top",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/pt/GuildaTierDraw.kt"
     },
     {
@@ -2887,7 +2857,7 @@
       "type": "HENTAI",
       "domain": "hensekai.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zmanga/id/Hensekai.kt"
     },
     {
@@ -2939,16 +2909,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Hentai20.kt"
-    },
-    {
-      "name": "HENTAI3Z",
-      "title": "Hentai3z",
-      "locale": "en",
-      "type": "HENTAI",
-      "domain": "manga18h.xyz",
-      "broken": true,
-      "broken_reason": "Redirect to @hentai20",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Hentai3z.kt"
     },
     {
       "name": "HENTAI3ZCC",
@@ -3087,7 +3047,7 @@
       "type": "HENTAI",
       "domain": "hentaiz.news",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/vi/HentaiZ.kt"
     },
     {
@@ -3141,16 +3101,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/ar/Hijala.kt"
     },
     {
-      "name": "HIJALACOM",
-      "title": "Hijalacom",
-      "locale": "ar",
-      "type": "MANGA",
-      "domain": "hijala.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/Hijalacom.kt"
-    },
-    {
       "name": "HIKARISCAN",
       "title": "HikariScan",
       "locale": "pt",
@@ -3199,16 +3149,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/iken/en/HiveComic.kt"
-    },
-    {
-      "name": "VOIDSCANS",
-      "title": "HiveToon",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "hivetoon.com",
-      "broken": true,
-      "broken_reason": "Redirect to HiveComic",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/VoidScans.kt"
     },
     {
       "name": "HNISCANTRAD",
@@ -3266,9 +3206,9 @@
       "locale": "es",
       "type": "MANGA",
       "domain": "visormanga.com",
-      "broken": true,
-      "broken_reason": "Not dead, changed template",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/HouseMangas.kt"
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/es/HouseMangasParser.kt"
     },
     {
       "name": "HOUSEOFOTAKUS",
@@ -3277,7 +3217,7 @@
       "type": "MANGA",
       "domain": "houseofotakus.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/HouseOfOtakus.kt"
     },
     {
@@ -3287,7 +3227,7 @@
       "type": "MANGA",
       "domain": "hunlight.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/HunLight.kt"
     },
     {
@@ -3317,7 +3257,7 @@
       "type": "MANGA",
       "domain": "hwago01.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/Hwago.kt"
     },
     {
@@ -3351,23 +3291,13 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/IllusionScan.kt"
     },
     {
-      "name": "IMMORTALUPDATES",
-      "title": "ImmortalUpdates",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "immortalupdates.com",
-      "broken": true,
-      "broken_reason": "Redirect to @MortalsGroove",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ImmortalUpdates.kt"
-    },
-    {
       "name": "IMPARATORMANGA",
       "title": "ImparatorManga",
       "locale": "tr",
       "type": "MANGA",
       "domain": "www.imparatormanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/ImparatorManga.kt"
     },
     {
@@ -3387,7 +3317,7 @@
       "type": "MANGA",
       "domain": "imperioscans.com.br",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/ImperioScans.kt"
     },
     {
@@ -3397,18 +3327,8 @@
       "type": "MANGA",
       "domain": "clubinari.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/InariManga.kt"
-    },
-    {
-      "name": "INARIPIKAV",
-      "title": "InariPikav",
-      "locale": "es",
-      "type": "MANGA",
-      "domain": "clubinari.org",
-      "broken": true,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/InariPikav.kt"
     },
     {
       "name": "INDO18H",
@@ -3417,7 +3337,7 @@
       "type": "HENTAI",
       "domain": "indo18h.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/Indo18h.kt"
     },
     {
@@ -3427,7 +3347,7 @@
       "type": "MANGA",
       "domain": "infamous-scans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/InfamousScans.kt"
     },
     {
@@ -3439,6 +3359,16 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Infrafandub.kt"
+    },
+    {
+      "name": "INKAPK",
+      "title": "InkAPK",
+      "locale": "pt",
+      "type": "HENTAI",
+      "domain": "inkapk.net",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/InkAPK.kt"
     },
     {
       "name": "MURIMSCAN",
@@ -3467,7 +3397,7 @@
       "type": "MANGA",
       "domain": "inmoralnofansub.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/InmoralNoFansub.kt"
     },
     {
@@ -3479,16 +3409,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/MangaMundoDrama.kt"
-    },
-    {
-      "name": "INSTAMANHWA",
-      "title": "InstaManhwa",
-      "locale": "en",
-      "type": "HENTAI",
-      "domain": "www.manhwaden.com",
-      "broken": true,
-      "broken_reason": "Redirect to @XMANHWA",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/InstaManhwa.kt"
     },
     {
       "name": "INUMANGA",
@@ -3547,7 +3467,7 @@
       "type": "MANGA",
       "domain": "japscans.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/JapScansFR.kt"
     },
     {
@@ -3557,7 +3477,7 @@
       "type": "MANGA",
       "domain": "jellyring.co",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Jellyring.kt"
     },
     {
@@ -3577,7 +3497,7 @@
       "type": "MANGA",
       "domain": "jpmangas.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/JpMangas.kt"
     },
     {
@@ -3597,18 +3517,8 @@
       "type": "MANGA",
       "domain": "kaijuno8.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/onemanga/fr/KaijuNo8.kt"
-    },
-    {
-      "name": "KAISCANS",
-      "title": "KaiScans",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "luascans.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/KaiScans.kt"
     },
     {
       "name": "KAKUSEIPROJECT",
@@ -3677,7 +3587,7 @@
       "type": "MANGA",
       "domain": "kedi.to",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Kedi.kt"
     },
     {
@@ -3687,7 +3597,7 @@
       "type": "MANGA",
       "domain": "kenhuav2scan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Origin server returns HTTP 500",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Kenhuav2Scan.kt"
     },
     {
@@ -3727,7 +3637,7 @@
       "type": "HENTAI",
       "domain": "18.kiara.cool",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Kiara18.kt"
     },
     {
@@ -3741,21 +3651,11 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/onemanga/fr/KingdomScan.kt"
     },
     {
-      "name": "FURYMANGA",
-      "title": "KingOfScans",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "myshojo.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/FuryManga.kt"
-    },
-    {
       "name": "KIRYUU",
       "title": "Kiryuu",
       "locale": "id",
       "type": "MANGA",
-      "domain": "v4.kiryuu.to",
+      "domain": "v5.kiryuu.to",
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/natsu/id/Kiryuu.kt"
@@ -3767,7 +3667,7 @@
       "type": "MANGA",
       "domain": "www.kishisan.site",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/id/Kishisan.kt"
     },
     {
@@ -3787,7 +3687,7 @@
       "type": "HENTAI",
       "domain": "klikmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/KlikManga.kt"
     },
     {
@@ -3857,7 +3757,7 @@
       "type": "MANGA",
       "domain": "komikav.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikAvParser.kt"
     },
     {
@@ -3897,7 +3797,7 @@
       "type": "MANGA",
       "domain": "www.komikges.my.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/id/KomikGes.kt"
     },
     {
@@ -3911,16 +3811,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikGo.kt"
     },
     {
-      "name": "KOMIKID",
-      "title": "KomikId",
-      "locale": "id",
-      "type": "MANGA",
-      "domain": "komiku.org",
-      "broken": true,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/id/KomikId.kt"
-    },
-    {
       "name": "KOMIKINDO",
       "title": "KomikIndo",
       "locale": "id",
@@ -3931,23 +3821,13 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikIndoParser.kt"
     },
     {
-      "name": "KOMIKINDO_INFO",
-      "title": "KomikIndo.info",
-      "locale": "id",
-      "type": "HENTAI",
-      "domain": "mangasusuku.com",
-      "broken": true,
-      "broken_reason": "Redirect to @MANGASUSUKU",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zmanga/id/KomikIndoInfo.kt"
-    },
-    {
       "name": "KOMIKINDO_MOE",
       "title": "KomikIndo.org",
       "locale": "id",
       "type": "HENTAI",
       "domain": "komikindo.ch",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikIndo.kt"
     },
     {
@@ -3957,7 +3837,7 @@
       "type": "MANGA",
       "domain": "komiklab.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/KomikLabParser.kt"
     },
     {
@@ -3967,7 +3847,7 @@
       "type": "MANGA",
       "domain": "komikmu.top",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikLokalParser.kt"
     },
     {
@@ -3977,7 +3857,7 @@
       "type": "MANGA",
       "domain": "komiklovers.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare origin TLS error (5xx) — site misconfigured or dead",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikLovers.kt"
     },
     {
@@ -3997,7 +3877,7 @@
       "type": "HENTAI",
       "domain": "komikpix.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikPix.kt"
     },
     {
@@ -4037,7 +3917,7 @@
       "type": "MANGA",
       "domain": "komiksan.link",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikSan.kt"
     },
     {
@@ -4047,7 +3927,7 @@
       "type": "MANGA",
       "domain": "komiksay.info",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/KomikSay.kt"
     },
     {
@@ -4136,7 +4016,7 @@
       "locale": "tr",
       "type": "HENTAI",
       "domain": "www.kuroimanga.com",
-      "broken": true,
+      "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/KuroiManga.kt"
     },
@@ -4147,7 +4027,7 @@
       "type": "HENTAI",
       "domain": "kyumik.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Kyumik.kt"
     },
     {
@@ -4157,7 +4037,7 @@
       "type": "MANGA",
       "domain": "ladyestelarscan.com.br",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/LadyestelarScan.kt"
     },
     {
@@ -4167,7 +4047,7 @@
       "type": "MANGA",
       "domain": "laidbackscans.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/en/LaidBackScans.kt"
     },
     {
@@ -4247,7 +4127,7 @@
       "type": "MANGA",
       "domain": "lectorunitoon.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Lectorunitoon.kt"
     },
     {
@@ -4257,7 +4137,7 @@
       "type": "MANGA",
       "domain": "lectorunm.life",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Lectorunm.kt"
     },
     {
@@ -4387,7 +4267,7 @@
       "type": "MANGA",
       "domain": "lermanga.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Connection refused — server offline",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/pt/LerManga.kt"
     },
     {
@@ -4397,7 +4277,7 @@
       "type": "MANGA",
       "domain": "lermangaonline.com.br",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/pt/LerMangaOnline.kt"
     },
     {
@@ -4451,16 +4331,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/LichMangas.kt"
     },
     {
-      "name": "LICHSUBS",
-      "title": "LichSubs",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "www.kuroimanga.com",
-      "broken": true,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/LichSubs.kt"
-    },
-    {
       "name": "LIKEMANGANET",
       "title": "Like-Manga.net",
       "locale": "ar",
@@ -4476,8 +4346,8 @@
       "locale": "en",
       "type": "MANGA",
       "domain": "likemanga.ink",
-      "broken": false,
-      "broken_reason": "",
+      "broken": true,
+      "broken_reason": "Blocked by Cloudflare",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/likemanga/en/LikeManga.kt"
     },
     {
@@ -4547,7 +4417,7 @@
       "type": "MANGA",
       "domain": "www.linkstartscan.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/LinkStartScan.kt"
     },
     {
@@ -4557,7 +4427,7 @@
       "type": "MANGA",
       "domain": "lire-scan.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/LireScan.kt"
     },
     {
@@ -4567,7 +4437,7 @@
       "type": "MANGA",
       "domain": "lirescanvf.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/JpScanVf.kt"
     },
     {
@@ -4577,7 +4447,7 @@
       "type": "MANGA",
       "domain": "lkscanlation.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/LkScanlation.kt"
     },
     {
@@ -4597,7 +4467,7 @@
       "type": "HENTAI",
       "domain": "lolicon.mobi",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/LoliconMobi.kt"
     },
     {
@@ -4617,7 +4487,7 @@
       "type": "MANGA",
       "domain": "lscomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/LeviatanScans.kt"
     },
     {
@@ -4637,7 +4507,7 @@
       "type": "MANGA",
       "domain": "luacomic.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/en/LuaScans.kt"
     },
     {
@@ -4647,7 +4517,7 @@
       "type": "MANGA",
       "domain": "luffymanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/LuffyManga.kt"
     },
     {
@@ -4657,7 +4527,7 @@
       "type": "MANGA",
       "domain": "lugnica-scans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Root returns HTTP 404 — site gone or restructured",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/LugnicaScans.kt"
     },
     {
@@ -4677,7 +4547,7 @@
       "type": "MANGA",
       "domain": "lunarrscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/LunarScan.kt"
     },
     {
@@ -4697,7 +4567,7 @@
       "type": "MANGA",
       "domain": "lunarscans.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/LunarScans.kt"
     },
     {
@@ -4757,7 +4627,7 @@
       "type": "MANGA",
       "domain": "luxmanga.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/LuxManga.kt"
     },
     {
@@ -4897,7 +4767,7 @@
       "type": "MANGA",
       "domain": "manga-spark.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/Mangaspark.kt"
     },
     {
@@ -4927,7 +4797,7 @@
       "type": "MANGA",
       "domain": "manga-1001.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manga1001.kt"
     },
     {
@@ -4957,7 +4827,7 @@
       "type": "HENTAI",
       "domain": "manga18.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manga18Xyz.kt"
     },
     {
@@ -4969,16 +4839,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/all/Manga18Fx.kt"
-    },
-    {
-      "name": "MANGA18H",
-      "title": "Manga18h",
-      "locale": "en",
-      "type": "HENTAI",
-      "domain": "manga18h.xyz",
-      "broken": true,
-      "broken_reason": "Redirect to @hentai20",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manga18h.kt"
     },
     {
       "name": "MANGA18X",
@@ -4997,7 +4857,7 @@
       "type": "HENTAI",
       "domain": "manga1k.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manga1k.kt"
     },
     {
@@ -5017,7 +4877,7 @@
       "type": "MANGA",
       "domain": "manga4life.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/nepnep/en/Manga4Life.kt"
     },
     {
@@ -5027,7 +4887,7 @@
       "type": "MANGA",
       "domain": "manga68.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manga68.kt"
     },
     {
@@ -5047,7 +4907,7 @@
       "type": "MANGA",
       "domain": "mangaaction.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaAction.kt"
     },
     {
@@ -5059,16 +4919,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/ar/MangaAiLand.kt"
-    },
-    {
-      "name": "MANGARBIC",
-      "title": "MangaArabic",
-      "locale": "ar",
-      "type": "MANGA",
-      "domain": "lekmanga.net",
-      "broken": true,
-      "broken_reason": "Website is down or domain has been changed",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/Mangarbic.kt"
     },
     {
       "name": "MANGAATREND",
@@ -5117,7 +4967,7 @@
       "type": "MANGA",
       "domain": "mangabob.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaBob.kt"
     },
     {
@@ -5147,7 +4997,7 @@
       "type": "MANGA",
       "domain": "mangacim.com.tr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/Mangacim.kt"
     },
     {
@@ -5197,7 +5047,7 @@
       "type": "MANGA",
       "domain": "mangacultivator.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaCultivator.kt"
     },
     {
@@ -5277,7 +5127,7 @@
       "type": "MANGA",
       "domain": "mangadoor.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Origin server returns HTTP 406",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/es/MangaDoor.kt"
     },
     {
@@ -5309,16 +5159,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/Mangaefendisi.kt"
-    },
-    {
-      "name": "MANGAEFFECT",
-      "title": "MangaEffect",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "www.mangaread.org",
-      "broken": true,
-      "broken_reason": "Redirect to @MANGAREAD",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaEffect.kt"
     },
     {
       "name": "MANGATXUNOFFICIAL",
@@ -5357,7 +5197,7 @@
       "type": "MANGA",
       "domain": "mangafenxi.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ja/MangaFenxi.kt"
     },
     {
@@ -5477,7 +5317,7 @@
       "type": "MANGA",
       "domain": "www.mangafr.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/scan/fr/MangaFr.kt"
     },
     {
@@ -5489,16 +5329,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaFreak.kt"
-    },
-    {
-      "name": "MANGAGALAXY",
-      "title": "MangaGalaxy",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "vortexscans.org",
-      "broken": true,
-      "broken_reason": "Redirect to VortexScans",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/iken/en/MangaGalaxyParser.kt"
     },
     {
       "name": "MANGAGEKO",
@@ -5547,7 +5377,7 @@
       "type": "MANGA",
       "domain": "mangagojo.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/MangaGojo.kt"
     },
     {
@@ -5577,8 +5407,18 @@
       "type": "HENTAI",
       "domain": "mangaholic.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaHall.kt"
+    },
+    {
+      "name": "MANGAHOME",
+      "title": "MangaHome",
+      "locale": "en",
+      "type": "MANGA",
+      "domain": "www.mangahome.com",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/MangaHomeParser.kt"
     },
     {
       "name": "MANGAHONA",
@@ -5617,7 +5457,7 @@
       "type": "MANGA",
       "domain": "mangaid.click",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/id/Mangaid.kt"
     },
     {
@@ -5661,6 +5501,16 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangabox/en/Mangakakalot.kt"
     },
     {
+      "name": "MANGAKATANA",
+      "title": "MangaKatana",
+      "locale": "en",
+      "type": "MANGA",
+      "domain": "mangakatana.com",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/MangaKatana.kt"
+    },
+    {
       "name": "MANGAKAWAII_EN",
       "title": "MangaKawaii En",
       "locale": "en",
@@ -5687,7 +5537,7 @@
       "type": "MANGA",
       "domain": "mangakazani.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/MangaKazani.kt"
     },
     {
@@ -5807,7 +5657,7 @@
       "type": "MANGA",
       "domain": "mangalesen.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — Parking/1.0 HTTP 436",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/de/MangaLesen.kt"
     },
     {
@@ -5831,6 +5681,16 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ru/rulib/MangaLibParser.kt"
     },
     {
+      "name": "NEOX_SCANS",
+      "title": "MangaLivre",
+      "locale": "pt",
+      "type": "MANGA",
+      "domain": "mangalivre.tv",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Neoxscans.kt"
+    },
+    {
       "name": "MANGAMAMMY",
       "title": "MangaMammy",
       "locale": "ru",
@@ -5849,16 +5709,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/MangaMana.kt"
-    },
-    {
-      "name": "MANGA_MANHUA",
-      "title": "MangaManhua",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "mangaonlineteam.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaManhua.kt"
     },
     {
       "name": "MANGAMANIACS",
@@ -5897,7 +5747,7 @@
       "type": "MANGA",
       "domain": "manga-moons.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/th/MangaMoons.kt"
     },
     {
@@ -5917,7 +5767,7 @@
       "type": "MANGA",
       "domain": "mangananquim.site",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/MangaNanquim.kt"
     },
     {
@@ -5951,23 +5801,13 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/MangaNinja.kt"
     },
     {
-      "name": "MANGANOON",
-      "title": "MangaNoon",
-      "locale": "ar",
-      "type": "MANGA",
-      "domain": "vrnoin.site",
-      "broken": true,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/MangaNoon.kt"
-    },
-    {
       "name": "MANGAOKU",
       "title": "Mangaoku",
       "locale": "tr",
       "type": "MANGA",
       "domain": "mangaoku.info",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Mangaoku.kt"
     },
     {
@@ -5977,7 +5817,7 @@
       "type": "MANGA",
       "domain": "mangaokusana.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/MangaOkusana.kt"
     },
     {
@@ -6047,7 +5887,7 @@
       "type": "HENTAI",
       "domain": "mangaowl.one",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaowlOne.kt"
     },
     {
@@ -6057,7 +5897,7 @@
       "type": "MANGA",
       "domain": "mangaowl.to",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/Mangaowl.kt"
     },
     {
@@ -6067,7 +5907,7 @@
       "type": "MANGA",
       "domain": "mangaowlnet.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaOwlBlog.kt"
     },
     {
@@ -6077,7 +5917,7 @@
       "type": "HENTAI",
       "domain": "mangaowlyaoi.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaOwlUs.kt"
     },
     {
@@ -6085,7 +5925,7 @@
       "title": "MangaPark",
       "locale": "",
       "type": "MANGA",
-      "domain": "mangapark.io",
+      "domain": "mangapark.net",
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/all/MangaPark.kt"
@@ -6097,7 +5937,7 @@
       "type": "MANGA",
       "domain": "mangapeak.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/MangaPeak.kt"
     },
     {
@@ -6137,7 +5977,7 @@
       "type": "MANGA",
       "domain": "mangapure.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaPure.kt"
     },
     {
@@ -6147,7 +5987,7 @@
       "type": "MANGA",
       "domain": "mangaqueen.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaQueen.kt"
     },
     {
@@ -6187,7 +6027,7 @@
       "type": "MANGA",
       "domain": "mangareader.to",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare reports origin server unreachable",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/all/MangaReaderToParser.kt"
     },
     {
@@ -6199,16 +6039,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaRock.kt"
-    },
-    {
-      "name": "MANGAROCKTEAM",
-      "title": "MangaRock.team",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "mangarockteam.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaRockTeam.kt"
     },
     {
       "name": "MANGAROLLS",
@@ -6237,7 +6067,7 @@
       "type": "MANGA",
       "domain": "mangaruby.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaRuby.kt"
     },
     {
@@ -6247,7 +6077,7 @@
       "type": "MANGA",
       "domain": "mangaruhu.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/MangaRuhu.kt"
     },
     {
@@ -6257,7 +6087,7 @@
       "type": "HENTAI",
       "domain": "mangaryu.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaRyu.kt"
     },
     {
@@ -6267,7 +6097,7 @@
       "type": "MANGA",
       "domain": "mangascan-fr.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/MangaScan.kt"
     },
     {
@@ -6287,7 +6117,7 @@
       "type": "MANGA",
       "domain": "mangaschan.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/pt/MangasChan.kt"
     },
     {
@@ -6307,7 +6137,7 @@
       "type": "MANGA",
       "domain": "mangasee123.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/nepnep/en/MangaSee.kt"
     },
     {
@@ -6337,7 +6167,7 @@
       "type": "MANGA",
       "domain": "mangashiro.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/MangaShiro.kt"
     },
     {
@@ -6347,7 +6177,7 @@
       "type": "MANGA",
       "domain": "mangasiginagi.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/MangaSiginagi.kt"
     },
     {
@@ -6367,7 +6197,7 @@
       "type": "MANGA",
       "domain": "mangasonline.cc",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/pt/MangasOnline.kt"
     },
     {
@@ -6407,7 +6237,7 @@
       "type": "MANGA",
       "domain": "mangastorm.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ar/MangaStorm.kt"
     },
     {
@@ -6447,18 +6277,8 @@
       "type": "MANGA",
       "domain": "www.mangasy.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Mangasy.kt"
-    },
-    {
-      "name": "MANGATALE",
-      "title": "MangaTale",
-      "locale": "id",
-      "type": "MANGA",
-      "domain": "ikiru.one",
-      "broken": true,
-      "broken_reason": "Redirect to @IKIRU",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/MangaTaleParser.kt"
     },
     {
       "name": "MANGATELLERS",
@@ -6497,7 +6317,7 @@
       "type": "MANGA",
       "domain": "mangatime.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/MangaTime.kt"
     },
     {
@@ -6507,7 +6327,7 @@
       "type": "HENTAI",
       "domain": "mangatop.site",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/all/MangaTop.kt"
     },
     {
@@ -6577,7 +6397,7 @@
       "type": "MANGA",
       "domain": "mangaus.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Mangaus.kt"
     },
     {
@@ -6629,16 +6449,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Mangawt.kt"
-    },
-    {
-      "name": "MANGAWT_NET",
-      "title": "MangaWt.net",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "mangawt.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/MangaWtNet.kt"
     },
     {
       "name": "MANGA_WTF",
@@ -6707,7 +6517,7 @@
       "type": "MANGA",
       "domain": "mangazodiac.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/vi/MangaZodiac.kt"
     },
     {
@@ -6817,7 +6627,7 @@
       "type": "MANGA",
       "domain": "www.manhuakey.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/th/Manhuakey.kt"
     },
     {
@@ -6867,7 +6677,7 @@
       "type": "MANGA",
       "domain": "www.manhuasy.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manhuasy.kt"
     },
     {
@@ -6937,7 +6747,7 @@
       "type": "HENTAI",
       "domain": "manhwa18.app",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Manhwa18App.kt"
     },
     {
@@ -6996,8 +6806,8 @@
       "locale": "en",
       "type": "HENTAI",
       "domain": "manhwaclub.net",
-      "broken": true,
-      "broken_reason": "Check + refactor code needed",
+      "broken": false,
+      "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ManhwaClub.kt"
     },
     {
@@ -7157,7 +6967,7 @@
       "type": "HENTAI",
       "domain": "www.manhwalover.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/ManhwaLover.kt"
     },
     {
@@ -7177,7 +6987,7 @@
       "type": "MANGA",
       "domain": "manhwanew.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ManhwaNew.kt"
     },
     {
@@ -7187,7 +6997,7 @@
       "type": "HENTAI",
       "domain": "manhwablue.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/ManhwaPlus.kt"
     },
     {
@@ -7307,7 +7117,7 @@
       "type": "MANGA",
       "domain": "manwe.pro",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Manwe.kt"
     },
     {
@@ -7317,7 +7127,7 @@
       "type": "HENTAI",
       "domain": "manycomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ManyComic.kt"
     },
     {
@@ -7377,7 +7187,7 @@
       "type": "MANGA",
       "domain": "www.maxgsscan.online",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/pt/MaxgsScan.kt"
     },
     {
@@ -7477,7 +7287,7 @@
       "type": "HENTAI",
       "domain": "www.mikoroku.web.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/id/Mikoroku.kt"
     },
     {
@@ -7547,7 +7357,7 @@
       "type": "MANGA",
       "domain": "mmdaos.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Mmdaos.kt"
     },
     {
@@ -7557,7 +7367,7 @@
       "type": "MANGA",
       "domain": "mm-scans.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MmScans.kt"
     },
     {
@@ -7567,7 +7377,7 @@
       "type": "MANGA",
       "domain": "site.modescanlator.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancms/pt/ModeScanlator.kt"
     },
     {
@@ -7577,7 +7387,7 @@
       "type": "MANGA",
       "domain": "momonohanascan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/MomonohanaScan.kt"
     },
     {
@@ -7587,7 +7397,7 @@
       "type": "MANGA",
       "domain": "visormonarca.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/MonarcaManga.kt"
     },
     {
@@ -7637,7 +7447,7 @@
       "type": "MANGA",
       "domain": "mortalsgroove.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MortalsGroove.kt"
     },
     {
@@ -7667,7 +7477,7 @@
       "type": "MANGA",
       "domain": "msypublisher.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Root returns HTTP 404 — site gone or restructured",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MsyPublisher.kt"
     },
     {
@@ -7757,7 +7567,7 @@
       "type": "MANGA",
       "domain": "nabiscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "HTTP 403 — access blocked",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/NabiScans.kt"
     },
     {
@@ -7791,34 +7601,14 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/en/NecroScans.kt"
     },
     {
-      "name": "NEKOPOST",
-      "title": "NekoPost",
-      "locale": "th",
-      "type": "HENTAI",
-      "domain": "www.superdoujin.org",
-      "broken": true,
-      "broken_reason": "Redirect to @KINGS_MANGA",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/th/NekoPost.kt"
-    },
-    {
       "name": "NEKOSCANS",
       "title": "NekoScans",
       "locale": "es",
       "type": "MANGA",
       "domain": "www.nekoscans.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/es/NekoScans.kt"
-    },
-    {
-      "name": "NEOX_SCANS",
-      "title": "NeoxScans",
-      "locale": "pt",
-      "type": "MANGA",
-      "domain": "mangalivre.net",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Neoxscans.kt"
     },
     {
       "name": "NEROXUS",
@@ -7937,7 +7727,7 @@
       "type": "MANGA",
       "domain": "newmanhua.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/NewManhua.kt"
     },
     {
@@ -8007,7 +7797,7 @@
       "type": "MANGA",
       "domain": "www.nightcomic.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/NightComic.kt"
     },
     {
@@ -8127,7 +7917,7 @@
       "type": "MANGA",
       "domain": "noonscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Origin server returns HTTP 503",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/NoonScan.kt"
     },
     {
@@ -8137,7 +7927,7 @@
       "type": "MANGA",
       "domain": "noonscan.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Manjanoon.kt"
     },
     {
@@ -8187,7 +7977,7 @@
       "type": "MANGA",
       "domain": "novelstown.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/Novelstown.kt"
     },
     {
@@ -8197,8 +7987,18 @@
       "type": "MANGA",
       "domain": "www.noxscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/NoxScans.kt"
+    },
+    {
+      "name": "NOXSUBS",
+      "title": "NoxSubs",
+      "locale": "tr",
+      "type": "MANGA",
+      "domain": "noxsubs.net",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/NoxSubs.kt"
     },
     {
       "name": "NTRMANGA",
@@ -8217,8 +8017,18 @@
       "type": "MANGA",
       "domain": "1manhwa.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/NvManga.kt"
+    },
+    {
+      "name": "NYRAXMANGA",
+      "title": "Nyraxmanga",
+      "locale": "en",
+      "type": "MANGA",
+      "domain": "nyraxmanga.com",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Nyraxmanga.kt"
     },
     {
       "name": "NYXMANGA",
@@ -8227,7 +8037,7 @@
       "type": "MANGA",
       "domain": "nyxmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/NyxManga.kt"
     },
     {
@@ -8237,7 +8047,7 @@
       "type": "MANGA",
       "domain": "oioivn.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/cupfox/vi/OioiVn.kt"
     },
     {
@@ -8287,7 +8097,7 @@
       "type": "MANGA",
       "domain": "onepieceex.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/pt/OnePieceEx.kt"
     },
     {
@@ -8317,7 +8127,7 @@
       "type": "MANGA",
       "domain": "onlymanhwa.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/OnlyManhwa.kt"
     },
     {
@@ -8327,7 +8137,7 @@
       "type": "MANGA",
       "domain": "onma.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/ar/Onma.kt"
     },
     {
@@ -8387,18 +8197,8 @@
       "type": "MANGA",
       "domain": "otsugami.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Otsugami.kt"
-    },
-    {
-      "name": "PANCONCOLA",
-      "title": "Panconcola",
-      "locale": "es",
-      "type": "MANGA",
-      "domain": "artessupremas.com",
-      "broken": true,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Panconcola.kt"
     },
     {
       "name": "PANTHEONSCAN",
@@ -8417,7 +8217,7 @@
       "type": "MANGA",
       "domain": "www.pantheon-scan.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Root returns HTTP 404 — site gone or restructured",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/PantheonScanFr.kt"
     },
     {
@@ -8427,7 +8227,7 @@
       "type": "MANGA",
       "domain": "papscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/animebootstrap/fr/PapScan.kt"
     },
     {
@@ -8527,7 +8327,7 @@
       "type": "MANGA",
       "domain": "phetruyen.vip",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/vi/Saytruyenhay.kt"
     },
     {
@@ -8557,7 +8357,7 @@
       "type": "MANGA",
       "domain": "pianmanga.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/PianManga.kt"
     },
     {
@@ -8587,7 +8387,7 @@
       "type": "MANGA",
       "domain": "pinkteacomics.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/vi/PinkTeaComic.kt"
     },
     {
@@ -8637,7 +8437,7 @@
       "type": "MANGA",
       "domain": "po2scans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/Po2Scans.kt"
     },
     {
@@ -8667,7 +8467,7 @@
       "type": "HENTAI",
       "domain": "ponymanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/PonyManga.kt"
     },
     {
@@ -8697,7 +8497,7 @@
       "type": "MANGA",
       "domain": "pornhwascans.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/PornhwaScans.kt"
     },
     {
@@ -8727,7 +8527,7 @@
       "type": "MANGA",
       "domain": "potatomanga.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/PotatoManga.kt"
     },
     {
@@ -8737,7 +8537,7 @@
       "type": "MANGA",
       "domain": "reader.powermanga.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/foolslide/it/PowerManga.kt"
     },
     {
@@ -8747,7 +8547,7 @@
       "type": "HENTAI",
       "domain": "prismahentai.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Prismahentai.kt"
     },
     {
@@ -8757,7 +8557,7 @@
       "type": "MANGA",
       "domain": "projetoscanlator.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/ProjetoScanlator.kt"
     },
     {
@@ -8767,7 +8567,7 @@
       "type": "MANGA",
       "domain": "prunusscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/PrunusScans.kt"
     },
     {
@@ -8777,7 +8577,7 @@
       "type": "HENTAI",
       "domain": "psunicorn.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/Psunicorn.kt"
     },
     {
@@ -8797,7 +8597,7 @@
       "type": "HENTAI",
       "domain": "pururin.to",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/Pururin.kt"
     },
     {
@@ -8847,7 +8647,7 @@
       "type": "MANGA",
       "domain": "radiantscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/LuminousScans.kt"
     },
     {
@@ -8857,7 +8657,7 @@
       "type": "MANGA",
       "domain": "ragnarokscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/RagnarokScan.kt"
     },
     {
@@ -8877,7 +8677,7 @@
       "type": "MANGA",
       "domain": "ragnarscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/Ragnarscans.kt"
     },
     {
@@ -8887,7 +8687,7 @@
       "type": "MANGA",
       "domain": "ragnascan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/RagnaScan.kt"
     },
     {
@@ -8917,7 +8717,7 @@
       "type": "MANGA",
       "domain": "rainbowfairyscan.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/RainbowFairyScan.kt"
     },
     {
@@ -8987,7 +8787,7 @@
       "type": "MANGA",
       "domain": "rawmanga.su",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ja/RawManga.kt"
     },
     {
@@ -8997,7 +8797,7 @@
       "type": "MANGA",
       "domain": "rawxz.ac",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ja/RawXz.kt"
     },
     {
@@ -9027,7 +8827,7 @@
       "type": "MANGA",
       "domain": "fr.readergen.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare origin TLS error (5xx) — site misconfigured or dead",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/fr/Readergen.kt"
     },
     {
@@ -9037,7 +8837,7 @@
       "type": "MANGA",
       "domain": "qscomics.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/ReadersPoint.kt"
     },
     {
@@ -9047,7 +8847,7 @@
       "type": "MANGA",
       "domain": "readfreecomics.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ReadFreeComics.kt"
     },
     {
@@ -9077,7 +8877,7 @@
       "type": "HENTAI",
       "domain": "readmanhua.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ReadManhua.kt"
     },
     {
@@ -9107,7 +8907,7 @@
       "type": "MANGA",
       "domain": "reaperscans.com",
       "broken": true,
-      "broken_reason": "Closed site",
+      "broken_reason": "Site is in maintenance mode — parser cannot fetch while site is offline",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancms/en/ReaperComics.kt"
     },
     {
@@ -9117,7 +8917,7 @@
       "type": "MANGA",
       "domain": "reaper-scans.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/fr/ReaperScansFr.kt"
     },
     {
@@ -9177,7 +8977,7 @@
       "type": "MANGA",
       "domain": "www.revolutionscantrad.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/RevolutionScantrad.kt"
     },
     {
@@ -9207,7 +9007,7 @@
       "type": "MANGA",
       "domain": "www.rh2plusmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/th/RhPlusManga.kt"
     },
     {
@@ -9227,7 +9027,7 @@
       "type": "MANGA",
       "domain": "rsdleft.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/RightdarkScan.kt"
     },
     {
@@ -9237,7 +9037,7 @@
       "type": "MANGA",
       "domain": "rimuscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/RimuScans.kt"
     },
     {
@@ -9247,7 +9047,7 @@
       "type": "MANGA",
       "domain": "rizzfables.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/RizzComic.kt"
     },
     {
@@ -9257,7 +9057,7 @@
       "type": "MANGA",
       "domain": "www.guildknives.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/RobinManga.kt"
     },
     {
@@ -9277,7 +9077,7 @@
       "type": "MANGA",
       "domain": "rogmangas.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/RogMangas.kt"
     },
     {
@@ -9299,16 +9099,6 @@
       "broken": false,
       "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/en/RoliaScan.kt"
-    },
-    {
-      "name": "ROMANTIKMANGA",
-      "title": "RomantikManga",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "webtoonhatti.club",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/RomantikManga.kt"
     },
     {
       "name": "RUYAMANGA",
@@ -9417,7 +9207,7 @@
       "type": "MANGA",
       "domain": "scambertraslator.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Scambertraslator.kt"
     },
     {
@@ -9437,7 +9227,7 @@
       "type": "HENTAI",
       "domain": "scan-hentai.fr",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/fr/ScanHentai.kt"
     },
     {
@@ -9467,7 +9257,7 @@
       "type": "MANGA",
       "domain": "scan-manga.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/ScanManga.kt"
     },
     {
@@ -9477,7 +9267,7 @@
       "type": "MANGA",
       "domain": "scanmanga-vf.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mmrcms/fr/ScanMangaVfWs.kt"
     },
     {
@@ -9487,7 +9277,7 @@
       "type": "MANGA",
       "domain": "scansmangas.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/fr/ScansMangasMe.kt"
     },
     {
@@ -9497,7 +9287,7 @@
       "type": "MANGA",
       "domain": "scan-trad.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/scan/fr/ScanTrad.kt"
     },
     {
@@ -9507,7 +9297,7 @@
       "type": "MANGA",
       "domain": "scantrad-vf.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/fr/ScantradVf.kt"
     },
     {
@@ -9537,7 +9327,7 @@
       "type": "MANGA",
       "domain": "scanvf.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/scan/fr/ScanVfOrg.kt"
     },
     {
@@ -9547,7 +9337,7 @@
       "type": "MANGA",
       "domain": "scarmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/ScarManga.kt"
     },
     {
@@ -9607,7 +9397,7 @@
       "type": "MANGA",
       "domain": "www.seinemanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/cupfox/fr/SeineManga.kt"
     },
     {
@@ -9707,7 +9497,7 @@
       "type": "MANGA",
       "domain": "www.shadowxmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/ar/ShadowxManga.kt"
     },
     {
@@ -9717,7 +9507,7 @@
       "type": "MANGA",
       "domain": "sheakomik.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/Sheakomik.kt"
     },
     {
@@ -9781,16 +9571,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/id/ShiyuraSub.kt"
     },
     {
-      "name": "SHOJOSCANS",
-      "title": "ShojoScans",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "violetscans.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/ShojoScans.kt"
-    },
-    {
       "name": "SHOOTINGSTARSCANS",
       "title": "Shooting Star Scans",
       "locale": "en",
@@ -9807,7 +9587,7 @@
       "type": "MANGA",
       "domain": "siikomik.fun",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/SiiKomik.kt"
     },
     {
@@ -9877,7 +9657,7 @@
       "type": "MANGA",
       "domain": "skymanga.work",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/SkyManga.kt"
     },
     {
@@ -9887,7 +9667,7 @@
       "type": "MANGA",
       "domain": "skymangas.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/SkyMangas.kt"
     },
     {
@@ -9931,16 +9711,6 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/SnowMTL.kt"
     },
     {
-      "name": "SNOWSCANS",
-      "title": "SnowScans",
-      "locale": "en",
-      "type": "MANGA",
-      "domain": "flixscans.net",
-      "broken": true,
-      "broken_reason": "Redirect to @FLIXSCANS",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/SnowScans.kt"
-    },
-    {
       "name": "SNSCOEURTURKEY",
       "title": "SnscoeurTurkey",
       "locale": "tr",
@@ -9967,7 +9737,7 @@
       "type": "MANGA",
       "domain": "solooscan.blogspot.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/pt/SolooScan.kt"
     },
     {
@@ -9997,7 +9767,7 @@
       "type": "MANGA",
       "domain": "spiderscans.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/SpiderScans.kt"
     },
     {
@@ -10017,7 +9787,7 @@
       "type": "MANGA",
       "domain": "starboundscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/keyoapp/fr/StarboundScans.kt"
     },
     {
@@ -10037,7 +9807,7 @@
       "type": "MANGA",
       "domain": "www.stickhorse.cl",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Stickhorse.kt"
     },
     {
@@ -10057,7 +9827,7 @@
       "type": "MANGA",
       "domain": "strayfansub.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/StrayFansub.kt"
     },
     {
@@ -10217,7 +9987,7 @@
       "type": "MANGA",
       "domain": "tecnoprojects.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare origin TLS error (5xx) — site misconfigured or dead",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/TecnoProjects.kt"
     },
     {
@@ -10227,7 +9997,7 @@
       "type": "MANGA",
       "domain": "tecnoscann.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/TecnoScann.kt"
     },
     {
@@ -10247,7 +10017,7 @@
       "type": "MANGA",
       "domain": "teenmanhua.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/TeenManhua.kt"
     },
     {
@@ -10267,7 +10037,7 @@
       "type": "MANGA",
       "domain": "tempestscans.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Server not responding — connection times out",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/TempestfansubParser.kt"
     },
     {
@@ -10281,24 +10051,24 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/TempestFansubNet.kt"
     },
     {
-      "name": "TEMPESTSCANS",
-      "title": "TempestScans",
-      "locale": "tr",
-      "type": "MANGA",
-      "domain": "adumanga.com",
-      "broken": false,
-      "broken_reason": "",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/tr/TempestScans.kt"
-    },
-    {
       "name": "TEMPLESCAN",
       "title": "TempleScan",
       "locale": "en",
       "type": "MANGA",
       "domain": "templetoons.com",
-      "broken": true,
-      "broken_reason": "Not dead, changed template",
+      "broken": false,
+      "broken_reason": "",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancms/en/TempleScan.kt"
+    },
+    {
+      "name": "TEMPLESCAN_H",
+      "title": "TempleScan +18",
+      "locale": "en",
+      "type": "HENTAI",
+      "domain": "templescan.net",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/heancms/en/TempleScanH.kt"
     },
     {
       "name": "TEMPLESCANESP",
@@ -10307,18 +10077,8 @@
       "type": "HENTAI",
       "domain": "templescanesp.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/es/TempleScanEsp.kt"
-    },
-    {
-      "name": "TENKAISCAN",
-      "title": "TenkaiScan",
-      "locale": "es",
-      "type": "HENTAI",
-      "domain": "falcoscan.net",
-      "broken": true,
-      "broken_reason": "Not dead, changed template",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/TenkaiScan.kt"
     },
     {
       "name": "MASTERKOMIK",
@@ -10377,7 +10137,7 @@
       "type": "MANGA",
       "domain": "theguildscans.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Theguildscans.kt"
     },
     {
@@ -10427,7 +10187,7 @@
       "type": "MANGA",
       "domain": "tmomanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is gone — root redirects to an unrelated domain",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/TmoManga.kt"
     },
     {
@@ -10457,7 +10217,7 @@
       "type": "MANGA",
       "domain": "toomics.top/de",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/hotcomics/de/Toomics.kt"
     },
     {
@@ -10577,7 +10337,7 @@
       "type": "MANGA",
       "domain": "toon69.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/MangaRosie.kt"
     },
     {
@@ -10587,7 +10347,7 @@
       "type": "MANGA",
       "domain": "toonchill.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ToonChill.kt"
     },
     {
@@ -10737,7 +10497,7 @@
       "type": "MANGA",
       "domain": "treemanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/TreeManga.kt"
     },
     {
@@ -10937,7 +10697,7 @@
       "type": "MANGA",
       "domain": "nakamatoon.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/es/UkiyoToon.kt"
     },
     {
@@ -11061,23 +10821,13 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Vermanhwa.kt"
     },
     {
-      "name": "VEXMANGA",
-      "title": "VexManga",
-      "locale": "ar",
-      "type": "MANGA",
-      "domain": "vortexscans.org",
-      "broken": true,
-      "broken_reason": "Redirect to @VORTEXSCANS",
-      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/ar/VexManga.kt"
-    },
-    {
       "name": "VFSCAN",
       "title": "VfScan",
       "locale": "fr",
       "type": "MANGA",
       "domain": "www.vfscan.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/VfScan.kt"
     },
     {
@@ -11087,7 +10837,7 @@
       "type": "HENTAI",
       "domain": "villainessscan.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/pt/VillainessScan.kt"
     },
     {
@@ -11117,7 +10867,7 @@
       "type": "HENTAI",
       "domain": "viyafansub.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/ViyaFansub.kt"
     },
     {
@@ -11127,7 +10877,7 @@
       "type": "MANGA",
       "domain": "voidscans.co",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/VoidScansCo.kt"
     },
     {
@@ -11157,7 +10907,7 @@
       "type": "MANGA",
       "domain": "vyvymanga.org",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Cloudflare reports origin server unreachable",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/VyvyManga.kt"
     },
     {
@@ -11177,7 +10927,7 @@
       "type": "MANGA",
       "domain": "warungkomik.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Blocked by Cloudflare challenge",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/id/WarungKomik.kt"
     },
     {
@@ -11197,7 +10947,7 @@
       "type": "MANGA",
       "domain": "webtoon.uk",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Webtoon.kt"
     },
     {
@@ -11337,7 +11087,7 @@
       "type": "MANGA",
       "domain": "www.witcomics.net",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/it/WitComics.kt"
     },
     {
@@ -11377,7 +11127,7 @@
       "type": "HENTAI",
       "domain": "worldmanhwas.zone",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/WorldManhwas.kt"
     },
     {
@@ -11447,7 +11197,7 @@
       "type": "HENTAI",
       "domain": "xxx.revolutionscantrad.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/fr/XxxRevolutionScantrad.kt"
     },
     {
@@ -11467,7 +11217,7 @@
       "type": "HENTAI",
       "domain": "yaoi.mobi",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain hijacked — now serves a JS redirect to spam/ads",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/YaoiMobi.kt"
     },
     {
@@ -11547,7 +11297,7 @@
       "type": "MANGA",
       "domain": "yaoitr.fun",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/YaoiTr.kt"
     },
     {
@@ -11567,7 +11317,7 @@
       "type": "MANGA",
       "domain": "yd-comics.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/YdComics.kt"
     },
     {
@@ -11577,7 +11327,7 @@
       "type": "MANGA",
       "domain": "www.yetiskinruyamanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/YetiskinRuyaManga.kt"
     },
     {
@@ -11627,7 +11377,7 @@
       "type": "MANGA",
       "domain": "yubikiri.my.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/id/Yubikiri.kt"
     },
     {
@@ -11667,7 +11417,7 @@
       "type": "MANGA",
       "domain": "www.yuramanga.my.id",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zmanga/id/YuraManga.kt"
     },
     {
@@ -11717,7 +11467,7 @@
       "type": "MANGA",
       "domain": "zahard.xyz",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/mangareader/en/Zahard.kt"
     },
     {
@@ -11727,7 +11477,7 @@
       "type": "MANGA",
       "domain": "zamanmanga.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain parked — landing page only, no manga content",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/tr/ZamanManga.kt"
     },
     {
@@ -11757,7 +11507,7 @@
       "type": "MANGA",
       "domain": "inkstory.me",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Root returns HTTP 404 — site gone or restructured",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/ru/ZenMangaParser.kt"
     },
     {
@@ -11767,7 +11517,7 @@
       "type": "MANGA",
       "domain": "zevep.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Site is online but parser is broken — layout/API changed, needs rewrite",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/es/Zevep.kt"
     },
     {
@@ -11817,7 +11567,7 @@
       "type": "MANGA",
       "domain": "zinmanga.cc",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ZinMangaCc.kt"
     },
     {
@@ -11827,7 +11577,7 @@
       "type": "MANGA",
       "domain": "zinmanga.ms",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/ZinMangaMS.kt"
     },
     {
@@ -11841,13 +11591,23 @@
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/madara/en/Zinmanga.kt"
     },
     {
+      "name": "ZONATMO",
+      "title": "ZonaTMO",
+      "locale": "es",
+      "type": "MANGA",
+      "domain": "zonatmo.to",
+      "broken": false,
+      "broken_reason": "",
+      "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/es/ZonaTmoParser.kt"
+    },
+    {
       "name": "ZSCANLATION",
       "title": "ZScanlation",
       "locale": "pt",
       "type": "HENTAI",
       "domain": "www.zscanlation.com",
       "broken": true,
-      "broken_reason": "",
+      "broken_reason": "Domain has no DNS records — site is gone",
       "file": "src/main/kotlin/org/koitharu/kotatsu/parsers/site/zeistmanga/pt/ZScanlation.kt"
     },
     {
