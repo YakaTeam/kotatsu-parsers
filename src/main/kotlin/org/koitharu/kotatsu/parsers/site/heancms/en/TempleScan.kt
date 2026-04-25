@@ -31,8 +31,10 @@ import java.util.EnumSet
 import java.util.Locale
 
 @MangaSourceParser("TEMPLESCAN", "TempleScan", "en")
-internal class TempleScan(context: MangaLoaderContext) :
-	PagedMangaParser(context, MangaParserSource.TEMPLESCAN, pageSize = 20, searchPageSize = 10) {
+internal open class TempleScan(
+	context: MangaLoaderContext,
+	source: MangaParserSource = MangaParserSource.TEMPLESCAN,
+) : PagedMangaParser(context, source, pageSize = 20, searchPageSize = 10) {
 
 	override val configKeyDomain = ConfigKey.Domain("templetoons.com")
 
