@@ -7,7 +7,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken("Site is online but parser is broken — layout/API changed, needs rewrite") // There are no comics on the website at all.
+@Broken("Site is behind a Joken/Cowboy JWT JS-challenge bot-shield — needs in-app/WebView verification before delisting") // There are no comics on the website at all.
 @MangaSourceParser("GREMORYMANGAS", "GremoryMangas", "es")
 internal class GremoryMangas(context: MangaLoaderContext) :
 	MangaReaderParser(

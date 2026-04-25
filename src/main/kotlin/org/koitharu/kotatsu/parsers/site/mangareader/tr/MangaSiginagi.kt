@@ -6,7 +6,7 @@ import org.koitharu.kotatsu.parsers.model.MangaParserSource
 import org.koitharu.kotatsu.parsers.site.mangareader.MangaReaderParser
 import org.koitharu.kotatsu.parsers.Broken
 
-@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
+@Broken("Site is behind a Joken/Cowboy JWT JS-challenge bot-shield — needs in-app/WebView verification before delisting")
 @MangaSourceParser("MANGASIGINAGI", "MangaSiginagi", "tr")
 internal class MangaSiginagi(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.MANGASIGINAGI, "mangasiginagi.com", pageSize = 20, searchPageSize = 10)

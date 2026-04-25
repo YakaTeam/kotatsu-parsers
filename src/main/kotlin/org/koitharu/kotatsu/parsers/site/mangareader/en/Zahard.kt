@@ -10,7 +10,7 @@ import org.koitharu.kotatsu.parsers.util.parseHtml
 import org.koitharu.kotatsu.parsers.util.urlEncoded
 import java.util.*
 
-@Broken("Site is online but parser is broken — layout/API changed, needs rewrite")
+@Broken("Site is behind a Joken/Cowboy JWT JS-challenge bot-shield — needs in-app/WebView verification before delisting")
 @MangaSourceParser("ZAHARD", "Zahard", "en")
 internal class Zahard(context: MangaLoaderContext) :
 	MangaReaderParser(context, MangaParserSource.ZAHARD, "zahard.xyz", pageSize = 20, searchPageSize = 30) {
