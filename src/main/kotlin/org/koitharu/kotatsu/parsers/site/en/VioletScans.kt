@@ -113,7 +113,7 @@ internal class VioletScans(context: MangaLoaderContext) :
 		val root = doc.selectFirstOrThrow(".main-info")
 		val coverUrl = root.selectFirstOrThrow(".first-half .thumb img").attr("src")
 
-		val tags = root.selectFirstOrThrow("div .wd-full").map { tag ->
+		val tags = root.select("div .wd-full").map { tag ->
 			val tagName = tag.selectFirstOrThrow("a").text()
 			val tagKey = tag.selectFirstOrThrow("a").attr("href")
 			MangaTag(
