@@ -23,6 +23,7 @@ updates:
             # out of the auto-PR queue; open them manually when we're ready to validate.
             -   dependency-name: "*"
                 update-types: [ "version-update:semver-major" ]
+            -   dependency-name: "org.jsoup:jsoup"
 
     # GitHub Actions used by workflows in .github/workflows
     -   package-ecosystem: "github-actions"

@@ -22,8 +22,7 @@ internal const val SCHEME_HTTPS = "https"
 // TODO suspend
 public fun Response.parseHtml(): Document = use { response ->
     val body = response.body
-    val charset = body.contentType()?.charset()?.name()
-    Jsoup.parse(body.byteStream(), charset, response.request.url.toString())
+    Jsoup.parse(body.string(), response.request.url.toString())
 }
 
 /**
