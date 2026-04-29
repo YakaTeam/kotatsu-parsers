@@ -16,10 +16,14 @@ internal class OlimpoScans(context: MangaLoaderContext) :
 	override val tagPrefix = "lista-de-comics-genero-"
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val fullUrl = ("/" + chapter.url).toAbsoluteUrl(domain)
+		val fullUrl = chapter.url.toAbsoluteUrl(domain)
 		val doc = webClient.httpGet(fullUrl).parseHtml()
 		return doc.select(selectPage).map { img ->
-			val url = ("/proxy.php?link=" + img.requireSrc()).toRelativeUrl(domain)
+			val rawSrc = img.attr("data-original")
+				.ifEmpty { img.attr("data-src") }
+				.ifEmpty { img.requireSrc() }
+				.trim()
+			val url = "/proxy.php?link=$rawSrc".toRelativeUrl(domain)
 			MangaPage(
 				id = generateUid(url),
 				url = url,
