@@ -1,0 +1,36 @@
+image: openjdk:17-jdk-slim
+
+variables:
+  ANDROID_SDK_ROOT: /opt/android-sdk
+  BUILD_TOOLS_VERSION: "34.0.0"
+
+before_script:
+  - apt-get update && apt-get install -y wget unzip
+  - mkdir -p $ANDROID_SDK_ROOT/cmdline-tools
+  - wget -q https://dl.google.com/android/repository/commandlinetools-linux-9477386_latest.zip -O /tmp/cmdline-tools.zip
+  - unzip /tmp/cmdline-tools.zip -d $ANDROID_SDK_ROOT/cmdline-tools
+  - mv $ANDROID_SDK_ROOT/cmdline-tools/cmdline-tools $ANDROID_SDK_ROOT/cmdline-tools/latest
+  - export PATH=$PATH:$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:$ANDROID_SDK_ROOT/platform-tools
+  - yes | sdkmanager --sdk_root=$ANDROID_SDK_ROOT "build-tools;$BUILD_TOOLS_VERSION" "platform-tools"
+  - export PATH=$PATH:$ANDROID_SDK_ROOT/build-tools/$BUILD_TOOLS_VERSION
+
+publish:
+  stage: build
+  script:
+    - chmod +x gradlew
+    - ./gradlew assemble --rerun-tasks
+    - |
+      if [ -f build/libs/kotatsu-parsers.jar ]; then
+        echo "Processing library with d8..."
+        d8 --release build/libs/kotatsu-parsers.jar --output build/libs/plugin.jar
+      else
+        echo "ℹ️ Pre-compiled library not found, skipping D8 step..."
+      fi
+  artifacts:
+    paths:
+      - build/libs/plugin.jar
+    expire_in: 1 week
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+      changes:
+        - src/main/kotlin/org/koitharu/kotatsu/parsers/**/*
