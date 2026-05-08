@@ -1,5 +1,5 @@
 [versions]
-kotlin = "2.2.10"
+kotlin = "2.3.21"
 ksp = "2.2.10-2.0.2"
 coroutines = "1.10.2"
 junit = "5.14.3"
