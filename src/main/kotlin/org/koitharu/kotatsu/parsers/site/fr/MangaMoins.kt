@@ -254,7 +254,7 @@ internal class MangaMoins(context: MangaLoaderContext) :
 			.addQueryParameter("slug", slug)
 			.build()
 		val json = fetchApiJson(url, referer)
-		val pagesBaseUrl = json.optString("pagesBaseUrl").trim().ifEmpty { return emptyList() }
+		val pagesBaseUrl = normalizePageUrl(json.optString("pagesBaseUrl").trim()).ifEmpty { return emptyList() }
 		val pagesCount = json.optInt("pageNumbers", 0)
 		if (pagesCount <= 0) return emptyList()
 		val baseUrl = if (pagesBaseUrl.endsWith('/')) pagesBaseUrl else "$pagesBaseUrl/"
@@ -338,13 +338,18 @@ internal class MangaMoins(context: MangaLoaderContext) :
 	}
 
 	private fun sanitizePageUrl(raw: String?): String? {
-		val candidate = raw?.trim()?.takeIf { it.isNotEmpty() } ?: return null
+		val candidate = raw?.trim()?.takeIf { it.isNotEmpty() }?.let(::normalizePageUrl) ?: return null
 		val absolute = candidate.toAbsoluteUrl(domain)
 		val url = absolute.toHttpUrlOrNull() ?: return null
 		if (url.queryParameterNames.contains("v") && url.queryParameter("v").isNullOrBlank()) {
 			return null
 		}
 		return url.newBuilder().build().toString()
+	}
+
+	private fun normalizePageUrl(url: String): String {
+		// The site reader strips this decoy prefix from API page URLs before loading images.
+		return url.replace(PAGE_URL_DECOY_PREFIX, "")
 	}
 
 	private suspend fun fetchApiJson(url: HttpUrl, referer: String = "https://$domain/"): JSONObject {
@@ -554,5 +559,6 @@ internal class MangaMoins(context: MangaLoaderContext) :
 		private val IMAGE_MTIMES_BLOCK = Regex("imageMtimes\\s*=\\s*\\{([^}]*)\\}")
 		private val IMAGE_MTIMES_ENTRY = Regex("[\"']?([0-9]+)[\"']?\\s*:\\s*([0-9]+)")
 		private val PAGE_IMAGE_NAME_REGEX = Regex("(\\d+)(\\.[^./?#]+)")
+		private const val PAGE_URL_DECOY_PREFIX = "4445xcsltlesnoobsarretezdevolernoscansmerci123891b"
 	}
 }
