@@ -14,16 +14,16 @@ import org.koitharu.kotatsu.parsers.exception.ParseException
 import org.koitharu.kotatsu.parsers.model.*
 import org.koitharu.kotatsu.parsers.network.CommonHeaders
 import org.koitharu.kotatsu.parsers.util.*
-import java.util.*
 import java.math.BigDecimal
 import java.math.RoundingMode
+import java.util.EnumSet
 
 @MangaSourceParser("COMIX", "Comix", "en", ContentType.MANGA)
 internal class Comix(context: MangaLoaderContext) :
 	PagedMangaParser(context, MangaParserSource.COMIX, 28) {
 
 	override val configKeyDomain = ConfigKey.Domain("comix.to")
-	private val apiBase = "api/v2"
+	private val apiBase = "api/v1"
 	private val apiBaseUrl get() = "https://$domain/$apiBase"
 
 	override fun getRequestHeaders() = super.getRequestHeaders().newBuilder()
@@ -100,8 +100,10 @@ internal class Comix(context: MangaLoaderContext) :
 	}
 
 	private fun parseMangaFromJson(json: JSONObject): Manga {
-		val hashId = json.optString("hash_id", "").nullIfEmpty()
-		val slug = json.optString("slug", "").nullIfEmpty()
+		val hid = json.optString("hid", "").nullIfEmpty()
+		// url field is like "https://domain/title/hid-slug", extract path after /title/
+		val urlPath = json.optString("url", "").removePrefix("https://$domain")
+			.nullIfEmpty() ?: hid?.let { "/title/$it" } ?: "/title/unknown"
 		val title = json.optString("title", "Unknown")
 		val description = json.optString("synopsis", "").nullIfEmpty()
 
@@ -119,16 +121,20 @@ internal class Comix(context: MangaLoaderContext) :
 			else -> null
 		}
 
-		val ratedAvg = json.optDouble("rated_avg", 0.0)
-		val rating = if (ratedAvg > 0.0) (ratedAvg / 20.0).toFloat() else RATING_UNKNOWN
+		val ratedAvg = json.optDouble("ratedAvg", 0.0)
+		val rating = if (ratedAvg > 0.0) (ratedAvg / 10.0).toFloat().coerceIn(0f, 1f) else RATING_UNKNOWN
 
-		val resolvedHash = hashId ?: UUID.randomUUID().toString()
-		val urlSlug = if (slug != null) "$resolvedHash-$slug" else resolvedHash
+		val uid = hid ?: urlPath
+
+		val contentRating = when (json.optString("contentRating", "").lowercase()) {
+			"erotica", "pornographic" -> ContentRating.ADULT
+			else -> ContentRating.SAFE
+		}
 
 		return Manga(
-			id = generateUid(resolvedHash),
-			url = "/title/$urlSlug",
-			publicUrl = "https://$domain/title/$urlSlug",
+			id = generateUid(uid),
+			url = urlPath,
+			publicUrl = "https://$domain$urlPath",
 			coverUrl = coverUrl,
 			title = title,
 			altTitles = emptySet(),
@@ -138,7 +144,7 @@ internal class Comix(context: MangaLoaderContext) :
 			authors = emptySet(),
 			state = state,
 			source = source,
-			contentRating = if (json.optBoolean("is_nsfw", false)) ContentRating.ADULT else ContentRating.SAFE
+			contentRating = contentRating,
 		)
 	}
 
@@ -146,10 +152,12 @@ internal class Comix(context: MangaLoaderContext) :
 	// Details
 	// -------------------------
 	override suspend fun getDetails(manga: Manga): Manga = coroutineScope {
-		val hash = manga.url.substringAfter("/title/").substringBefore("-").nullIfEmpty()
+		// url is like /title/hid-slug — extract hid (everything before first '-')
+		val hid = manga.url.removePrefix("/title/").substringBefore("-").nullIfEmpty()
 			?: throw ParseException("Invalid manga URL", manga.url)
+		val mangaSlug = manga.url.removePrefix("/title/")
 
-		val detailsUrl = "$apiBaseUrl/manga/$hash".toHttpUrl().newBuilder()
+		val detailsUrl = "$apiBaseUrl/manga/$hid".toHttpUrl().newBuilder()
 			.addQueryParameter("includes[]", "author")
 			.addQueryParameter("includes[]", "artist")
 			.addQueryParameter("includes[]", "genre")
@@ -157,7 +165,7 @@ internal class Comix(context: MangaLoaderContext) :
 			.addQueryParameter("includes[]", "demographic")
 			.build()
 		val detailsDeferred = async { webClient.httpGet(detailsUrl).parseJson() }
-		val chaptersDeferred = async { getChapters(hash) }
+		val chaptersDeferred = async { getChapters(hid, mangaSlug) }
 
 		val response = runCatching { detailsDeferred.await() }.getOrDefault(JSONObject())
 		val chapters = runCatching { chaptersDeferred.await() }.getOrDefault(emptyList())
@@ -167,12 +175,12 @@ internal class Comix(context: MangaLoaderContext) :
 			val updated = parseMangaFromJson(result)
 
 			val authors = LinkedHashSet<String>()
-			result.optJSONArray("author")?.let { arr ->
+			result.optJSONArray("authors")?.let { arr ->
 				for (i in 0 until arr.length()) {
 					arr.optJSONObject(i)?.optString("title")?.nullIfEmpty()?.let { authors.add(it) }
 				}
 			}
-			result.optJSONArray("artist")?.let { arr ->
+			result.optJSONArray("artists")?.let { arr ->
 				for (i in 0 until arr.length()) {
 					arr.optJSONObject(i)?.optString("title")?.nullIfEmpty()?.let { authors.add(it) }
 				}
@@ -184,16 +192,16 @@ internal class Comix(context: MangaLoaderContext) :
 					for (i in 0 until arr.length()) {
 						val o = arr.optJSONObject(i) ?: continue
 						val name = o.optString("title", "").nullIfEmpty() ?: continue
-						val id = o.optInt("term_id", 0).takeIf { it != 0 }?.toString() ?: continue
+						val id = o.optInt("id", 0).takeIf { it != 0 }?.toString() ?: continue
 						tags.add(MangaTag(title = name, key = id, source = source))
 					}
 				}
 			}
-			addTags("genre"); addTags("theme"); addTags("demographic")
+			addTags("genres"); addTags("tags"); addTags("demographics")
 
-			val ratedAvg = result.optDouble("rated_avg", 0.0)
+			val ratedAvg = result.optDouble("ratedAvg", 0.0)
 			val synopsis = result.optString("synopsis", "")
-			val altTitles = result.optJSONArray("alt_titles")?.let { arr ->
+			val altTitles = result.optJSONArray("altTitles")?.let { arr ->
 				(0 until arr.length()).map { arr.getString(it) }
 			} ?: emptyList()
 
@@ -214,7 +222,7 @@ internal class Comix(context: MangaLoaderContext) :
 				authors = authors,
 				tags = tags,
 				description = newDesc,
-				altTitles = altTitles.toSet()
+				altTitles = altTitles.toSet(),
 			)
 		}
 
@@ -224,7 +232,7 @@ internal class Comix(context: MangaLoaderContext) :
 	private fun generateFancyScore(ratedAvg: Double): String {
 		if (ratedAvg == 0.0) return ""
 		val score = BigDecimal(ratedAvg).setScale(1, RoundingMode.HALF_UP)
-		val stars = score.divide(BigDecimal(20), 0, RoundingMode.HALF_UP).toInt()
+		val stars = score.divide(BigDecimal(2), 0, RoundingMode.HALF_UP).toInt().coerceIn(0, 5)
 
 		return buildString {
 			append("★".repeat(stars))
@@ -236,29 +244,28 @@ internal class Comix(context: MangaLoaderContext) :
 	// -------------------------
 	// Chapters
 	// -------------------------
-	private fun chaptersRequestUrl(hashId: String, page: Int) = run {
+	private fun chaptersRequestUrl(hashId: String, mangaSlug: String, page: Int) = run {
 		val path = "/manga/$hashId/chapters"
-		val time = 1L
-		val hashToken = ComixHash.generateHash(path = path, time = time)
+		val hashToken = ComixHash.generateHash(path)
 		"$apiBaseUrl$path".toHttpUrl().newBuilder()
 			.addQueryParameter("order[number]", "desc")
 			.addQueryParameter("limit", "100")
 			.addQueryParameter("page", page.toString())
-			.addQueryParameter("time", time.toString())
+			.addQueryParameter("mangaSlug", mangaSlug)
 			.addQueryParameter("_", hashToken)
 			.build()
 	}
 
-	private suspend fun getChapters(hashId: String): List<MangaChapter> = coroutineScope {
-		val firstPageUrl = chaptersRequestUrl(hashId, 1)
+	private suspend fun getChapters(hashId: String, mangaSlug: String): List<MangaChapter> = coroutineScope {
+		val firstPageUrl = chaptersRequestUrl(hashId, mangaSlug, 1)
 
 		val firstResp = runCatching { webClient.httpGet(firstPageUrl).parseJson() }.getOrNull()
 			?: return@coroutineScope emptyList()
 
 		val result = firstResp.optJSONObject("result") ?: return@coroutineScope emptyList()
 		val firstItems = result.optJSONArray("items") ?: JSONArray()
-		val pagination = result.optJSONObject("pagination")
-		val totalPages = pagination?.optInt("last_page", 1) ?: 1
+		val meta = result.optJSONObject("meta")
+		val totalPages = meta?.optInt("lastPage", 1) ?: 1
 
 		val allItems = mutableListOf<JSONObject>()
 		for (i in 0 until firstItems.length()) {
@@ -268,10 +275,10 @@ internal class Comix(context: MangaLoaderContext) :
 		if (totalPages > 1) {
 			val deferreds = (2..totalPages).map {
 				async {
-					val url = chaptersRequestUrl(hashId, it)
+					val url = chaptersRequestUrl(hashId, mangaSlug, it)
 					runCatching {
-							webClient.httpGet(url).parseJson().optJSONObject("result")?.optJSONArray("items")
-						}.getOrNull()
+						webClient.httpGet(url).parseJson().optJSONObject("result")?.optJSONArray("items")
+					}.getOrNull()
 				}
 			}
 			deferreds.awaitAll().filterNotNull().forEach {
@@ -285,23 +292,22 @@ internal class Comix(context: MangaLoaderContext) :
 			val num = it.optDouble("number", Double.NaN)
 			if (num.isNaN()) return@mapNotNull null
 
-			val chapterId = it.optLong("chapter_id", 0L)
+			val chapterId = it.optLong("id", 0L)
 			if (chapterId == 0L) return@mapNotNull null
 			val number = num.toFloat()
 			val name = it.optString("name", "").nullIfEmpty()
-			val createdAt = it.optLong("created_at", 0L)
 
-			val scanlationGroup = it.optJSONObject("scanlation_group")
-			var scanlatorName = scanlationGroup?.optString("name", null)?.nullIfEmpty()
+			val group = it.optJSONObject("group")
+			var scanlatorName = group?.optString("name", null)?.nullIfEmpty()
 
-			if (scanlatorName == null && it.optInt("is_official", 0) == 1) {
+			if (scanlatorName == null && it.optBoolean("isOfficial", false)) {
 				scanlatorName = "Official"
 			}
 
-			val groupId = it.optInt("scanlation_group_id", 0)
+			val groupId = group?.optInt("id", 0) ?: 0
 
 			val title = buildString {
-				if (it.optString("volume", "0") != "0") append("Vol. ").append(it.optString("volume")).append(" ")
+				if (it.optInt("volume", 0) != 0) append("Vol. ").append(it.optInt("volume")).append(" ")
 				append("Ch. ").append(if (number == number.toLong().toFloat()) number.toLong() else number)
 				if (name != null) append(" - ").append(name)
 				if (scanlatorName != null) append(" [").append(scanlatorName).append("]")
@@ -313,12 +319,12 @@ internal class Comix(context: MangaLoaderContext) :
 				id = generateUid(uid),
 				title = title.ifBlank { "Chapter $number" },
 				number = number,
-				volume = it.optString("volume", "0").toIntOrNull() ?: 0,
+				volume = it.optInt("volume", 0),
 				url = "/title/$hashId/$chapterId",
-				uploadDate = createdAt * 1000L,
+				uploadDate = 0L,
 				source = source,
 				scanlator = scanlatorName,
-				branch = scanlatorName
+				branch = scanlatorName,
 			)
 		}.sortedBy { it.number }
 	}
@@ -328,24 +334,31 @@ internal class Comix(context: MangaLoaderContext) :
 	// -------------------------
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
 		val chapterId = chapter.url.substringAfterLast("/").substringBefore("-")
-		val response = webClient.httpGet("$apiBaseUrl/chapters/$chapterId").parseJson()
+		val path = "/chapters/$chapterId"
+		val hashToken = ComixHash.generateHash(path)
+		val url = "$apiBaseUrl$path".toHttpUrl().newBuilder()
+			.addQueryParameter("_", hashToken)
+			.build()
+		val response = webClient.httpGet(url).parseJson()
 
-		val images = response.optJSONObject("result")?.optJSONArray("images") ?: return emptyList()
-		val pages = ArrayList<MangaPage>(images.length())
+		val pages = response.optJSONObject("result")?.optJSONArray("pages") ?: return emptyList()
+		val result = ArrayList<MangaPage>(pages.length())
 
-		for (i in 0 until images.length()) {
-			val imgObj = images.optJSONObject(i) ?: continue
-			val url = imgObj.optString("url", "").nullIfEmpty() ?: continue
+		for (i in 0 until pages.length()) {
+			val imgObj = pages.optJSONObject(i) ?: continue
+			val imgUrl = imgObj.optString("url", "").nullIfEmpty() ?: continue
 
-			pages.add(MangaPage(
-				id = generateUid(url),
-				url = url,
-				preview = null,
-				source = source
-			))
+			result.add(
+				MangaPage(
+					id = generateUid(imgUrl),
+					url = imgUrl,
+					preview = null,
+					source = source,
+				),
+			)
 		}
 
-		return pages
+		return result
 	}
 
 	override suspend fun getRelatedManga(seed: Manga): List<Manga> = emptyList()
