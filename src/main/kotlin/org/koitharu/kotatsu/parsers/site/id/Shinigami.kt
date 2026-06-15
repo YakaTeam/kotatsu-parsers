@@ -64,6 +64,8 @@ internal class Shinigami(context: MangaLoaderContext) :
 		)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(apiSuffix)
@@ -128,14 +130,14 @@ internal class Shinigami(context: MangaLoaderContext) :
 				append("&genre_exclude_mode=and")
 			}
 
-			if (!filter.author.isNullOrEmpty()) {
+			if (!author.isNullOrEmpty()) {
 				append("&author=")
-				append(filter.author.lowercase().replace(' ', '-').urlEncoded())
+				append(author.lowercase().replace(' ', '-').urlEncoded())
 			}
 
-			if (!filter.query.isNullOrEmpty()) {
+			if (!query.isNullOrEmpty()) {
 				append("&q=")
-				val encodedQuery = filter.query.splitByWhitespace()
+				val encodedQuery = query.splitByWhitespace()
 					.joinToString(separator = "+") { part ->
 						part.urlEncoded()
 					}

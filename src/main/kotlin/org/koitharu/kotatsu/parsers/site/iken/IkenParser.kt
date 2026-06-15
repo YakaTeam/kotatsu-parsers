@@ -56,6 +56,7 @@ internal abstract class IkenParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(defaultDomain)
@@ -63,8 +64,8 @@ internal abstract class IkenParser(
 			append(page)
 			append("&perPage=18&searchTerm=")
 
-			filter.query?.let {
-				append(filter.query.urlEncoded())
+			query?.let { query ->
+				append(query.urlEncoded())
 			}
 
 			if (filter.tags.isNotEmpty()) {

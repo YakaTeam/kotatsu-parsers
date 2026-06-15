@@ -145,9 +145,10 @@ internal abstract class LineWebtoonsParser(
 	}
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val manga = when {
-			!filter.query.isNullOrEmpty() -> {
-				makeRequest("/lineWebtoon/webtoon/searchChallenge?query=${filter.query.urlEncoded()}&startIndex=${offset + 1}&pageSize=20")
+			!query.isNullOrEmpty() -> {
+				makeRequest("/lineWebtoon/webtoon/searchChallenge?query=${query.urlEncoded()}&startIndex=${offset + 1}&pageSize=20")
 					.getJSONObject("challengeSearch")
 					.getJSONArray("titleList")
 					.mapJSON { jo ->

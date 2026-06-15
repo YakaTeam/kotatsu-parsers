@@ -37,7 +37,8 @@ internal class LuratoonScansParser(context: MangaLoaderContext) :
     override suspend fun getFilterOptions() = MangaListFilterOptions()
 
     override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-        require(filter.query.isNullOrEmpty()) { ErrorMessages.SEARCH_NOT_SUPPORTED }
+		val query = filter.query
+        require(query.isNullOrEmpty()) { ErrorMessages.SEARCH_NOT_SUPPORTED }
         val url = urlBuilder()
         val tag = filter.tags.oneOrThrowIfMany()
         if (tag == null) {

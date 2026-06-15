@@ -66,6 +66,7 @@ internal class Klz9(context: MangaLoaderContext) :
     }
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val builder = urlBuilder()
 			.addPathSegment("api").addPathSegment("manga")
 			.addPathSegment("list")
@@ -73,8 +74,8 @@ internal class Klz9(context: MangaLoaderContext) :
         builder.addQueryParameter("page", page.toString())
         builder.addQueryParameter("limit", pageSize.toString())
 
-        if (!filter.query.isNullOrEmpty()) {
-            builder.addQueryParameter("search", filter.query)
+        if (!query.isNullOrEmpty()) {
+            builder.addQueryParameter("search", query)
         }
 
         if (filter.tags.isNotEmpty()) {

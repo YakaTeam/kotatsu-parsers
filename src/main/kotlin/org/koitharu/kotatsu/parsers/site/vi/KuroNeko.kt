@@ -55,14 +55,16 @@ internal class KuroNeko(context: MangaLoaderContext):
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
-			if (!filter.author.isNullOrEmpty()) {
+			if (!author.isNullOrEmpty()) {
 				clear()
 				append("https://")
 				append(domain)
 
 				append("/tac-gia/")
-				append(filter.author.lowercase().replace(" ", "-"))
+				append(author.lowercase().replace(" ", "-"))
 
 				append("?sort=")
 				append(
@@ -109,9 +111,9 @@ internal class KuroNeko(context: MangaLoaderContext):
 				},
 			)
 
-			if (!filter.query.isNullOrEmpty()) {
+			if (!query.isNullOrEmpty()) {
 				append("&keyword=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			if (page > 1) {

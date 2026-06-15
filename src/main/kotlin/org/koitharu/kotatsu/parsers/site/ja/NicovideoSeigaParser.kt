@@ -43,23 +43,24 @@ internal class NicovideoSeigaParser(context: MangaLoaderContext) :
 	)
 
 	override val authUrl: String
-		get() = "https://${getDomain("account")}/login?site=seiga"
+		get() = "https://${getDomain(this, "account")}/login?site=seiga"
 
-	override suspend fun isAuthorized(): Boolean = context.cookieJar.getCookies(getDomain("seiga")).any {
+	override suspend fun isAuthorized(): Boolean = context.cookieJar.getCookies(getDomain(this, "seiga")).any {
 		it.name == "user_session"
 	}
 
 	override suspend fun getUsername(): String {
-		val body = webClient.httpGet("https://${getDomain("app")}/my/apps").parseHtml().body()
+		val body = webClient.httpGet("https://${getDomain(this, "app")}/my/apps").parseHtml().body()
 		return body.selectFirst("#userinfo > div > div > strong")?.text() ?: throw AuthRequiredException(source)
 	}
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val page = (offset / 20f).toIntUp().inc()
-		val domain = getDomain("seiga")
+		val domain = getDomain(this, "seiga")
 		val url = when {
-			!filter.query.isNullOrEmpty() -> {
-				return if (offset == 0) getSearchList(filter.query, page) else emptyList()
+			!query.isNullOrEmpty() -> {
+				return if (offset == 0) getSearchList(query, page) else emptyList()
 			}
 
 			else -> {
@@ -105,14 +106,14 @@ internal class NicovideoSeigaParser(context: MangaLoaderContext) :
 					STATUS_FINISHED -> MangaState.FINISHED
 					else -> null
 				},
-				publicUrl = href.toAbsoluteUrl(item.host ?: getDomain("seiga")),
+				publicUrl = href.toAbsoluteUrl(item.host ?: getDomain(this, "seiga")),
 				source = source,
 			)
 		}
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
-		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(getDomain("seiga"))).parseHtml()
+		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(getDomain(this, "seiga"))).parseHtml()
 		val contents = doc.body().requireElementById("contents")
 		val statusText = contents
 			.select("div.mg_work_detail > div > div:nth-child(2) > div.tip.content_status.status_series > span")
@@ -150,7 +151,7 @@ internal class NicovideoSeigaParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val fullUrl = chapter.url.toAbsoluteUrl(getDomain("seiga"))
+		val fullUrl = chapter.url.toAbsoluteUrl(getDomain(this, "seiga"))
 		val doc = webClient.httpGet(fullUrl).parseHtml()
 		if (!doc.select("#login_manga").isEmpty())
 			throw AuthRequiredException(source)
@@ -167,7 +168,7 @@ internal class NicovideoSeigaParser(context: MangaLoaderContext) :
 	}
 
 	private suspend fun fetchAvailableTags(): Set<MangaTag> {
-		val doc = webClient.httpGet("https://${getDomain("seiga")}/manga/list").parseHtml()
+		val doc = webClient.httpGet("https://${getDomain(this, "seiga")}/manga/list").parseHtml()
 		val root = doc.body().selectOrThrow("#mg_category_list > ul > li").drop(1)
 		return root.mapToSet { li ->
 			val a = li.selectFirstOrThrow("a")
@@ -180,7 +181,7 @@ internal class NicovideoSeigaParser(context: MangaLoaderContext) :
 	}
 
 	private suspend fun getSearchList(query: String, page: Int): List<Manga> {
-		val domain = getDomain("seiga")
+		val domain = getDomain(this, "seiga")
 		val doc = webClient.httpGet("https://$domain/manga/search/?q=$query&page=$page&sort=score").parseHtml()
 		val root = doc.body().select(".search_result__item")
 		return root.mapNotNull { item ->

@@ -46,31 +46,34 @@ internal class HentaiEra(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search/?key=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&")
 				}
 
 				else -> {
-					if (filter.tags.size > 1 || (filter.tags.isNotEmpty() && filter.locale != null)) {
+					val tags = filter.tags
+					val lang = filter.locale
+					if (tags.size > 1 || (tags.isNotEmpty() && lang != null)) {
 						append("/search/?key=")
 						if (order == SortOrder.POPULARITY) {
 							append(
-								buildQuery(filter.tags, filter.locale)
+								buildQuery(tags, lang)
 									.replace("&lt=1&dl=0&pp=0&tr=0", "&lt=0&dl=0&pp=1&tr=0"),
 							)
 						} else {
-							append(buildQuery(filter.tags, filter.locale))
+							append(buildQuery(tags, lang))
 						}
 						append("&")
-					} else if (filter.tags.isNotEmpty()) {
-						filter.tags.oneOrThrowIfMany()?.let {
+					} else if (tags.isNotEmpty()) {
+						tags.oneOrThrowIfMany()?.let {
 							append("/tag/")
 							append(it.key)
 						}
@@ -80,9 +83,9 @@ internal class HentaiEra(context: MangaLoaderContext) :
 							append("popular/")
 						}
 						append("?")
-					} else if (filter.locale != null) {
+					} else if (lang != null) {
 						append("/language/")
-						append(filter.locale.toLanguagePath())
+						append(lang.toLanguagePath())
 						append("/")
 
 						if (order == SortOrder.POPULARITY) {

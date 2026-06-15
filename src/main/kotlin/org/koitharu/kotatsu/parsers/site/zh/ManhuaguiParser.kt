@@ -162,6 +162,7 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
+		val query = filter.query
 
         // Flag of whether there is title query param
 		var flagHasTitleQuery = false
@@ -170,7 +171,7 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 			var queryFull: String?
 			var orderStr: String?
 			var pageStr: String?
-			if (filter.query == null) {
+			if (query == null) {
 				append(listUrl.toAbsoluteUrl(domain))
 				queryFull = listOfNotNull(
 					filter.locale,
@@ -189,7 +190,7 @@ internal class ManhuaguiParser(context: MangaLoaderContext) :
 			} else {
 				flagHasTitleQuery = true
 				append(searchUrl.toAbsoluteUrl(domain))
-				queryFull = filter.query
+				queryFull = query
 				orderStr = when (order) {
 					SortOrder.POPULARITY -> "_o1"
 					SortOrder.NEWEST -> "_o2"

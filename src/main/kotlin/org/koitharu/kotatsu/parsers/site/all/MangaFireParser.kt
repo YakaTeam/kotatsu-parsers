@@ -176,6 +176,7 @@ internal abstract class MangaFireParser(
     )
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("/filter")
 
@@ -188,12 +189,12 @@ internal abstract class MangaFireParser(
 			append(siteLang)
 
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					// Keyword + vrf
 					append("&keyword=")
-					append(encodeKeyword(filter.query))
+					append(encodeKeyword(query))
 					append("&vrf=")
-					append(VrfGenerator.generate(filter.query))
+					append(VrfGenerator.generate(query))
 
 					append("&sort=")
 					append(when (order) {

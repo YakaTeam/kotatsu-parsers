@@ -90,6 +90,7 @@ internal abstract class ZeistMangaParser(
 	protected open val datePattern = "yyyy-MM-dd"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val startIndex = maxMangaResults * (page - 1) + 1
 
 		val url = buildString {
@@ -98,7 +99,7 @@ internal abstract class ZeistMangaParser(
 			append("/feeds/posts/default/-/")
 			when {
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append(mangaCategory)
 					append("?alt=json&orderby=published&max-results=")
 					append((maxMangaResults + 1).toString())
@@ -107,7 +108,7 @@ internal abstract class ZeistMangaParser(
 					append("&q=label:")
 					append(mangaCategory)
 					append("+")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 
 				else -> {

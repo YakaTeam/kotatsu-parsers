@@ -50,18 +50,19 @@ internal abstract class HeanCms(
 
 	protected open val pathManga = "series"
 	protected open val apiPath
-		get() = getDomain("api")
+		get() = getDomain(this, "api")
 
 	protected open val paramsUpdated = "latest"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(apiPath)
 			append("/query?query_string=")
 
-			filter.query?.let {
-				append(filter.query.urlEncoded())
+			query?.let { query ->
+				append(query.urlEncoded())
 			}
 
 			append("&series_type=Comic&perPage=$pageSize")

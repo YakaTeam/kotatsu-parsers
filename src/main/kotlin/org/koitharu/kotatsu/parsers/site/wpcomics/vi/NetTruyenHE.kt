@@ -36,9 +36,10 @@ internal class NetTruyenHE(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val response =
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					val url = buildString {
 						append("https://")
 						append(domain)
@@ -47,7 +48,7 @@ internal class NetTruyenHE(context: MangaLoaderContext) :
 						append(page.toString())
 						append('/')
 						append("?keyword=")
-						append(filter.query.urlEncoded())
+						append(query.urlEncoded())
 					}
 
 					val result = runCatchingCancellable { webClient.httpGet(url) }

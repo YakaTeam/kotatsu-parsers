@@ -85,12 +85,13 @@ internal class RaijinScans(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://$domain")
 			if (page > 0) append("/page/${page + 1}")
 
 			append("?post_type=wp-manga&s=")
-			filter.query?.let { append(it.urlEncoded()) }
+			query?.let { query -> append(query.urlEncoded()) }
 
 			if (filter.year != YEAR_UNKNOWN) append("&release[]=${filter.year}")
 			if (!filter.tags.isEmpty()) {

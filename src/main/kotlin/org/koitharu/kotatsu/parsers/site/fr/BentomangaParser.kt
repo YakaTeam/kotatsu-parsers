@@ -56,13 +56,14 @@ internal class BentomangaParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = urlBuilder()
 			.host(domain)
 			.addPathSegment("manga_list")
 			.addQueryParameter("limit", page.toString())
 
-		filter.query?.let {
-			url.addQueryParameter("search", filter.query)
+		query?.let { query ->
+			url.addQueryParameter("search", query)
 		}
 
 		when (order) {

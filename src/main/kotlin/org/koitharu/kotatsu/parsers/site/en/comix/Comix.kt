@@ -58,9 +58,10 @@ internal class Comix(context: MangaLoaderContext) :
 	// List / Search
 	// -------------------------
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val builder = "$apiBaseUrl/manga".toHttpUrl().newBuilder().apply {
-			if (!filter.query.isNullOrBlank()) {
-				addQueryParameter("keyword", filter.query)
+			if (!query.isNullOrBlank()) {
+				addQueryParameter("keyword", query)
 			}
 
 			val (param, dir) = when (order) {

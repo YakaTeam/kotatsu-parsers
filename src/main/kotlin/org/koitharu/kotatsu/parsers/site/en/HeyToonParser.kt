@@ -65,11 +65,12 @@ internal class HeyToonParser(context: MangaLoaderContext) :
 	private val headers = Headers.headersOf("X-Requested-With", "XMLHttpRequest")
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		return when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (page > 1) return emptyList()
 
-				val url = "https://$domain/api/complete-search?keyword=${filter.query.urlEncoded()}"
+				val url = "https://$domain/api/complete-search?keyword=${query.urlEncoded()}"
 				val response = webClient.httpGet(url, headers).parseJsonArray()
 
 				response.mapJSON { comic ->

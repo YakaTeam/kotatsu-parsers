@@ -57,15 +57,17 @@ internal class Manhwa18Com(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/tim-kiem?page=")
 			append(page.toString())
 
-			filter.query?.let {
+			query?.let { query ->
 				append("&q=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			append("&accept_genres=")
@@ -108,10 +110,10 @@ internal class Manhwa18Com(context: MangaLoaderContext) :
 			}
 
 			// Support author
-			// filter.author.let{
+			// author.let{
 			// 	the
 			// 	append("&artist=")
-			// 	append(filter.author)
+			// 	append(author)
 			// }
 
 		}

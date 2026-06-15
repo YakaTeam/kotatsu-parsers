@@ -35,6 +35,7 @@ internal class DocTruyen3Q(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -61,8 +62,8 @@ internal class DocTruyen3Q(context: MangaLoaderContext) :
 				}
 			}
 
-			if (filter.query?.isNotEmpty() == true) {
-				params.add("keyword=${filter.query.urlEncoded()}")
+			if (query?.isNotEmpty() == true) {
+				params.add("keyword=${query.urlEncoded()}")
 			}
 
 			if (page > 1) {

@@ -34,6 +34,7 @@ internal class TruyenHentaiVN(context: MangaLoaderContext) :
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.UPDATED)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -48,9 +49,9 @@ internal class TruyenHentaiVN(context: MangaLoaderContext) :
 					}
 				}
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/tim-kiem-truyen/?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					if (page > 1) {
 						append("&page=")
 						append(page)

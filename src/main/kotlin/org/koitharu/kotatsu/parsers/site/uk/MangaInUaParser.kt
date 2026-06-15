@@ -42,13 +42,14 @@ internal class MangaInUaParser(context: MangaLoaderContext) : PagedMangaParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
 
-				!filter.query.isNullOrEmpty() -> {
-					append("/index.php?do=search&subaction=search&search_start=$page&full_search=1&story=${filter.query}&titleonly=3")
+				!query.isNullOrEmpty() -> {
+					append("/index.php?do=search&subaction=search&search_start=$page&full_search=1&story=${query}&titleonly=3")
 				}
 
 				else -> {

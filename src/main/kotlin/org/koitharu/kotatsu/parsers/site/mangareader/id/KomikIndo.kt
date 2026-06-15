@@ -46,6 +46,7 @@ internal class KomikIndo(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -111,9 +112,9 @@ internal class KomikIndo(context: MangaLoaderContext) :
 				},
 			)
 
-			filter.query?.let {
+			query?.let { query ->
 				append("&title=")
-				append(it.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			if (page > 1) {

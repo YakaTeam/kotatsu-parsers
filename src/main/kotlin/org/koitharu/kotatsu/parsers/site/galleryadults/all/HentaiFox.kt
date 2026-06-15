@@ -26,13 +26,14 @@ internal class HentaiFox(context: MangaLoaderContext) :
 	override val availableSortOrders: Set<SortOrder> = EnumSet.of(SortOrder.UPDATED, SortOrder.POPULARITY)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search/?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					if (page > 1) {
 						append("&page=")
 						append(page.toString())
@@ -40,9 +41,11 @@ internal class HentaiFox(context: MangaLoaderContext) :
 				}
 
 				else -> {
-					if (filter.tags.size > 1 || (filter.tags.isNotEmpty() && filter.locale != null)) {
+					val tags = filter.tags
+					val lang = filter.locale
+					if (tags.size > 1 || (tags.isNotEmpty() && lang != null)) {
 						append("/search/?q=")
-						append(buildQuery(filter.tags, filter.locale))
+						append(buildQuery(tags, lang))
 						if (page > 1) {
 							append("&page=")
 							append(page.toString())
@@ -51,8 +54,8 @@ internal class HentaiFox(context: MangaLoaderContext) :
 						if (order == SortOrder.POPULARITY) {
 							append("&sort=popular")
 						}
-					} else if (filter.tags.isNotEmpty()) {
-						filter.tags.oneOrThrowIfMany()?.let {
+					} else if (tags.isNotEmpty()) {
+						tags.oneOrThrowIfMany()?.let {
 							append("/tag/")
 							append(it.key)
 						}
@@ -66,9 +69,9 @@ internal class HentaiFox(context: MangaLoaderContext) :
 							append(page.toString())
 							append("/")
 						}
-					} else if (filter.locale != null) {
+					} else if (lang != null) {
 						append("/language/")
-						append(filter.locale.toLanguagePath())
+						append(lang.toLanguagePath())
 						append("/")
 						if (order == SortOrder.POPULARITY) {
 							append("popular/")

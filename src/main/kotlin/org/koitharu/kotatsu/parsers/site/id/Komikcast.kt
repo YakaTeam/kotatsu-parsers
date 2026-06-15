@@ -86,12 +86,13 @@ internal class Komikcast(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = urlBuilder().host(apiUrl).apply {
 			addPathSegment("series")
 
 			// Query with keyword, testing...
-			if (!filter.query.isNullOrEmpty()) {
-				val keyword = filter.query.encodeKeyword()
+			if (!query.isNullOrEmpty()) {
+				val keyword = query.encodeKeyword()
 				val filterValue = "title=like=\"$keyword\",nativeTitle=like=\"$keyword\""
 				addEncodedQueryParameter("filter", filterValue)
 			}

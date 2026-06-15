@@ -80,6 +80,8 @@ internal class Koharu(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val baseUrl = "https://$apiSuffix/books"
 		val url = buildString {
 			append(baseUrl)
@@ -88,8 +90,8 @@ internal class Koharu(context: MangaLoaderContext) :
 			val includedTags: MutableList<String> = mutableListOf()
 			val excludedTags: MutableList<String> = mutableListOf()
 
-			if (!filter.query.isNullOrEmpty() && filter.query.startsWith("id:")) {
-				val ipk = filter.query.removePrefix("id:")
+			if (!query.isNullOrEmpty() && query.startsWith("id:")) {
+				val ipk = query.removePrefix("id:")
 				val response = webClient.httpGet("$baseUrl/detail/$ipk").parseJson()
 				return listOf(parseMangaDetail(response))
 			}
@@ -105,18 +107,18 @@ internal class Koharu(context: MangaLoaderContext) :
 			}
 			append("?sort=").append(sortValue)
 
-			if (!filter.query.isNullOrEmpty()) {
-				terms.add("title:\"${filter.query.urlEncoded()}\"")
+			if (!query.isNullOrEmpty()) {
+				terms.add("title:\"${query.urlEncoded()}\"")
 			}
 
-			if (!filter.author.isNullOrEmpty()) {
+			if (!author.isNullOrEmpty()) {
 				val authors = authorsIds.getOrDefault(emptyMap())
-				val authorId = authors[filter.author.lowercase()]
+				val authorId = authors[author.lowercase()]
 
 				if (authorId != null) {
 					includedTags.add(authorId)
 				} else {
-					terms.add("artist:\"${filter.author.urlEncoded()}\"")
+					terms.add("artist:\"${author.urlEncoded()}\"")
 				}
 			}
 

@@ -82,6 +82,7 @@ internal class RemangaParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		copyCookies()
 		val urlBuilder = urlBuilder(subdomain = "api")
 			.addPathSegment("api")
@@ -90,8 +91,8 @@ internal class RemangaParser(
 			.addQueryParameter("page", page.toString())
 			.addQueryParameter("count", PAGE_SIZE.toString())
 			.addQueryParameter("ordering", getSortKey(order))
-		if (!filter.query.isNullOrEmpty()) {
-			urlBuilder.addQueryParameter("query", filter.query)
+		if (!query.isNullOrEmpty()) {
+			urlBuilder.addQueryParameter("query", query)
 		} else {
 			urlBuilder.addPathSegment("catalog")
 		}
@@ -168,7 +169,7 @@ internal class RemangaParser(
 	}
 
 	override suspend fun getPages(chapter: MangaChapter): List<MangaPage> {
-		val content = webClient.httpGet(chapter.url.toAbsoluteUrl(getDomain("api")))
+		val content = webClient.httpGet(chapter.url.toAbsoluteUrl(org.koitharu.kotatsu.parsers.util.getDomain(this, "api")))
 			.parseJson()
 		val pages = content.optJSONArray("pages")
 		if (pages == null) {

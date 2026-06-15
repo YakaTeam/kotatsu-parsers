@@ -301,7 +301,8 @@ internal class ExHentaiParser(
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
-        if (response.headersContentLength(BANNED_RESPONSE_LENGTH) <= BANNED_RESPONSE_LENGTH) {
+        val contentLength = response.headersContentLength()
+        if (contentLength in 0L..BANNED_RESPONSE_LENGTH) {
             val text = response.peekBody(BANNED_RESPONSE_LENGTH).use { it.string() }
             if (text.contains("IP address has been temporarily banned", ignoreCase = true)) {
                 val hours = Regex("([0-9]+) hours?").find(text)?.groupValues?.getOrNull(1)?.toLongOrNull() ?: 0
@@ -432,6 +433,7 @@ internal class ExHentaiParser(
             return null
         }
         val joiner = StringUtil.StringJoiner(" ")
+        val query = query
         if (!query.isNullOrEmpty()) {
             joiner.add(query)
         }
@@ -456,6 +458,7 @@ internal class ExHentaiParser(
             joiner.append(lc.toLanguagePath())
             joiner.append("\"$")
         }
+        val author = author
         if (!author.isNullOrEmpty()) {
             joiner.add("artist:\"")
             joiner.append(author)

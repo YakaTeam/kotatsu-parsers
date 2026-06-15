@@ -43,10 +43,11 @@ internal class AnibelParser(context: MangaLoaderContext) : AbstractMangaParser(c
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val filters = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				return if (offset == 0) {
-					search(filter.query)
+					search(query)
 				} else {
 					emptyList()
 				}
@@ -89,7 +90,7 @@ internal class AnibelParser(context: MangaLoaderContext) : AbstractMangaParser(c
 				id = generateUid(mediaId),
 				title = title.getString("be"),
 				coverUrl = jo.getString("poster").removePrefix("/cdn")
-					.toAbsoluteUrl(getDomain("cdn")) + "?width=200&height=280",
+					.toAbsoluteUrl(getDomain(this, "cdn")) + "?width=200&height=280",
 				altTitles = setOfNotNull(title.optJSONArray("alt")?.optString(0)?.nullIfEmpty()),
 				authors = emptySet(),
 				contentRating = null,
@@ -128,7 +129,7 @@ internal class AnibelParser(context: MangaLoaderContext) : AbstractMangaParser(c
 			""".trimIndent(),
 		).getJSONObject("media")
 		val title = details.getJSONObject("title")
-		val poster = details.getString("poster").removePrefix("/cdn").toAbsoluteUrl(getDomain("cdn"))
+		val poster = details.getString("poster").removePrefix("/cdn").toAbsoluteUrl(getDomain(this, "cdn"))
 		val chapters = apiCall(
 			"""
 			chapters(mediaId: "${details.getString("mediaId")}", offset: 0, limit: 99999) {
@@ -236,7 +237,7 @@ internal class AnibelParser(context: MangaLoaderContext) : AbstractMangaParser(c
 				id = generateUid(mediaId),
 				title = title.getString("be"),
 				coverUrl = jo.getString("poster").removePrefix("/cdn")
-					.toAbsoluteUrl(getDomain("cdn")) + "?width=200&height=280",
+					.toAbsoluteUrl(getDomain(this, "cdn")) + "?width=200&height=280",
 				altTitles = setOfNotNull(title.getString("en").nullIfEmpty()),
 				authors = emptySet(),
 				contentRating = null,

@@ -31,13 +31,14 @@ internal class SadScans(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/series")
-			filter.query?.let {
+			query?.let { query ->
 				append("?search=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 		}
 

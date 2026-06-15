@@ -143,6 +143,8 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val all = getFilteredAndSortedList(order, filter)
 		val fromIndex = ((page - 1) * pageSize).coerceAtLeast(0)
 		if (fromIndex >= all.size) {
@@ -536,9 +538,10 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getDetails(manga: Manga): Manga {
-		if (!manga.chapters.isNullOrEmpty()) {
+		val chapters = manga.chapters
+		if (!chapters.isNullOrEmpty()) {
 			return manga.copy(
-				chapters = normalizeChapterOrder(manga.chapters),
+				chapters = normalizeChapterOrder(chapters),
 			)
 		}
 
@@ -896,7 +899,7 @@ internal class PoseidonScans(context: MangaLoaderContext) :
 		if (dateString.isNullOrBlank()) return 0L
 
 		val cleanedDateString =
-			dateString.removePrefix("\"").removeSuffix("\"").removePrefix($$"$D").removePrefix("D").trim()
+			dateString.removePrefix("\"").removeSuffix("\"").removePrefix("D").trim()
 
 		return isoDateFormat.parseSafe(cleanedDateString)
 	}

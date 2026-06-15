@@ -55,6 +55,7 @@ internal class MangaWtfParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url =
 			urlBuilder("api")
 				.addPathSegment("v2")
@@ -63,7 +64,7 @@ internal class MangaWtfParser(
 				.addQueryParameter("size", pageSize.toString())
 				.addQueryParameter("type", "COMIC")
 		when {
-			filter.query.isNullOrEmpty() -> {
+			query.isNullOrEmpty() -> {
 				url.addQueryParameter(
 					"sort",
 					when (order) {
@@ -110,7 +111,7 @@ internal class MangaWtfParser(
 			}
 
 			else -> {
-				url.addQueryParameter("search", filter.query)
+				url.addQueryParameter("search", query)
 			}
 		}
 		val ja = webClient.httpGet(url.build()).parseJsonArray()

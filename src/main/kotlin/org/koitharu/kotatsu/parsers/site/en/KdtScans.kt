@@ -76,11 +76,12 @@ internal class KdtScans(context: MangaLoaderContext) :
     }
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
         val url = buildString {
             append("https://$domain/manga/?page=${page}")
 
-            filter.query?.let {
-                append("&s=${it.urlEncoded()}")
+            query?.let { q ->
+                append("&s=${q.urlEncoded()}")
             }
 
             val sortValue = when (order) {

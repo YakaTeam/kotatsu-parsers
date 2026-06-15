@@ -44,9 +44,10 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = urlBuilder().addPathSegments(apiSuffix)
 		val isDefaultHome = order == SortOrder.UPDATED
-			&& filter.query.isNullOrEmpty()
+			&& query.isNullOrEmpty()
 			&& filter.tags.isEmpty()
 			&& filter.locale == null
 
@@ -55,7 +56,7 @@ internal class NHentaiParser(context: MangaLoaderContext) :
 			url.addQueryParameter("page", page.toString())
 		} else {
 			val query = buildString {
-				filter.query?.trim()?.takeIf { it.isNotEmpty() }?.let {
+				query?.trim()?.takeIf { it.isNotEmpty() }?.let {
 					append(it)
 					append(" ")
 				}

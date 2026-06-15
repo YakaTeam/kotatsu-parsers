@@ -76,14 +76,15 @@ internal class ComicKLive(context: MangaLoaderContext) :
     }
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
         val url = urlBuilder()
             .host(domain)
             .addPathSegment("api")
             .addPathSegment("search")
             .addQueryParameter("type", "comic")
 
-        filter.query?.let {
-            url.addQueryParameter("q", filter.query)
+        query?.let { query ->
+            url.addQueryParameter("q", query)
         }
 
         filter.tags.forEach {
@@ -154,7 +155,7 @@ internal class ComicKLive(context: MangaLoaderContext) :
         }
 
         // no "page" parameter, use "cursor" to prevent empty list when searching with keyword
-        if (filter.query.isNullOrEmpty() && page > 1) {
+        if (query.isNullOrEmpty() && page > 1) {
             url.addQueryParameter("cursor", pageCursor)
         }
 

@@ -108,6 +108,7 @@ internal abstract class LibSocialParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val urlBuilder = HttpUrl.Builder()
 			.scheme(SCHEME_HTTPS)
 			.host(apiHost)
@@ -126,8 +127,8 @@ internal abstract class LibSocialParser(
 		for (tag in filter.tagsExclude) {
 			urlBuilder.addQueryParameter("${tag.typeKey()}_exclude[]", tag.key.drop(1))
 		}
-		if (!filter.query.isNullOrEmpty()) {
-			urlBuilder.addQueryParameter("q", filter.query)
+		if (!query.isNullOrEmpty()) {
+			urlBuilder.addQueryParameter("q", query)
 		}
 		urlBuilder.addQueryParameter(
 			"sort_by",

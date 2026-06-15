@@ -59,15 +59,16 @@ internal class ImHentai(context: MangaLoaderContext) :
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/search/?page=")
 			append(page.toString())
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("&key=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 
 				else -> {

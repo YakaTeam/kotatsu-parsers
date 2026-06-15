@@ -67,8 +67,9 @@ internal abstract class OtakuSanctuaryParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val doc = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
@@ -76,7 +77,7 @@ internal abstract class OtakuSanctuaryParser(
 					append("https://")
 					append(domain)
 					append("/Home/Search?search=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 				webClient.httpGet(url).parseHtml().requireElementById("collection-manga")
 			}

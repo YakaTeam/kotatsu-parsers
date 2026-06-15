@@ -62,12 +62,13 @@ internal abstract class Manga18Parser(
 	protected open val datePattern = "dd-MM-yyyy"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append('/')
 
-			if (filter.tags.isNotEmpty() && filter.query != null) {
+			if (filter.tags.isNotEmpty() && query != null) {
 				throw IllegalArgumentException("Search is not supported with tags")
 			}
 
@@ -80,11 +81,11 @@ internal abstract class Manga18Parser(
 				}
 			}
 
-			if (!filter.query.isNullOrEmpty()) {
+			if (!query.isNullOrEmpty()) {
 				append(listUrl)
 				append(page.toString())
 				append("?search=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 				append("&order_by=latest")
 			}
 

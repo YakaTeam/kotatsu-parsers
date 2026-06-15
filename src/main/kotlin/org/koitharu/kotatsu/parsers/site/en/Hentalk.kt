@@ -60,17 +60,19 @@ internal class Hentalk(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions() // not found any URLs for it
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/__data.json?x-sveltekit-trailing-slash=1&x-sveltekit-invalidated=001")
 
 			when {
-				!filter.query.isNullOrEmpty() || filter.tags.isNotEmpty() || !filter.author.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() || filter.tags.isNotEmpty() || !author.isNullOrEmpty() -> {
 					append("&q=")
 
-					if (!filter.author.isNullOrEmpty()) {
-						append("artist:\"${space2plus(filter.author)}\"")
+					if (!author.isNullOrEmpty()) {
+						append("artist:\"${space2plus(author)}\"")
 						append('+')
 					}
 
@@ -81,8 +83,8 @@ internal class Hentalk(context: MangaLoaderContext) :
 						}
 					}
 
-					if (!filter.query.isNullOrEmpty()) {
-						append(space2plus(filter.query))
+					if (!query.isNullOrEmpty()) {
+						append(space2plus(query))
 					} else {
 						append('+')
 					}

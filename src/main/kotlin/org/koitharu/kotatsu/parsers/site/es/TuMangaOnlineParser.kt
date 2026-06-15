@@ -69,15 +69,16 @@ internal class TuMangaOnlineParser(context: MangaLoaderContext) : PagedMangaPars
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/library?_pg=1&page=")
 			append(page.toString())
 
-			filter.query?.let {
+			query?.let { query ->
 				append("&title=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			append("&order_item=")

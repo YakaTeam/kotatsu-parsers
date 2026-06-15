@@ -54,7 +54,8 @@ internal class DesuMeParser(context: MangaLoaderContext) :
     private val tagsCache = suspendLazy(initializer = ::fetchTags)
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        if (!filter.query.isNullOrEmpty() && page != searchPaginator.firstPage) {
+		val query = filter.query
+        if (!query.isNullOrEmpty() && page != searchPaginator.firstPage) {
             return emptyList()
         }
         val domain = domain
@@ -69,9 +70,9 @@ internal class DesuMeParser(context: MangaLoaderContext) :
                 append("&genres=")
                 filter.tags.joinTo(this, ",") { it.key }
             }
-            if (!filter.query.isNullOrEmpty()) {
+            if (!query.isNullOrEmpty()) {
                 append("&search=")
-                append(filter.query)
+                append(query)
             }
         }
         val json = webClient.httpGet(url).parseJson().getJSONArray("response")

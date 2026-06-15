@@ -63,6 +63,7 @@ internal abstract class NepnepParser(
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val doc = searchDoc.get()
 		val json = JSONArray(
 			doc.selectFirstOrThrow("script:containsData(MainFunction)").data()
@@ -83,10 +84,10 @@ internal abstract class NepnepParser(
 			//val viewMonth = m.getString("vm")
 
 			when {
-				!filter.query.isNullOrEmpty() -> {
-					if (m.getString("s").contains(filter.query, ignoreCase = true) || (m.getJSONArray("al")
+				!query.isNullOrEmpty() -> {
+					if (m.getString("s").contains(query, ignoreCase = true) || (m.getJSONArray("al")
 							.length() > 0 && m.getJSONArray("al").getString(0)
-							.contains(filter.query, ignoreCase = true))
+							.contains(query, ignoreCase = true))
 					) {
 						mangaWithLastUpdateList.add(
 							MangaWithLastUpdate(addManga(href, imgUrl, m), lastUpdate, views),

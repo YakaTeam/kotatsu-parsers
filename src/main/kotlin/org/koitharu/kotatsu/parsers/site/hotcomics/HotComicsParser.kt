@@ -52,6 +52,7 @@ internal abstract class HotComicsParser(
 	protected open val onePage = false
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		if (onePage && page > 1) {
 			return emptyList()
 		}
@@ -61,9 +62,9 @@ internal abstract class HotComicsParser(
 			append(domain)
 			when {
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search?keyword=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&page=")
 					append(page)
 				}

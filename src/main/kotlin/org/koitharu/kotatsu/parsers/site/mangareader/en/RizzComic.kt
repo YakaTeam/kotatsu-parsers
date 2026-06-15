@@ -58,16 +58,17 @@ internal class RizzComic(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		if (page > 1) {
 			return emptyList()
 		}
 		var url = "https://$domain$filterUrl"
 
 		val payload = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				url = "https://$domain$searchUrl"
-				if (filter.query != "") {
-					mapOf("search_value" to filter.query.trim())
+				if (query != "") {
+					mapOf("search_value" to query.trim())
 				} else {
 					null
 				}

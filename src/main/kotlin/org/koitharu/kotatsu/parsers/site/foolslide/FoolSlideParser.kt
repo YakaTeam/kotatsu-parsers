@@ -45,8 +45,9 @@ internal abstract class FoolSlideParser(
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val doc = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
@@ -58,7 +59,7 @@ internal abstract class FoolSlideParser(
 					append(searchUrl)
 				}
 
-				webClient.httpPost(url, "search=${filter.query.urlEncoded()}").parseHtml()
+				webClient.httpPost(url, "search=${query.urlEncoded()}").parseHtml()
 			}
 
 			else -> {
