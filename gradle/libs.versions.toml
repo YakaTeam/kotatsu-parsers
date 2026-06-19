@@ -2,7 +2,7 @@
 androidx-collection = "1.6.0"
 android-stubs = "4.1.1.4"
 core = "b62a0681d7"
-kotlin = "2.2.10"
+kotlin = "2.4.0"
 ksp = "2.2.10-2.0.2"
 coroutines = "1.10.2"
 junit = "5.14.3"
