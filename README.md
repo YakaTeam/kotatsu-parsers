@@ -1,3 +1,11 @@
+# ABANDONED PROJECT
+
+Please move to: [UMA](https://github.com/InvalidDavid/UMA)
+
+> # NOTE:
+> 
+> This plugin can still work in the future but will not receive any updates if somethings breaks!
+
 # kotatsu-parsers
 
 This library provides a collection of manga parsers for convenient access to manga available on the web. It can be used in
