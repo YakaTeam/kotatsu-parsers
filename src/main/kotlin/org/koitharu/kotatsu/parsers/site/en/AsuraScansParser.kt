@@ -64,17 +64,15 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/browse?page=")
 			append(page)
 
-			query?.let { query ->
+			filter.query?.let {
 				append("&q=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			if (filter.tags.isNotEmpty()) {
@@ -107,9 +105,9 @@ internal class AsuraScansParser(context: MangaLoaderContext) :
 				)
 			}
 
-			if (!author.isNullOrEmpty()) {
+			if (!filter.author.isNullOrEmpty()) {
 				append("&author=")
-				append(author.urlEncoded())
+				append(filter.author.urlEncoded())
 			}
 
 			append(

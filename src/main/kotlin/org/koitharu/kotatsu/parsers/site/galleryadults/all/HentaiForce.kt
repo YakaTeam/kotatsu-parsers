@@ -54,29 +54,26 @@ internal class HentaiForce(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search?q=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&page=")
 				}
 
 				else -> {
-					val tags = filter.tags
-					val lang = filter.locale
-					if (tags.size > 1 || (tags.isNotEmpty() && lang != null)) {
+					if (filter.tags.size > 1 || (filter.tags.isNotEmpty() && filter.locale != null)) {
 						append("/search?q=")
-						append(buildQuery(tags, lang))
+						append(buildQuery(filter.tags, filter.locale))
 						if (order == SortOrder.POPULARITY) {
 							append("&sort=popular")
 						}
 						append("&page=")
-					} else if (tags.isNotEmpty()) {
-						tags.oneOrThrowIfMany()?.let {
+					} else if (filter.tags.isNotEmpty()) {
+						filter.tags.oneOrThrowIfMany()?.let {
 							append("/tag/")
 							append(it.key)
 						}
@@ -86,9 +83,9 @@ internal class HentaiForce(context: MangaLoaderContext) :
 							append("popular/")
 						}
 						append("?")
-					} else if (lang != null) {
+					} else if (filter.locale != null) {
 						append("/language/")
-						append(lang.toLanguagePath())
+						append(filter.locale.toLanguagePath())
 						append("/")
 
 						if (order == SortOrder.POPULARITY) {

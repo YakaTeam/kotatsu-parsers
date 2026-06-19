@@ -43,9 +43,8 @@ internal class TrWebtoon(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		if (order == SortOrder.UPDATED) {
-			if (filter.tags.isNotEmpty() || filter.states.isNotEmpty() || query != null) {
+			if (filter.tags.isNotEmpty() || filter.states.isNotEmpty() || filter.query != null) {
 				throw IllegalArgumentException("Sorting by update with filters is not supported by this source.")
 			}
 			val url = buildString {
@@ -62,9 +61,9 @@ internal class TrWebtoon(context: MangaLoaderContext) :
 				append("/webtoon-listesi?page=")
 				append(page.toString())
 
-				query?.let { query ->
+				filter.query?.let {
 					append("&q=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				filter.tags.oneOrThrowIfMany()?.let {

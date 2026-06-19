@@ -82,8 +82,6 @@ internal abstract class FmreaderParser(
 	protected open val tagPrefix = "manga-list-genre-"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -91,14 +89,14 @@ internal abstract class FmreaderParser(
 			append("?page=")
 			append(page.toString())
 
-			query?.let { query ->
+			filter.query?.let {
 				append("&name=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
-			// author?.let { author ->
+			// filter.author?.let {
 			// 	append("&author=")
-			// 	append(author.urlEncoded())
+			// 	append(filter.author.urlEncoded())
 			// }
 
 			append("&genre=")

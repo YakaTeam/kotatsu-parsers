@@ -181,10 +181,9 @@ internal abstract class WebtoonsParser(
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val document = when {
-			!query.isNullOrEmpty() -> {
-				val searchUrl = "https://$domain/$languageCode/search?keyword=${query.urlEncoded()}"
+			!filter.query.isNullOrEmpty() -> {
+				val searchUrl = "https://$domain/$languageCode/search?keyword=${filter.query.urlEncoded()}"
 				webClient.httpGet(searchUrl).parseHtml()
 			}
 

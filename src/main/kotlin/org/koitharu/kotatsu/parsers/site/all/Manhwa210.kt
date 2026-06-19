@@ -37,17 +37,16 @@ internal class Manhwa210(context: MangaLoaderContext) : PagedMangaParser(context
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 
 			when {
 
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search")
 					append("?filter[name]=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 
 					if (page > 1) {
 						append("&page=")
@@ -94,7 +93,7 @@ internal class Manhwa210(context: MangaLoaderContext) : PagedMangaParser(context
 				}
 			}
 
-			if (query.isNullOrEmpty()) {
+			if (filter.query.isNullOrEmpty()) {
 				append("&sort=")
 				when (order) {
 					SortOrder.POPULARITY -> append("-views")

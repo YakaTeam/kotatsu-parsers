@@ -107,9 +107,8 @@ internal class CMangaParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = urlBuilder().apply {
-			if (query.isNullOrEmpty() && (order == SortOrder.RELEVANCE ||
+			if (filter.query.isNullOrEmpty() && (order == SortOrder.RELEVANCE ||
 					order == SortOrder.POPULARITY_TODAY ||
 					order == SortOrder.POPULARITY_WEEK ||
 					order == SortOrder.POPULARITY_MONTH
@@ -122,7 +121,7 @@ internal class CMangaParser(context: MangaLoaderContext) :
 				addQueryParameter("team", "0")
 				addQueryParameter("sort", "update")
 				addQueryParameter("tag", filter.tags.joinToString(separator = ",") { it.key })
-				addQueryParameter("string", query.orEmpty())
+				addQueryParameter("string", filter.query.orEmpty())
 				addQueryParameter(
 					"status",
 					when (filter.states.oneOrThrowIfMany()) {

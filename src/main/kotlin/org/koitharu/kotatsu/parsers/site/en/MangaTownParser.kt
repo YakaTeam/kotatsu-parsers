@@ -42,14 +42,13 @@ internal class MangaTownParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search?name=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&page=")
 					append(page.toString())
 				}
@@ -261,7 +260,7 @@ internal class MangaTownParser(context: MangaLoaderContext) :
 	}
 
 	private suspend fun bypassLicensedChapters(manga: Manga): List<MangaChapter> {
-		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(getDomain(this, "m"))).parseHtml()
+		val doc = webClient.httpGet(manga.url.toAbsoluteUrl(getDomain("m"))).parseHtml()
 		val list = doc.body().selectFirst("ul.detail-ch-list") ?: return emptyList()
 		val dateFormat = SimpleDateFormat("MMM dd,yyyy", Locale.US)
 		return list.select("li").asReversed().mapIndexedNotNull { i, li ->

@@ -35,7 +35,6 @@ internal class HentaiVnBuzz(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -74,13 +73,13 @@ internal class HentaiVnBuzz(context: MangaLoaderContext) :
 				append(filter.tagsExclude.joinToString(",") { it.key })
 			}
 
-			if (!query.isNullOrEmpty()) {
+			if (!filter.query.isNullOrEmpty()) {
 				clear()
 
 				append("https://")
 				append(domain)
 				append("/tim-kiem?q=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 
 				return@buildString // end of buildString
 			}

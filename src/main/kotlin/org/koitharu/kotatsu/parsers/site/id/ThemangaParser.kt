@@ -82,9 +82,8 @@ internal class TheManga(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> searchManga(query)
+			!filter.query.isNullOrEmpty() -> searchManga(filter.query)
 			filter.tags.isNotEmpty() -> getMangaListByGenre(filter.tags.first().key, page, filter.tags)
 			else -> getAllManga(page, order)
 		}

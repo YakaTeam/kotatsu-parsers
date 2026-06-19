@@ -37,14 +37,13 @@ internal class Hentai18VN(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
 
-				val keyword = query
+				val keyword = filter.query
 				val url = "http://$domain/search/html/1"
 				val headers = Headers.Builder().add("X-Requested-With", "XMLHttpRequest").build()
 				val response = webClient.httpPost(url.toHttpUrl(), payload = "keyword=$keyword", headers).parseHtml()

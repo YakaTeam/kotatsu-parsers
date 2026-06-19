@@ -48,15 +48,14 @@ internal class FlixScans(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val json = when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
 				val url = "https://api.$domain/api/v1/search/serie"
 				val body = JSONObject()
-				body.put("title", query.urlEncoded())
+				body.put("title", filter.query.urlEncoded())
 				webClient.httpPost(url, body).parseJson().getJSONArray("data")
 			}
 

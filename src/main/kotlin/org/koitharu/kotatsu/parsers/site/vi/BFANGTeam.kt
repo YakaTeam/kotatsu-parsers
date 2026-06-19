@@ -55,12 +55,10 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val url = urlBuilder().addPathSegment("manga")
 
-		if (!query.isNullOrEmpty()) {
-			url.addEncodedQueryParameter("q", query)
+		if (!filter.query.isNullOrEmpty()) {
+			url.addEncodedQueryParameter("q", filter.query)
 		}
 
 		// todo: need to use data-genre (num) instead of genre name
@@ -77,9 +75,9 @@ internal class BFANGTeam (context: MangaLoaderContext) :
 			}
 		}
 
-		if (!author.isNullOrEmpty()) {
+		if (!filter.author.isNullOrEmpty()) {
 			url.addQueryParameter("q",
-				author.splitByWhitespace().joinToString(separator = "+") { it }
+				filter.author.splitByWhitespace().joinToString(separator = "+") { it }
 			)
 		}
 

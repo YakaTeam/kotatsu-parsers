@@ -33,13 +33,12 @@ internal class LireScan(context: MangaLoaderContext) : PagedMangaParser(context,
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val doc = when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
-				val q = query.urlEncoded().replace("%20", "+")
+				val q = filter.query.urlEncoded().replace("%20", "+")
 				val post = "do=search&subaction=search&search_start=0&full_search=0&result_from=1&story=$q"
 				webClient.httpPost("https://$domain/index.php?do=search", post).parseHtml()
 			}

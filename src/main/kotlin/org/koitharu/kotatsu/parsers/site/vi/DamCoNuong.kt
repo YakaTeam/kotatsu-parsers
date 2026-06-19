@@ -55,7 +55,6 @@ internal class DamCoNuong(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -91,9 +90,9 @@ internal class DamCoNuong(context: MangaLoaderContext) :
 				append(filter.tags.joinTo(this, ",") { it.key })
 			}
 
-			if (!query.isNullOrEmpty()) {
+			if (!filter.query.isNullOrEmpty()) {
 				append("&filter[name]=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			if (filter.tagsExclude.isNotEmpty()) {

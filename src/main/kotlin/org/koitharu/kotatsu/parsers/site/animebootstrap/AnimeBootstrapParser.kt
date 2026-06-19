@@ -56,7 +56,6 @@ internal abstract class AnimeBootstrapParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -65,9 +64,9 @@ internal abstract class AnimeBootstrapParser(
 			append(page.toString())
 			append("&type=all")
 
-			query?.let { query ->
+			filter.query?.let {
 				append("&search=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			filter.tags.oneOrThrowIfMany()?.let {

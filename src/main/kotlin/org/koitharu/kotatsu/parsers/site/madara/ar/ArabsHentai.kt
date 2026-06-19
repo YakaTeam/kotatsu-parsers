@@ -84,11 +84,10 @@ internal class ArabsHentai(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val pages = page + 1
 
 		val url = when {
-			!query.isNullOrEmpty() || filter.tags.isNotEmpty() -> {
+			!filter.query.isNullOrEmpty() || filter.tags.isNotEmpty() -> {
 				buildString {
 					append("https://")
 					append(domain)
@@ -97,7 +96,7 @@ internal class ArabsHentai(context: MangaLoaderContext) :
 						append(pages)
 					}
 					append("/?s=")
-					append(query?.urlEncoded() ?: "")
+					append(filter.query?.urlEncoded() ?: "")
 
 					filter.tags.forEach { tag ->
 						append("&genre%5B%5D=")

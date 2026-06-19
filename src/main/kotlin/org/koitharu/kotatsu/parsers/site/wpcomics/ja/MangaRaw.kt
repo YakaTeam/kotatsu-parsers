@@ -15,15 +15,14 @@ internal class MangaRaw(context: MangaLoaderContext) :
 	override val listUrl = "/search/manga"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val response = when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				val url = buildString {
 					append("https://")
 					append(domain)
 					append(listUrl)
 					append("?keyword=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&page=")
 					append(page.toString())
 				}

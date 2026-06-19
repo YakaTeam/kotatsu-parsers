@@ -57,10 +57,8 @@ internal abstract class MangaWorldParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		// Handle UPDATED sort without filters - use homepage
-		val noQuery = query.isNullOrBlank()
+		val noQuery = filter.query.isNullOrBlank()
 			&& filter.tags.isEmpty()
 			&& filter.states.isEmpty()
 			&& filter.types.isEmpty()
@@ -77,9 +75,9 @@ internal abstract class MangaWorldParser(
 				append("/archive?&page=")
 				append(page.toString())
 
-				query?.let { query ->
+				filter.query?.let {
 					append("&keyword=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				filter.tags.forEach {
@@ -127,7 +125,7 @@ internal abstract class MangaWorldParser(
 				}
 
 				// author ( not query but same to tags )
-				// author.forEach {
+				// filter.author.forEach {
 				// 	append("&author=")
 				// 	append(it.key)
 				// }

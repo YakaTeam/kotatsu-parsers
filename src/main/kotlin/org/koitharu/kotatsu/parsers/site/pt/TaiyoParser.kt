@@ -111,7 +111,7 @@ internal class TaiyoParser(context: MangaLoaderContext) :
 			.addHeader(CommonHeaders.ORIGIN, "https://$domain")
 			.addHeader(CommonHeaders.REFERER, "https://$domain/")
 			.addHeader(CommonHeaders.ACCEPT, "application/json")
-			.tag(source)
+			.tag(MangaParserSource::class.java, source)
 			.build()
 		val client = context.httpClient.newBuilder()
 			.apply { interceptors().clear() }

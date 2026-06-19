@@ -41,14 +41,13 @@ internal class MangaKatana(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = when {
-			!query.isNullOrEmpty() -> buildString {
+			!filter.query.isNullOrEmpty() -> buildString {
 				append("https://")
 				append(domain)
 				if (page > 1) append("/page/").append(page)
 				append("/?search=1&q=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			else -> buildString {

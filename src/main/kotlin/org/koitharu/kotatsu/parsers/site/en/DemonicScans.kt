@@ -35,13 +35,12 @@ internal class DemonicScans(context: MangaLoaderContext) :
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-        val hasQuery = !query.isNullOrEmpty()
+        val hasQuery = !filter.query.isNullOrEmpty()
         val isNewest = order == SortOrder.NEWEST && !hasQuery && filter.tags.isEmpty()
         val isAlpha = order == SortOrder.ALPHABETICAL && !hasQuery && filter.tags.isEmpty()
         val isAlphaDesc = order == SortOrder.ALPHABETICAL_DESC && !hasQuery && filter.tags.isEmpty()
         val url = when {
-            hasQuery -> "https://$domain/search.php?manga=" + (query ?: "")
+            hasQuery -> "https://$domain/search.php?manga=" + (filter.query ?: "")
             isNewest -> "https://$domain/lastupdates.php?list=$page"
             isAlpha -> buildString {
                 append("https://$domain/advanced.php")

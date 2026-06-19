@@ -77,18 +77,16 @@ internal class BigSolo(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val catalog = getCatalog()
-		val normalizedQuery = normalizeSearchText(query)
+		val query = normalizeSearchText(filter.query)
 		val includeTags = filter.tags.mapTo(hashSetOf()) { normalizeTagKey(it.key) }
 		val excludeTags = filter.tagsExclude.mapTo(hashSetOf()) { normalizeTagKey(it.key) }
 		val stateFilter = filter.states
 		val typesFilter = filter.types
 		val demographicFilter = filter.demographics
-		val authorFilter = normalizeSearchText(author)
+		val authorFilter = normalizeSearchText(filter.author)
 		val filtered = catalog.entries.filter { entry ->
-			if (normalizedQuery.isNotEmpty() && normalizedQuery !in entry.searchText) {
+			if (query.isNotEmpty() && query !in entry.searchText) {
 				return@filter false
 			}
 			if (authorFilter.isNotEmpty() && authorFilter !in entry.authorsSearchText) {

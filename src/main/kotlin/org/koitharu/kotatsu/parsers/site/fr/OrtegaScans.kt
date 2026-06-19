@@ -149,7 +149,6 @@ internal class OrtegaScans(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val all = getFilteredAndSortedList(order, filter)
 		val from = ((page - 1) * pageSize).coerceAtLeast(0)
 		if (from >= all.size) return emptyList()

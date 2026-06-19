@@ -37,8 +37,7 @@ internal class MangaGeko(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val isSearch = !query.isNullOrEmpty()
+		val isSearch = !filter.query.isNullOrEmpty()
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -48,7 +47,7 @@ internal class MangaGeko(context: MangaLoaderContext) :
 						return emptyList()
 					}
 					append("/search/?search=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				else -> {

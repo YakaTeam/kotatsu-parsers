@@ -30,10 +30,9 @@ internal class Atsumaru(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         // Case 1: Search (Uses a different API endpoint)
-        if (!query.isNullOrEmpty()) {
-            return getSearchPage(page, query)
+        if (!filter.query.isNullOrEmpty()) {
+            return getSearchPage(page, filter.query)
         }
 
         // Case 2: Popular / Latest (Uses the infinite API)

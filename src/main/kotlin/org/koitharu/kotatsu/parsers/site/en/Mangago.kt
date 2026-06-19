@@ -41,7 +41,6 @@ internal class MangaGo(context: MangaLoaderContext) :
     }
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val sortParam = when (order) {
             SortOrder.UPDATED -> "s=1"
             SortOrder.POPULARITY -> "s=9"
@@ -50,8 +49,8 @@ internal class MangaGo(context: MangaLoaderContext) :
             else -> "s=1"
         }
 
-        val url = if (!query.isNullOrEmpty()) {
-            "https://$domain/r/l_search/?name=${query.urlEncoded()}&page=$page"
+        val url = if (!filter.query.isNullOrEmpty()) {
+            "https://$domain/r/l_search/?name=${filter.query.urlEncoded()}&page=$page"
         } else {
             val genre = filter.tags.firstOrNull()?.key ?: "All"
             "https://$domain/genre/$genre/$page/?$sortParam"

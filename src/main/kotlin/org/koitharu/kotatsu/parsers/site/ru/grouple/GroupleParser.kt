@@ -91,7 +91,6 @@ internal abstract class GroupleParser(
     )
 
     override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        val query = filter.query
         val domain = domain
         val root = if (filter.isEmpty()) {
             webClient.httpGet(
@@ -357,12 +356,11 @@ internal abstract class GroupleParser(
     }
 
     private suspend fun advancedSearch(offset: Int, order: SortOrder, filter: MangaListFilter): Response {
-        val query = filter.query
         val tagsMap = tagsIndex.get()
         val url = urlBuilder()
             .addPathSegment("search")
             .addPathSegment("advancedResults")
-        url.addQueryParameter("q", query)
+        url.addQueryParameter("q", filter.query)
         url.addQueryParameter("offset", offset.toString())
         filter.tags.forEach { tag ->
             val tagId = requireNotNull(tagsMap[tag.title.lowercase()]) { "Tag ${tag.title} not found" }

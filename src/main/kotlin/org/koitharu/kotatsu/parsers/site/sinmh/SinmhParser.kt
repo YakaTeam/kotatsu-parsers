@@ -57,16 +57,15 @@ internal abstract class SinmhParser(
 	protected open val listUrl = "list/"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append('/')
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append(searchUrl)
 					append("?keywords=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&page=")
 					append(page)
 				}

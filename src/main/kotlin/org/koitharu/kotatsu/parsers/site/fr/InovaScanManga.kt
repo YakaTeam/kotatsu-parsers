@@ -80,10 +80,9 @@ internal class InovaScanManga(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 
 		val url = buildApiUrl(
-			search = query.orEmpty(),
+			search = filter.query.orEmpty(),
 			sort = when (order) {
 				SortOrder.POPULARITY -> "popular"
 				SortOrder.NEWEST -> "new"

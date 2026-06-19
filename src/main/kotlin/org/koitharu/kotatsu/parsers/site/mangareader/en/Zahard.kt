@@ -31,7 +31,6 @@ internal class Zahard(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -39,9 +38,9 @@ internal class Zahard(context: MangaLoaderContext) :
 			append("?page=")
 			append(page.toString())
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("&search=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				else -> {

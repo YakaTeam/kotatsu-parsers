@@ -60,14 +60,13 @@ internal abstract class GalleryAdultsParser(
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search/?q=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&")
 				}
 
@@ -81,9 +80,9 @@ internal abstract class GalleryAdultsParser(
 						append("/tag/")
 						append(tag.key)
 						append("/?")
-					} else if (lang != null) {
+					} else if (filter.locale != null) {
 						append("/language/")
-						append(lang.toLanguagePath())
+						append(filter.locale.toLanguagePath())
 						append("/?")
 					} else {
 						append("/?")

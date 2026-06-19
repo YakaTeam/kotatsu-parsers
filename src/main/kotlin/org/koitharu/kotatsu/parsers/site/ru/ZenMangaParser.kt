@@ -51,10 +51,8 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 	private val apiDomain = if (domain.startsWith("v1.")) domain.replace("v1.", "api.") else "api.$domain"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
-		if (!author.isNullOrBlank()) {
-			return getListPageByAuthor(author, page)
+		if (!filter.author.isNullOrBlank()) {
+			return getListPageByAuthor(filter.author, page)
 		}
 
 		val urlBuilder = HttpUrl.Builder()
@@ -68,8 +66,8 @@ internal class ZenMangaParser(context: MangaLoaderContext) :
 
 		urlBuilder.addQueryParameter("sort", getSortParameter(order))
 
-		if (!query.isNullOrBlank()) {
-			urlBuilder.addQueryParameter("search", query)
+		if (!filter.query.isNullOrBlank()) {
+			urlBuilder.addQueryParameter("search", filter.query)
 		}
 
 		filter.tags.oneOrThrowIfMany()?.let {

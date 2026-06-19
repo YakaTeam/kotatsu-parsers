@@ -58,14 +58,13 @@ internal class LangGeekParser(context: MangaLoaderContext):
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
 
-				val keyword = query.urlEncoded()
+				val keyword = filter.query.urlEncoded()
 				val url = "https://$domain/wp-admin/admin-ajax.php?action=flatsome_ajax_search_products&query=${keyword}"
 				val response = webClient.httpGet(url.toHttpUrl()).parseJson()
 				parseMangaSearch(response)

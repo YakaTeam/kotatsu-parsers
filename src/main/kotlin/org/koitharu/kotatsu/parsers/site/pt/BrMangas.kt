@@ -35,18 +35,17 @@ internal class BrMangas(context: MangaLoaderContext) : PagedMangaParser(context,
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val url = buildString {
             append("https://")
             append(domain)
             append('/')
             when {
-                !query.isNullOrEmpty() -> {
+                !filter.query.isNullOrEmpty() -> {
                     if (page > 1) {
                         append("/page/$page/")
                     }
                     append("/?s=")
-                    append(query.urlEncoded())
+                    append(filter.query.urlEncoded())
                 }
 
                 else -> {
@@ -78,7 +77,7 @@ internal class BrMangas(context: MangaLoaderContext) : PagedMangaParser(context,
 
         val item = when {
 
-            !query.isNullOrEmpty() -> {
+            !filter.query.isNullOrEmpty() -> {
                 doc.select("div.listagem div.item")
             }
 

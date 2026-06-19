@@ -5,7 +5,6 @@ plugins {
     `maven-publish`
     alias(libs.plugins.kotlin.jvm)
     alias(libs.plugins.ksp)
-    alias(libs.plugins.kotlin.serialization)
 }
 
 group = "org.koitharu"
@@ -21,9 +20,6 @@ ksp {
 
 tasks.jar {
 	archiveFileName.set("kotatsu-parsers.jar")
-	exclude("android/**")
-	exclude("androidx/annotation/**")
-	exclude("androidx/preference/**")
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
@@ -40,6 +36,7 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach 
 
 kotlin {
     jvmToolchain(11)
+    explicitApiWarning()
     sourceSets["main"].kotlin.srcDirs("build/generated/ksp/main/kotlin")
 }
 
@@ -53,18 +50,13 @@ publishing {
 
 dependencies {
     implementation(libs.kotlinx.coroutines.core)
-	implementation(libs.kotlinx.serialization.json)
     implementation(libs.okhttp)
     implementation(libs.okio)
     implementation(libs.json)
     implementation(libs.androidx.collection)
-
-	api(libs.core.parsers)
     api(libs.jsoup)
 
-    compileOnly(libs.android.stubs)
-
-    ksp(project(":plugins-ksp"))
+    ksp(project(":kotatsu-parsers-ksp"))
 
     testImplementation(libs.junit.api)
     testImplementation(libs.junit.engine)

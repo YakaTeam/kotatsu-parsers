@@ -34,14 +34,13 @@ internal abstract class GuyaParser(
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/api/get_all_series/")
 		}
-		return if (!query.isNullOrEmpty()) {
-			parseMangaList(webClient.httpGet(url).parseJson(), query)
+		return if (!filter.query.isNullOrEmpty()) {
+			parseMangaList(webClient.httpGet(url).parseJson(), filter.query)
 		} else {
 			parseMangaList(webClient.httpGet(url).parseJson(), "")
 		}

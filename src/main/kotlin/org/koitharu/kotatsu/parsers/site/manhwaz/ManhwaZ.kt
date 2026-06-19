@@ -73,13 +73,12 @@ internal abstract class ManhwaZ(
 	protected open val searchPath = "/search"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
-			if (!query.isNullOrEmpty()) {
+			if (!filter.query.isNullOrEmpty()) {
 				append("$searchPath?s=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 				append("&page=")
 				append(page.toString())
 			} else {

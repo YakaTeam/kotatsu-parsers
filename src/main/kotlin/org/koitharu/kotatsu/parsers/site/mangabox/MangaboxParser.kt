@@ -89,14 +89,13 @@ internal abstract class MangaboxParser(
 	protected open val itemSelector = "div.search-story-item, a.list-story-item, .story_item"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = urlBuilder()
 
-		if (!query.isNullOrEmpty()) {
-			val filteredQuery = query.filterQuery()
+		if (!filter.query.isNullOrEmpty()) {
+			val query = filter.query.filterQuery()
 			url.addPathSegment("search")
 			url.addPathSegment("story")
-			url.addPathSegment(filteredQuery)
+			url.addPathSegment(query)
 		} else {
 			url.addPathSegment("genre")
 			if (filter.tags.isEmpty()) {

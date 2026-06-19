@@ -141,7 +141,6 @@ internal class KomiicParser(context: MangaLoaderContext) :
         .build()
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val offset = (page - paginator.firstPage) * pageSize
         val sexyLevel = parseSexyLevel(filter)
         // 严格使用原始查询：始终将 sexyLevel 传递给远端（若未选择则为 null）
@@ -158,10 +157,10 @@ internal class KomiicParser(context: MangaLoaderContext) :
             else -> "DATE_UPDATED"
         }
 
-        val base = if (!query.isNullOrEmpty()) {
-            val list = search(query)
+        val base = if (!filter.query.isNullOrEmpty()) {
+            val list = search(filter.query)
             if (page == paginator.firstPage) {
-                searchFirstPageCacheQuery = query
+                searchFirstPageCacheQuery = filter.query
                 searchFirstPageCache = list
             }
             list

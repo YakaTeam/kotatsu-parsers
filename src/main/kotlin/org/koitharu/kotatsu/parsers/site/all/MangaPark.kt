@@ -110,15 +110,14 @@ internal class MangaPark(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/search?page=")
 			append(page.toString())
-			query?.let { query ->
+			filter.query?.let {
 				append("&word=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			append("&genres=")

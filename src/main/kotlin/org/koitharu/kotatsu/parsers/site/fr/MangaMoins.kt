@@ -63,7 +63,6 @@ internal class MangaMoins(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions(): MangaListFilterOptions = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = HttpUrl.Builder()
 			.scheme("https")
 			.host(domain)
@@ -71,7 +70,7 @@ internal class MangaMoins(context: MangaLoaderContext) :
 			.addQueryParameter("page", page.toString())
 			.addQueryParameter("limit", API_LIMIT.toString())
 			.apply {
-				query?.trim()?.takeIf { it.isNotEmpty() }?.let { q ->
+				filter.query?.trim()?.takeIf { it.isNotEmpty() }?.let { q ->
 					addQueryParameter("q", q)
 				}
 			}

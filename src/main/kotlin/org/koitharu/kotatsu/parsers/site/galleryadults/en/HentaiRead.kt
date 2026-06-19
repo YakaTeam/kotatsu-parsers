@@ -159,8 +159,6 @@ internal class HentaiRead(context: MangaLoaderContext) :
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		// Query structure:
 		// ?s=&
 		// title-type=contains&     /* ?s= query types: contain, start-with, end-with */
@@ -180,12 +178,12 @@ internal class HentaiRead(context: MangaLoaderContext) :
 			append("https://$domain")
 
 			// ANY filter (including single tag) uses search format
-			val isSearch = query != null ||
+			val isSearch = filter.query != null ||
 				filter.tags.isNotEmpty() ||
 				filter.types.isNotEmpty() ||
 				filter.year != YEAR_UNKNOWN ||
 				filter.tagsExclude.isNotEmpty() ||
-				!author.isNullOrEmpty()
+				!filter.author.isNullOrEmpty()
 
 			when {
 				// Search with any filters
@@ -198,7 +196,7 @@ internal class HentaiRead(context: MangaLoaderContext) :
 					val queries = mutableListOf<String>()
 
 					// Search query (can be empty)
-					queries.add("s=${query?.trim()?.urlEncoded() ?: ""}")
+					queries.add("s=${filter.query?.trim()?.urlEncoded() ?: ""}")
 					queries.add("title-type=contains")
 					queries.add("search-mode=AND")
 					queries.add("release-type=in")
@@ -224,8 +222,8 @@ internal class HentaiRead(context: MangaLoaderContext) :
 					}
 
 					// Author (using artist ID for search)
-					if (!author.isNullOrEmpty()) {
-						val authorId = getAuthorId(author)
+					if (!filter.author.isNullOrEmpty()) {
+						val authorId = getAuthorId(filter.author)
 						if (authorId != null) {
 							queries.add("artists[]=$authorId")
 						}
@@ -401,15 +399,14 @@ internal class HentaiRead(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getPageUrl(page: MangaPage): String {
-		val preview = page.preview
-		if (preview.isNullOrEmpty()) {
+		if (page.preview.isNullOrEmpty()) {
 			throw Exception("It should be not null. Something wrong!")
 		}
 
 		// preview page url: https://hencover.xyz/preview/${mangaId}/${chapterId}/hr_${index.padLeft(4)}.jpg
 		// page url: https://henread.xyz/${mangaId}/${chapterId}/hr_${index.padLeft(4)}.jpg
 		val index = page.url.split("/").last()
-		val t = preview.split("/")
+		val t = page.preview.split("/")
 		val mangaId = t[4]
 		val chapterId = t[5]
 

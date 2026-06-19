@@ -59,10 +59,9 @@ internal class YurinekoParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val listUrl = when {
-			!query.isNullOrEmpty() -> {
-				"/search?query=${query.urlEncoded()}&page=$page"
+			!filter.query.isNullOrEmpty() -> {
+				"/search?query=${filter.query.urlEncoded()}&page=$page"
 			}
 
 			else -> {

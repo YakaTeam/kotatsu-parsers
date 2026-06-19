@@ -55,12 +55,11 @@ internal class AzoraMoon(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val all = allPostsCache.get()
 		var filtered: List<JSONObject> = all
 
-		if (!query.isNullOrEmpty()) {
-			val q = query.lowercase(sourceLocale)
+		if (!filter.query.isNullOrEmpty()) {
+			val q = filter.query.lowercase(sourceLocale)
 			filtered = filtered.filter { p ->
 				p.getStringOrNull("postTitle")?.lowercase(sourceLocale)?.contains(q) == true ||
 					p.getStringOrNull("alternativeTitles")?.lowercase(sourceLocale)?.contains(q) == true ||

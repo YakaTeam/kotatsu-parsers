@@ -105,9 +105,8 @@ internal class InMangaParser(context: MangaLoaderContext) : PagedMangaParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val genres = filter.tags.map { it.key }.toSet()
-		val formData = buildFormData(page, order, query ?: "", genres)
+		val formData = buildFormData(page, order, filter.query ?: "", genres)
 
 		val response = webClient.httpPost(
 			"https://$domain/manga/getMangasConsultResult".toHttpUrl(),

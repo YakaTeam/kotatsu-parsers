@@ -78,7 +78,6 @@ internal abstract class ZMangaParser(
 	// https://komikindo.info/advanced-search/?title=the&author=the&artist=the&yearx=2020&status=ongoing&type=Manga&order=update
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -101,15 +100,15 @@ internal abstract class ZMangaParser(
 				else -> append("update")
 			}
 
-			query?.let { query ->
+			filter.query?.let {
 				append("&title=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			// author
-			// author?.let { author ->
+			// filter.author?.let {
 			// 	append("&author=")
-			// 	append(author.urlEncoded())
+			// 	append(filter.author.urlEncoded())
 			// }
 
 			// artist

@@ -65,11 +65,10 @@ internal class AnimeSama(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val url = "$baseUrl/catalogue".toHttpUrl().newBuilder()
 
         // keyword
-        val encodedQuery = query?.splitByWhitespace()?.joinToString(separator = "+") { part ->
+        val encodedQuery = filter.query?.splitByWhitespace()?.joinToString(separator = "+") { part ->
             part.urlEncoded()
         }.orEmpty()
         url.addQueryParameter("search", encodedQuery)

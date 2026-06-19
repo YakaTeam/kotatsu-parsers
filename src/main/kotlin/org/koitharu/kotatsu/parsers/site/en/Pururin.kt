@@ -42,16 +42,15 @@ internal class Pururin(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/search?tag_condition=contains&page=")
 			append(page.toString())
 
-			query?.let { query ->
+			filter.query?.let {
 				append("&q=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 
 			if (filter.tags.isNotEmpty()) {

@@ -50,7 +50,6 @@ internal class ElderManga(context: MangaLoaderContext):
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val url = buildString {
             append("https://")
 			append(domain)
@@ -58,9 +57,9 @@ internal class ElderManga(context: MangaLoaderContext):
             append("?page=")
 			append(page.toString())
 
-            if (!query.isNullOrEmpty()) {
+            if (!filter.query.isNullOrEmpty()) {
                 append("&search=")
-                append(query.urlEncoded())
+                append(filter.query.urlEncoded())
             }
 
             if (filter.tags.isNotEmpty()) {

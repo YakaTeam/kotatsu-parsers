@@ -30,11 +30,10 @@ internal class RevolutionScantrad(context: MangaLoaderContext) :
 		)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		if (page > 1) {
 			return emptyList()
 		}
-		if (!query.isNullOrEmpty()) {
+		if (!filter.query.isNullOrEmpty()) {
 			throw IllegalArgumentException(ErrorMessages.SEARCH_NOT_SUPPORTED)
 		}
 		val url = buildString {

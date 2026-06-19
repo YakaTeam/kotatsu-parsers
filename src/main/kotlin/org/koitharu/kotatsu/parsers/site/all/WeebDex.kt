@@ -157,8 +157,6 @@ internal class WeebDex(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val url = urlBuilder()
 			.host("api.$domain")
 			.addPathSegment("manga")
@@ -197,8 +195,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 		}
 
 		// Keyword
-		if (!query.isNullOrEmpty()) {
-			url.addQueryParameter("title", query.urlEncoded())
+		if (!filter.query.isNullOrEmpty()) {
+			url.addQueryParameter("title", filter.query.urlEncoded())
 		}
 
 		// Content rating
@@ -286,8 +284,8 @@ internal class WeebDex(context: MangaLoaderContext) :
 		}
 
 		// Author + Artist search
-		if (!author.isNullOrBlank()) {
-			url.addQueryParameter("authorOrArtist", author.substringAfter("-").trim())
+		if (!filter.author.isNullOrBlank()) {
+			url.addQueryParameter("authorOrArtist", filter.author.substringAfter("-").trim())
 		}
 
 		val js = webClient.httpGet(url.build()).parseJson()

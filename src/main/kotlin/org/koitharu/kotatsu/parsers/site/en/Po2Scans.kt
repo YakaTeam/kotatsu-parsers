@@ -31,14 +31,13 @@ internal class Po2Scans(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/series")
-			if (!query.isNullOrEmpty()) {
+			if (!filter.query.isNullOrEmpty()) {
 				append("?search=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 		}
 		val doc = webClient.httpGet(url).parseHtml()

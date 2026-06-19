@@ -55,17 +55,16 @@ internal class MangaMana(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val postData = buildString {
 			append("page=")
 			append(page)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					if (page > 1) {
 						return emptyList()
 					}
 					val domainCdn = "cdn" + domain.removePrefix("www")
-					val url = "https://$domain/search-live?q=${query.urlEncoded()}"
+					val url = "https://$domain/search-live?q=${filter.query.urlEncoded()}"
 					val json = webClient.httpGet(url).parseJsonArray()
 					return json.mapJSON { jo ->
 						val slug = jo.getString("slug") ?: throw ParseException("Missing Slug", url)

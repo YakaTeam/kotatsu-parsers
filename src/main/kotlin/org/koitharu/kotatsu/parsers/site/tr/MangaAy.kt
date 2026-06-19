@@ -35,16 +35,15 @@ internal class MangaAy(context: MangaLoaderContext) : PagedMangaParser(context, 
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
 				return parseMangaListQueryOrTags(
 					webClient.httpPost(
 						"https://$domain/arama",
-						mapOf("title" to query.urlEncoded(), "genres" to ""),
+						mapOf("title" to filter.query.urlEncoded(), "genres" to ""),
 					).parseHtml(),
 				)
 			}

@@ -56,10 +56,9 @@ internal class BlogTruyenParser(context: MangaLoaderContext) :
 	private val dateFormat = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.US)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> {
-				val searchUrl = "https://${domain}/timkiem/nangcao/1/0/-1/-1?txt=${query.urlEncoded()}&p=$page"
+			!filter.query.isNullOrEmpty() -> {
+				val searchUrl = "https://${domain}/timkiem/nangcao/1/0/-1/-1?txt=${filter.query.urlEncoded()}&p=$page"
 				val searchContent = webClient.httpGet(searchUrl).parseHtml()
 					.selectFirst("section.list-manga-bycate > div.list")
 				parseMangaList(searchContent)

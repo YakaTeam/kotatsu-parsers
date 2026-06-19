@@ -51,7 +51,6 @@ internal class SssScanlator(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -68,9 +67,9 @@ internal class SssScanlator(context: MangaLoaderContext) :
 					else -> "recent"
 				},
 			)
-			if (!query.isNullOrEmpty()) {
+			if (!filter.query.isNullOrEmpty()) {
 				append("&search=")
-				append(query.urlEncoded())
+				append(filter.query.urlEncoded())
 			}
 			filter.tags.firstOrNull()?.let { tag ->
 				append("&genre=")

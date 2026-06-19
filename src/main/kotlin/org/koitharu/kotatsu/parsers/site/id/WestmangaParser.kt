@@ -44,19 +44,18 @@ internal class WestmangaParser(context: MangaLoaderContext) :
     )
 
     override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
         val page = (offset / PAGE_SIZE) + 1
 
         val urlBuilder = "$apiUrl/api/contents".toHttpUrl().newBuilder()
 
-        if (!query.isNullOrBlank()) {
-            urlBuilder.addQueryParameter("q", query)
+        if (!filter.query.isNullOrBlank()) {
+            urlBuilder.addQueryParameter("q", filter.query)
         }
 
         urlBuilder.addQueryParameter("page", page.toString())
         urlBuilder.addQueryParameter("per_page", PAGE_SIZE.toString())
 
-        if (query.isNullOrBlank()) {
+        if (filter.query.isNullOrBlank()) {
             val orderBy = when (order) {
                 SortOrder.POPULARITY -> "Popular"
                 SortOrder.UPDATED -> "Update"

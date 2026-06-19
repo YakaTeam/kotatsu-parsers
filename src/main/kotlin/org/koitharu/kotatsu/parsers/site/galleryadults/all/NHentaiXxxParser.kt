@@ -44,7 +44,6 @@ internal class NHentaiXxxParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -70,8 +69,8 @@ internal class NHentaiXxxParser(context: MangaLoaderContext) :
 						joiner.add(tag.title)
 					}
 
-					if (!query.isNullOrEmpty()) {
-						joiner.add(query.urlEncoded())
+					if (!filter.query.isNullOrEmpty()) {
+						joiner.add(filter.query.urlEncoded())
 					}
 					append(joiner.complete())
 				}

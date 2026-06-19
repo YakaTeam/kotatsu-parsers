@@ -88,12 +88,11 @@ internal class MangaReaderToParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = "https://$domain".toHttpUrl().newBuilder().apply {
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					addPathSegment("search")
-					addQueryParameter("keyword", query)
+					addQueryParameter("keyword", filter.query)
 					addQueryParameter("page", page.toString())
 				}
 

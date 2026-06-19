@@ -51,16 +51,15 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 		.build()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val author = filter.author
 		val url = urlBuilder().apply {
 			if (filter.tags.isNotEmpty()) {
 				addPathSegment("genre")
 				filter.tags.oneOrThrowIfMany()?.key?.let { it ->
 					addPathSegment(it.lowercase().splitByWhitespace().joinToString("-") { it })
 				}
-			} else if (!author.isNullOrEmpty()) {
+			} else if (!filter.author.isNullOrEmpty()) {
 				addPathSegment("author")
-				addPathSegment(author.splitByWhitespace().joinToString("-") { it.lowercase() })
+				addPathSegment(filter.author.splitByWhitespace().joinToString("-") { it.lowercase() })
 			} else {
 				addPathSegment("manga")
 			}
@@ -71,7 +70,7 @@ internal class DoujinDesuParser(context: MangaLoaderContext) :
 			}
 
 			if (!filter.states.isEmpty() &&
-				author.isNullOrEmpty() &&
+				filter.author.isNullOrEmpty() &&
 				filter.tags.isEmpty()
 			) {
 				filter.states.oneOrThrowIfMany()?.let {

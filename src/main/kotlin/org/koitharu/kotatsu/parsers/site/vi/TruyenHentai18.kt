@@ -42,7 +42,6 @@ internal class TruyenHentai18(context: MangaLoaderContext):
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = when {
 			filter.tags.isNotEmpty() -> {
 				buildString {
@@ -73,8 +72,8 @@ internal class TruyenHentai18(context: MangaLoaderContext):
 					append("&page=")
 					append(page)
 
-					if (!query.isNullOrEmpty()) {
-						append("&query=${query}")
+					if (!filter.query.isNullOrEmpty()) {
+						append("&query=${filter.query}")
 					}
 				}
 			}

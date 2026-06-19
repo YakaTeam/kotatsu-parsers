@@ -56,8 +56,6 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val author = filter.author
 		val urlBuilder = urlBuilder()
             urlBuilder.host(apiDomain)
             urlBuilder.addPathSegment("comic")
@@ -83,10 +81,10 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
         }
 
         // Search
-		if (!query.isNullOrEmpty()) {
+		if (!filter.query.isNullOrEmpty()) {
 			urlBuilder.addQueryParameter(
                 "search",
-                query.splitByWhitespace().joinToString("+") { it }
+                filter.query.splitByWhitespace().joinToString("+") { it }
             )
 		}
 
@@ -104,10 +102,10 @@ internal class NhentaiWorld(context: MangaLoaderContext) :
         }
 
         // Author
-        if (!author.isNullOrEmpty()) {
+        if (!filter.author.isNullOrEmpty()) {
             urlBuilder.addQueryParameter(
                 "author",
-                author.splitByWhitespace().joinToString("+") { it }
+                filter.author.splitByWhitespace().joinToString("+") { it }
             )
         }
 

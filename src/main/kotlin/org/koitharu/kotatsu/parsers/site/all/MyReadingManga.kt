@@ -151,7 +151,6 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -172,8 +171,8 @@ internal class MyReadingManga(context: MangaLoaderContext) :
 
             // fix order
             append("&s=")
-            if (!query.isNullOrEmpty()) {
-                append(query.splitByWhitespace().joinToString(separator = "+"))
+            if (!filter.query.isNullOrEmpty()) {
+                append(filter.query.splitByWhitespace().joinToString(separator = "+"))
             }
 
             val langSlug = getLanguageSlug(filter.locale)

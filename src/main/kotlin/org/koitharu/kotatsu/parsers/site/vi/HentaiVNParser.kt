@@ -63,13 +63,12 @@ internal class HentaiVNParser(context: MangaLoaderContext) : AbstractMangaParser
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				val page = (offset / PAGE_SIZE.toFloat()).toIntUp() + 1
 				urlBuilder()
 				val searchUrl =
-					"/tim-kiem-truyen.html?key=${query.urlEncoded()}&page=$page".toAbsoluteUrl(domain)
+					"/tim-kiem-truyen.html?key=${filter.query.urlEncoded()}&page=$page".toAbsoluteUrl(domain)
 				val docs = webClient.httpGet(searchUrl).parseHtml()
 				parseMainList(docs, page)
 			}

@@ -87,17 +87,16 @@ internal class HentaiUkrParser(context: MangaLoaderContext) : AbstractMangaParse
 	}
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		// Get all manga
 		val json = allManga.get().toMutableList()
 
-		if (!query.isNullOrEmpty()) {
+		if (!filter.query.isNullOrEmpty()) {
 			json.retainAll { item ->
-				item.getString("name").contains(query, ignoreCase = true) ||
-					item.getStringOrNull("eng_name")?.contains(query, ignoreCase = true) == true ||
-					item.getStringOrNull("orig_name")?.contains(query, ignoreCase = true) == true ||
-					item.getStringOrNull("author")?.contains(query, ignoreCase = true) == true ||
-					item.getStringOrNull("team")?.contains(query, ignoreCase = true) == true
+				item.getString("name").contains(filter.query, ignoreCase = true) ||
+					item.getStringOrNull("eng_name")?.contains(filter.query, ignoreCase = true) == true ||
+					item.getStringOrNull("orig_name")?.contains(filter.query, ignoreCase = true) == true ||
+					item.getStringOrNull("author")?.contains(filter.query, ignoreCase = true) == true ||
+					item.getStringOrNull("team")?.contains(filter.query, ignoreCase = true) == true
 			}
 		}
 		if (filter.tags.isNotEmpty()) {

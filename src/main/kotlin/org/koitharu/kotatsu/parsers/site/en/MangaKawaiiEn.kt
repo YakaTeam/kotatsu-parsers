@@ -39,14 +39,13 @@ internal class MangaKawaiiEn(context: MangaLoaderContext) :
 		.build()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search?query=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&search_type=manga&page=")
 					append(page)
 				}

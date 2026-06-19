@@ -125,10 +125,8 @@ internal class HitomiLaParser(context: MangaLoaderContext) : AbstractMangaParser
 
 	private var cachedSearchIds: List<Int> = emptyList()
 
-	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		return when {
-			query.isNullOrEmpty() -> {
+	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> = when {
+		filter.query.isNullOrEmpty() -> {
 
 			if (filter.tags.isEmpty()) {
 				when (order) {
@@ -187,12 +185,11 @@ internal class HitomiLaParser(context: MangaLoaderContext) : AbstractMangaParser
 
 		else -> {
 			if (offset == 0) {
-				cachedSearchIds = hitomiSearch(query, order).toList()
+				cachedSearchIds = hitomiSearch(filter.query, order).toList()
 			}
 			cachedSearchIds.subList(offset, min(offset + 25, cachedSearchIds.size))
 		}
 	}.toMangaList()
-	}
 
 	private fun Int.nextOffsetRange(): LongRange {
 		val bytes = this * 4L

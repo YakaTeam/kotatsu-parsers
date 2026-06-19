@@ -89,7 +89,6 @@ internal class HoneyMangaParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val body = JSONObject()
 		body.put("page", page)
 		body.put("pageSize", PAGE_SIZE)
@@ -116,15 +115,15 @@ internal class HoneyMangaParser(context: MangaLoaderContext) :
 
 			}
 
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				// Search
 				when {
-					query.length < 3 -> throw IllegalArgumentException(
+					filter.query.length < 3 -> throw IllegalArgumentException(
 						"The query must contain at least 3 characters (Запит має містити щонайменше 3 символи)",
 					)
 
 					page == searchPaginator.firstPage -> webClient
-						.httpGet(searchApi + query.urlEncoded())
+						.httpGet(searchApi + filter.query.urlEncoded())
 						.parseJsonArray()
 
 					else -> JSONArray()

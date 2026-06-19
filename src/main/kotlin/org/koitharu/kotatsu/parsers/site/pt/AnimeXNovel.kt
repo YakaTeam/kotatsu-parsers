@@ -55,8 +55,7 @@ internal class AnimeXNovel(context: MangaLoaderContext) :
 	private val dateFormat = SimpleDateFormat("yyyy-MM-dd", Locale.ROOT)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		val all = fetchAllSeries(query)
+		val all = fetchAllSeries(filter.query)
 		val sorted = when (order) {
 			SortOrder.POPULARITY -> all.sortedByDescending { it.postCount }
 			SortOrder.ALPHABETICAL -> all.sortedBy { it.name.lowercase(Locale.ROOT) }

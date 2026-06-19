@@ -48,17 +48,16 @@ internal class AComics(context: MangaLoaderContext) :
         order: SortOrder,
         filter: MangaListFilter,
     ): List<Manga> {
-        val query = filter.query
         val url = buildString {
             append("https://")
             append(domain)
             when {
-                !query.isNullOrEmpty() -> {
+                !filter.query.isNullOrEmpty() -> {
                     if (page > 0) {
                         return emptyList()
                     }
                     append("/search?keyword=")
-                    append(query)
+                    append(filter.query)
                 }
 
                 else -> {

@@ -86,14 +86,13 @@ internal class SussyScan(context: MangaLoaderContext) : PagedMangaParser(
 	private val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS", sourceLocale)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val genId = when {
 			filter.types.oneOrThrowIfMany() == ContentType.HENTAI -> "5"
 			else -> "1"
 		}
 
 		val url = when {
-			!query.isNullOrEmpty() || filter.tags.isNotEmpty() ||
+			!filter.query.isNullOrEmpty() || filter.tags.isNotEmpty() ||
 				filter.states.isNotEmpty() -> buildSearchUrl(page, filter)
 
 			// Popularity rankings
@@ -132,9 +131,8 @@ internal class SussyScan(context: MangaLoaderContext) : PagedMangaParser(
 	}
 
 	private fun buildSearchUrl(page: Int, filter: MangaListFilter): HttpUrl {
-		val query = filter.query
 		val builder = "$apiUrl/obras".toHttpUrl().newBuilder()
-			.addQueryParameter("obr_nome", query ?: "")
+			.addQueryParameter("obr_nome", filter.query ?: "")
 			.addQueryParameter("limite", "15")
 			.addQueryParameter("pagina", page.toString())
 

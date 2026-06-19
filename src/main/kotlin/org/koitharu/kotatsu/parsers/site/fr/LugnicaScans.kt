@@ -61,9 +61,8 @@ internal class LugnicaScans(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				throw IllegalArgumentException(ErrorMessages.SEARCH_NOT_SUPPORTED)
 			}
 

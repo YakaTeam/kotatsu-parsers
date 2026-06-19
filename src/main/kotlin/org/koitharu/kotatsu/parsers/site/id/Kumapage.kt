@@ -42,15 +42,14 @@ internal class Kumapage(context: MangaLoaderContext) :
     )
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		return when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				val genre = if (filter.tags.isNotEmpty()) filter.tags.first().key else "all"
 				val url = "https://$domain/search-process/"
 				val headers = Headers.Builder()
 					.add(CommonHeaders.CONTENT_TYPE, "application/x-www-form-urlencoded")
 					.build()
-				val response = webClient.httpPost(url.toHttpUrl(), payload = "view=1&keyword=${query}&genre=$genre", headers).parseHtml()
+				val response = webClient.httpPost(url.toHttpUrl(), payload = "view=1&keyword=${filter.query}&genre=$genre", headers).parseHtml()
 				parseSearchList(response)
 			}
 

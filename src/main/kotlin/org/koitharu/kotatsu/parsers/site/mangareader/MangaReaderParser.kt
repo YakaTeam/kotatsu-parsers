@@ -70,18 +70,17 @@ internal abstract class MangaReaderParser(
 	protected val mutex = Mutex()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 
 			when {
 
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/page/")
 					append(page.toString())
 					append("/?s=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				else -> {

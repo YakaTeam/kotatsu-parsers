@@ -47,11 +47,10 @@ internal class BatCave(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val urlBuilder = StringBuilder()
 		when {
-			!query.isNullOrEmpty() -> {
-				val encodedQuery = query.splitByWhitespace().joinToString(separator = "%20") { part ->
+			!filter.query.isNullOrEmpty() -> {
+				val encodedQuery = filter.query.splitByWhitespace().joinToString(separator = "%20") { part ->
 					part.urlEncoded()
 				}
 				urlBuilder.append("/search/")

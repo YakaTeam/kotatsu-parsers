@@ -44,14 +44,13 @@ internal class ScansMangasMe(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/?s=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&post_type=manga")
 				}
 

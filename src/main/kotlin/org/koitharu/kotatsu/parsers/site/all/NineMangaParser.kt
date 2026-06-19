@@ -68,19 +68,18 @@ internal abstract class NineMangaParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 
-			if (filter.tags.isNotEmpty() || filter.tagsExclude.isNotEmpty() || filter.states.isNotEmpty() || !query.isNullOrEmpty()) {
+			if (filter.tags.isNotEmpty() || filter.tagsExclude.isNotEmpty() || filter.states.isNotEmpty() || !filter.query.isNullOrEmpty()) {
 				append("/search/")
 				append("?page=")
 				append(page.toString())
 
-				query?.let { query ->
+				filter.query?.let {
 					append("&name_sel=contain&wd=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				append("&category_id=")

@@ -72,7 +72,6 @@ internal class RocksManga(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -85,8 +84,8 @@ internal class RocksManga(context: MangaLoaderContext) :
 			append("/?post_type=wp-manga")
 
 			append("&s=")
-			query?.let { query ->
-				append(query.urlEncoded())
+			filter.query?.let {
+				append(it.urlEncoded())
 			}
 
 			filter.types.forEach { contentType ->

@@ -42,7 +42,6 @@ internal abstract class ChanParser(
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val domain = domain
 		val doc = webClient.httpGet(buildUrl(offset, order, filter)).parseHtml()
 		val root = doc.body().selectFirst("div.main_fon")?.getElementById("content")
@@ -194,18 +193,17 @@ internal abstract class ChanParser(
 		order: SortOrder,
 		filter: MangaListFilter,
 	): HttpUrl {
-		val query = filter.query
 		val builder = urlBuilder()
 		builder.addQueryParameter("offset", offset.toString())
 		when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				builder.addQueryParameter("do", "search")
 				builder.addQueryParameter("subaction", "search")
 				builder.addQueryParameter("search_start", ((offset / 40) + 1).toString())
 				builder.addQueryParameter("full_search", "0")
 				builder.addQueryParameter("result_from", (offset + 1).toString())
 				builder.addQueryParameter("result_num", "40")
-				builder.addQueryParameter("story", query)
+				builder.addQueryParameter("story", filter.query)
 				builder.addQueryParameter("need_sort_date", "false")
 			}
 

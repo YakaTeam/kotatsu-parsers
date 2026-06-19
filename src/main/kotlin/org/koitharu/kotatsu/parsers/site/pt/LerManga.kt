@@ -42,7 +42,6 @@ internal class LerManga(context: MangaLoaderContext) : PagedMangaParser(context,
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -55,7 +54,7 @@ internal class LerManga(context: MangaLoaderContext) : PagedMangaParser(context,
 
 			when {
 
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					throw IllegalArgumentException(ErrorMessages.SEARCH_NOT_SUPPORTED)
 				}
 

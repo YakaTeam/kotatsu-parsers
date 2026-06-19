@@ -42,19 +42,18 @@ internal abstract class VmpParser(
 	protected open val geneUrl = "genero/"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append('/')
 			when {
 
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append(listUrl)
 					append("/page/")
 					append(page.toString())
 					append("?s=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 
 				else -> {

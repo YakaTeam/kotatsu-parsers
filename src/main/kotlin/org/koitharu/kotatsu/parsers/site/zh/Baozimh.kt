@@ -46,15 +46,14 @@ internal class Baozimh(context: MangaLoaderContext) :
 	private val tagsMap = suspendLazy(initializer = ::parseTags)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		when {
-			!query.isNullOrEmpty() -> {
+			!filter.query.isNullOrEmpty() -> {
 				if (page > 1) return emptyList()
 				val url = buildString {
 					append("https://")
 					append(domain)
 					append("/search?q=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 				}
 				return parseMangaListSearch(webClient.httpGet(url).parseHtml())
 			}

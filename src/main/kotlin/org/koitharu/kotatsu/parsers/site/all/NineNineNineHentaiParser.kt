@@ -113,15 +113,14 @@ internal class NineNineNineHentaiParser(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
-		return if (query.isNullOrEmpty()) {
+		return if (filter.query.isNullOrEmpty()) {
 			if (filter.tags.isEmpty() && order == SortOrder.POPULARITY) {
 				getPopularList(page, filter.locale)
 			} else {
 				getSearchList(page, null, filter.locale, filter.tags, order)
 			}
 		} else {
-			getSearchList(page, query, null, null, order)
+			getSearchList(page, filter.query, null, null, order)
 		}
 	}
 

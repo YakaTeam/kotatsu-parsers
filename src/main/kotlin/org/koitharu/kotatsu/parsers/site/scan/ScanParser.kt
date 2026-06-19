@@ -43,17 +43,16 @@ internal abstract class ScanParser(
 	protected open val listUrl = "/manga"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val q = filter.query
-		var isSearch = false
+		var query = false
 
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!q.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					append("/search?q=")
-					append(q.urlEncoded())
-					isSearch = true
+					append(filter.query.urlEncoded())
+					query = true
 				}
 
 				else -> {
@@ -81,7 +80,7 @@ internal abstract class ScanParser(
 			}
 		}
 
-		val doc = if (isSearch) {
+		val doc = if (query) {
 			val raw = webClient.httpGet(url).parseRaw()
 			Jsoup.parseBodyFragment(
 				raw.unescapeJson(),

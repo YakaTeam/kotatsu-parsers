@@ -66,10 +66,15 @@ internal abstract class KeyoappParser(
 	)
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query.orEmpty()
+		var query = ""
 		var tag = ""
 
 		val url = urlBuilder().apply {
+
+			filter.query?.let {
+				query = filter.query
+			}
+
 			filter.tags.oneOrThrowIfMany()?.let {
 				tag = it.title
 			}
@@ -79,6 +84,7 @@ internal abstract class KeyoappParser(
 				SortOrder.NEWEST -> addPathSegment("series")
 				else -> addPathSegment("series")
 			}
+
 		}.build()
 
 		return parseMangaList(webClient.httpGet(url).parseHtml(), tag, query)

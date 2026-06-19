@@ -61,11 +61,10 @@ internal class PerfScan(context: MangaLoaderContext) :
 	override val cdn = "https://$apiPath/cdn/"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val url = buildString {
 			append("https://$apiPath/series?page=$page&take=$pageSize&type=COMIC")
 
-			query?.let { query -> append("&title=").append(query.urlEncoded()) }
+			filter.query?.let { append("&title=").append(it.urlEncoded()) }
 
 			if (filter.states.isNotEmpty()) {
 				val statusMapping = fetchStatusMap()

@@ -28,20 +28,19 @@ internal class ManyToon(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		val query = filter.query
 		val pages = page + 1
 
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!query.isNullOrEmpty() -> {
+				!filter.query.isNullOrEmpty() -> {
 					if (pages > 1) {
 						append("/page/")
 						append(pages.toString())
 					}
 					append("/?s=")
-					append(query.urlEncoded())
+					append(filter.query.urlEncoded())
 					append("&post_type=wp-manga")
 				}
 
