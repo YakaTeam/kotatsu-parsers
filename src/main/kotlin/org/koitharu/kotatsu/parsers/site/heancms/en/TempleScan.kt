@@ -56,8 +56,9 @@ internal class TempleScan(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-		return if (!filter.query.isNullOrEmpty()) {
-			getSearchList(filter.query, page)
+		val query = filter.query
+		return if (!query.isNullOrEmpty()) {
+			getSearchList(query, page)
 		} else {
 			getBrowseList(page, order)
 		}

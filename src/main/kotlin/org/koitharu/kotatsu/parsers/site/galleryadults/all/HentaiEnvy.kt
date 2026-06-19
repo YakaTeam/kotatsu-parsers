@@ -38,22 +38,25 @@ internal class HentaiEnvy(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search/?s_key=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&")
 				}
 
 				else -> {
-					if (filter.tags.isNotEmpty()) {
-						if (filter.locale != null) {
+					val tags = filter.tags
+					val lang = filter.locale
+					if (tags.isNotEmpty()) {
+						if (lang != null) {
 							throw IllegalArgumentException(ErrorMessages.FILTER_BOTH_LOCALE_GENRES_NOT_SUPPORTED)
 						}
-						filter.tags.oneOrThrowIfMany()?.let {
+						tags.oneOrThrowIfMany()?.let {
 							append("/tag/")
 							append(it.key)
 							if (order == SortOrder.POPULARITY) {
@@ -61,9 +64,9 @@ internal class HentaiEnvy(context: MangaLoaderContext) :
 							}
 							append("/?")
 						}
-					} else if (filter.locale != null) {
+					} else if (lang != null) {
 						append("/language/")
-						append(filter.locale.toLanguagePath())
+						append(lang.toLanguagePath())
 						append("/?")
 					} else {
 						append("/?")

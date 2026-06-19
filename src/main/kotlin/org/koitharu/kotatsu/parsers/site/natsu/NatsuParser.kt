@@ -111,6 +111,8 @@ internal abstract class NatsuParser(
     }
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
         val url = "https://${domain}/wp-admin/admin-ajax.php?action=advanced_search"
 
         val formParts = mutableMapOf<String, String>()
@@ -130,8 +132,8 @@ internal abstract class NatsuParser(
 
         formParts["page"] = page.toString()
 
-        if (!filter.author.isNullOrEmpty()) {
-            val authorArray = JSONArray(filter.author)
+        if (!author.isNullOrEmpty()) {
+            val authorArray = JSONArray(author)
             formParts["author"] = authorArray.toString()
         } else formParts["author"] = "[]"
 
@@ -179,8 +181,8 @@ internal abstract class NatsuParser(
             else -> "popular"
         }
 
-        if (!filter.query.isNullOrEmpty()) {
-            formParts["query"] = filter.query
+        if (!query.isNullOrEmpty()) {
+            formParts["query"] = query
         }
 
         val html = httpPost(url, formParts)

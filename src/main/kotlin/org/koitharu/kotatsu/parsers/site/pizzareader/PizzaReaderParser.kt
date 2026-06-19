@@ -105,6 +105,7 @@ internal abstract class PizzaReaderParser(
 	protected open val abandonedFilter = "droppato"
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val manga = ArrayList<MangaWithDate>()
 		val selectedState = filter.states.oneOrThrowIfMany()
 		val selectedRating = filter.contentRating.oneOrThrowIfMany()
@@ -112,8 +113,8 @@ internal abstract class PizzaReaderParser(
 		val excludeTags = filter.tagsExclude.map { it.key.lowercase(Locale.ROOT) }
 
 		when {
-			!filter.query.isNullOrEmpty() -> {
-				val jsonManga = webClient.httpGet("https://$domain/api/search/${filter.query.urlEncoded()}").parseJson()
+			!query.isNullOrEmpty() -> {
+				val jsonManga = webClient.httpGet("https://$domain/api/search/${query.urlEncoded()}").parseJson()
 					.getJSONArray("comics")
 				for (i in 0 until jsonManga.length()) {
 					val j = jsonManga.getJSONObject(i)

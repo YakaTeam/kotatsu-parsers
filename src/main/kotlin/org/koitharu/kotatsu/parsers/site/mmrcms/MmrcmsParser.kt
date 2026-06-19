@@ -74,9 +74,10 @@ internal abstract class MmrcmsParser(
 	protected open val datePattern = "dd MMM. yyyy"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 
 		if (order == SortOrder.UPDATED) {
-			if (filter.query != null || filter.tags.isNotEmpty()) {
+			if (query != null || filter.tags.isNotEmpty()) {
 				throw IllegalArgumentException("Sorting by update with filters is not supported by this source.")
 
 			}
@@ -98,8 +99,8 @@ internal abstract class MmrcmsParser(
 			append(page.toString())
 
 			append("&author=&tag=&alpha=")
-			filter.query?.let {
-				append(filter.query.urlEncoded())
+			query?.let { query ->
+				append(query.urlEncoded())
 			}
 
 			append("&cat=")

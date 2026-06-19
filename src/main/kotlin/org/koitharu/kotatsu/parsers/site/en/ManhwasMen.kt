@@ -39,6 +39,7 @@ internal class ManhwasMen(context: MangaLoaderContext) :
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -46,9 +47,9 @@ internal class ManhwasMen(context: MangaLoaderContext) :
 			append("?page=")
 			append(page.toString())
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("&search=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 
 				else -> {

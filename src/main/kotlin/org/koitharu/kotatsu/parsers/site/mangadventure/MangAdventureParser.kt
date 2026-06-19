@@ -61,12 +61,13 @@ internal abstract class MangAdventureParser(
 		order: SortOrder,
 		filter: MangaListFilter,
 	): List<Manga> {
+		val query = filter.query
 		val url = apiUrl.addEncodedPathSegment("series")
 			.addEncodedQueryParameter("limit", pageSize.toString())
 			.addEncodedQueryParameter("page", page.toString())
 
-		filter.query?.let {
-			url.addQueryParameter("title", filter.query)
+		query?.let { query ->
+			url.addQueryParameter("title", query)
 		}
 
 		url.addQueryParameter(

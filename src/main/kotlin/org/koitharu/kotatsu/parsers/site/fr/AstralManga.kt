@@ -138,6 +138,8 @@ internal class AstralManga(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val all = getFilteredAndSortedList(order, filter)
 		val from = ((page - 1) * pageSize).coerceAtLeast(0)
 		if (from >= all.size) return emptyList()
@@ -222,9 +224,10 @@ internal class AstralManga(context: MangaLoaderContext) :
 				}
 				continue
 			}
-			if (isCoverUrlFresh(manga.coverUrl, now)) {
-				if (slug.isNotBlank() && !manga.coverUrl.isNullOrBlank()) {
-					putCoverCache(slug, manga.coverUrl, now)
+			val coverUrl = manga.coverUrl
+			if (isCoverUrlFresh(coverUrl, now)) {
+				if (slug.isNotBlank() && !coverUrl.isNullOrBlank()) {
+					putCoverCache(slug, coverUrl, now)
 				}
 				continue
 			}
@@ -630,11 +633,15 @@ internal class AstralManga(context: MangaLoaderContext) :
 			tags = (first.manga.tags + second.manga.tags).toSet(),
 			state = first.manga.state ?: second.manga.state,
 			authors = (first.manga.authors + second.manga.authors).toSet(),
-			description = when {
-				first.manga.description.isNullOrBlank() -> second.manga.description
-				second.manga.description.isNullOrBlank() -> first.manga.description
-				first.manga.description.length >= second.manga.description.length -> first.manga.description
-				else -> second.manga.description
+			description = run {
+				val d1 = first.manga.description
+				val d2 = second.manga.description
+				when {
+					d1.isNullOrBlank() -> d2
+					d2.isNullOrBlank() -> d1
+					d1.length >= d2.length -> d1
+					else -> d2
+				}
 			},
 		)
 		return MangaCache(

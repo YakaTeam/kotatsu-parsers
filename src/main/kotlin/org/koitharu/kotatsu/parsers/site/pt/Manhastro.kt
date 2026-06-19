@@ -49,10 +49,11 @@ internal class Manhastro(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val all = allMangasCache.get()
 		var filtered: List<JSONObject> = all
-		if (!filter.query.isNullOrEmpty()) {
-			val q = filter.query.lowercase(sourceLocale)
+		if (!query.isNullOrEmpty()) {
+			val q = query.lowercase(sourceLocale)
 			filtered = filtered.filter { m ->
 				(m.getStringOrNull("titulo")?.lowercase(sourceLocale)?.contains(q) == true) ||
 					(m.getStringOrNull("titulo_brasil")?.lowercase(sourceLocale)?.contains(q) == true)

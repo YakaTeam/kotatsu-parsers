@@ -41,8 +41,9 @@ internal class MangaPill(context: MangaLoaderContext) : PagedMangaParser(context
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		// bruh
-		val url = if (filter.types.isNotEmpty() || filter.states.isNotEmpty() || !filter.query.isNullOrEmpty() || filter.tags.isNotEmpty()) {
+		val url = if (filter.types.isNotEmpty() || filter.states.isNotEmpty() || !query.isNullOrEmpty() || filter.tags.isNotEmpty()) {
 			buildString {
 				append("/search")
 				append("?type=")
@@ -66,9 +67,9 @@ internal class MangaPill(context: MangaLoaderContext) : PagedMangaParser(context
 					}
 				} ?: "")
 
-				if (!filter.query.isNullOrEmpty()) {
+				if (!query.isNullOrEmpty()) {
 					append("&q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 
 				if (filter.tags.isNotEmpty()) {

@@ -40,12 +40,13 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = urlBuilder()
 		when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (page > 1) return emptyList() // no paging
 				url.addPathSegments("wp-admin/admin-ajax.php")
-				val payload = "action=searchtax&keyword=${filter.query.urlEncoded()}"
+				val payload = "action=searchtax&keyword=${query.urlEncoded()}"
 				return webClient.httpPost(url.build(), payload)
 					.parseJson().getJSONArray("data")
 					.mapJSONNotNull(::parseSearchItem)
@@ -58,7 +59,7 @@ internal class TuSachXinhXinh(context: MangaLoaderContext) :
 			else -> url.addPathSegment("danh-sach-truyen")
 		}
 
-		if (page > 1 && filter.query.isNullOrEmpty()) {
+		if (page > 1 && query.isNullOrEmpty()) {
 			url.addPathSegments("page/$page")
 		}
 

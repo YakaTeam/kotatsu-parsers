@@ -45,11 +45,12 @@ internal abstract class HeanCmsAlt(
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append(listUrl)
-			if (!filter.query.isNullOrEmpty()) {
+			if (!query.isNullOrEmpty()) {
 				throw IllegalArgumentException(ErrorMessages.SEARCH_NOT_SUPPORTED)
 			}
 			if (page > 1) {

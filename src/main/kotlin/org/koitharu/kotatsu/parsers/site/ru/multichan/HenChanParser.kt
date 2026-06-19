@@ -59,30 +59,37 @@ internal class HenChanParser(context: MangaLoaderContext) : ChanParser(context, 
 		)
 	}
 
-	override fun buildUrl(offset: Int, order: SortOrder, filter: MangaListFilter): HttpUrl = when {
-		filter.query.isNullOrEmpty() && filter.tags.isEmpty() && filter.tagsExclude.isEmpty() -> {
-			val builder = urlBuilder().addQueryParameter("offset", offset.toString())
-			when (order) {
-				SortOrder.POPULARITY -> {
-					builder.addPathSegment("mostviews")
-					builder.addQueryParameter("sort", "manga")
-				}
+	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		return super.getList(offset, order, filter)
+	}
 
-				SortOrder.RATING -> {
-					builder.addPathSegment("mostfavorites")
-					builder.addQueryParameter("sort", "manga")
-				}
+	override fun buildUrl(offset: Int, order: SortOrder, filter: MangaListFilter): HttpUrl {
+		val query = filter.query
+		return when {
+			query.isNullOrEmpty() && filter.tags.isEmpty() && filter.tagsExclude.isEmpty() -> {
+				val builder = urlBuilder().addQueryParameter("offset", offset.toString())
+				when (order) {
+					SortOrder.POPULARITY -> {
+						builder.addPathSegment("mostviews")
+						builder.addQueryParameter("sort", "manga")
+					}
 
-				else -> { // SortOrder.NEWEST
-					builder.addPathSegment("manga")
-					builder.addPathSegment("newest")
+					SortOrder.RATING -> {
+						builder.addPathSegment("mostfavorites")
+						builder.addQueryParameter("sort", "manga")
+					}
+
+					else -> { // SortOrder.NEWEST
+						builder.addPathSegment("manga")
+						builder.addPathSegment("newest")
+					}
 				}
+				builder.build()
 			}
-			builder.build()
-		}
 
-		else -> {
-			super.buildUrl(offset, order, filter)
+			else -> {
+				super.buildUrl(offset, order, filter)
+			}
 		}
 	}
 }

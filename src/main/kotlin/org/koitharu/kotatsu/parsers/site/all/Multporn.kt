@@ -52,13 +52,14 @@ internal class Multporn(context: MangaLoaderContext) :
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
         val url = buildString {
             append("https://")
             append(domain)
             when {
-                !filter.query.isNullOrEmpty() -> {
+                !query.isNullOrEmpty() -> {
                     append("/search?search_api_views_fulltext=")
-                    val encodedQuery = filter.query.splitByWhitespace().joinToString(separator = "+") { part ->
+                    val encodedQuery = query.splitByWhitespace().joinToString(separator = "+") { part ->
 					    part.urlEncoded()
 				    }
                     append(encodedQuery)

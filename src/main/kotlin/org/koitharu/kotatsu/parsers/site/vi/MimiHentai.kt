@@ -68,26 +68,28 @@ internal class MimiHentai(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions(availableTags = fetchTags())
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append("$domain/$apiSuffix")
 
-			if (!filter.query.isNullOrEmpty() ||
-				!filter.author.isNullOrEmpty() ||
+			if (!query.isNullOrEmpty() ||
+				!author.isNullOrEmpty() ||
 				filter.tags.isNotEmpty()
 			) {
 				append("/advance-search?page=")
 				append(page)
 				append("&max=18") // page size, avoid rate limit
 
-				if (!filter.query.isNullOrEmpty()) {
+				if (!query.isNullOrEmpty()) {
 					append("&name=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 
-				if (!filter.author.isNullOrEmpty()) {
+				if (!author.isNullOrEmpty()) {
 					append("&author=")
-					append(filter.author.urlEncoded())
+					append(author.urlEncoded())
 				}
 
 				if (filter.tags.isNotEmpty()) {

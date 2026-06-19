@@ -52,16 +52,17 @@ internal abstract class LikeMangaParser(
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/?act=search")
 
-			filter.query?.let {
+			query?.let { query ->
 				append("&f")
 				append("[keyword]".urlEncoded())
 				append("=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			append("&f")

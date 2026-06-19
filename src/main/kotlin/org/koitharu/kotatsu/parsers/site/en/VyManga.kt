@@ -46,19 +46,20 @@ internal class VyManga(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			append("/search?search_po=0&q=")
 
-			filter.query?.let {
-				append(filter.query.urlEncoded())
+			query?.let { query ->
+				append(query.urlEncoded())
 			}
 
 			append("&author_po=0&author=")
 
-			// filter.author?.let {
-			// 	append(filter.author.urlEncoded())
+			// author?.let { author ->
+			// 	append(author.urlEncoded())
 			// }
 
 			append("&completed=")

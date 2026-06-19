@@ -31,15 +31,17 @@ internal class HentaiCube(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val pages = page + 1
 
 		val url = buildString {
-			if (!filter.author.isNullOrEmpty()) {
+			if (!author.isNullOrEmpty()) {
 				clear()
 				append("https://")
 				append(domain)
 				append("/tacgia/")
-				append(filter.author.lowercase().replace(" ", "-"))
+				append(author.lowercase().replace(" ", "-"))
 
 				if (pages > 1) {
 					append("/page/")
@@ -69,8 +71,8 @@ internal class HentaiCube(context: MangaLoaderContext) :
 
 			append("/?s=")
 
-			filter.query?.let {
-				append(filter.query.urlEncoded())
+			query?.let { query ->
+				append(query.urlEncoded())
 			}
 
 			append("&post_type=wp-manga")

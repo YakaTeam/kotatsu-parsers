@@ -46,9 +46,10 @@ internal class TenkaiScan(context: MangaLoaderContext) :
 	private val dateFormat = SimpleDateFormat("dd/MM/yyyy", Locale.ROOT)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		if (page > 1) return emptyList() // site does not paginate; all comics are returned on page 1
 		val url = "https://$domain/comics".toHttpUrl().newBuilder().apply {
-			if (!filter.query.isNullOrBlank()) addQueryParameter("search", filter.query)
+			if (!query.isNullOrBlank()) addQueryParameter("search", query)
 		}.build()
 		val doc = webClient.httpGet(url).parseHtml()
 		return doc.select(".card.blade-project-index").mapNotNull { card ->

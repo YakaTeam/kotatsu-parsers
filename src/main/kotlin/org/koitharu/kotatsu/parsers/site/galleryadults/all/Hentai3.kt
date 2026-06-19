@@ -44,37 +44,40 @@ internal class Hentai3(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&page=")
 					append(page.toString())
 				}
 
 				else -> {
-					if (filter.tags.size > 1 || (filter.tags.isNotEmpty() && filter.locale != null)) {
+					val tags = filter.tags
+					val lang = filter.locale
+					if (tags.size > 1 || (tags.isNotEmpty() && lang != null)) {
 						append("/search?q=")
-						append(buildQuery(filter.tags, filter.locale))
+						append(buildQuery(tags, lang))
 						if (order == SortOrder.POPULARITY) {
 							append("&sort=popular")
 						}
 						append("&page=")
 						append(page.toString())
-					} else if (filter.locale != null) {
+					} else if (lang != null) {
 						append("/language/")
-						append(filter.locale.toLanguagePath())
+						append(lang.toLanguagePath())
 						append("/")
 						append(page.toString())
 						if (order == SortOrder.POPULARITY) {
 							append("?sort=popular")
 						}
-					} else if (filter.tags.isNotEmpty()) {
-						filter.tags.oneOrThrowIfMany()?.let {
+					} else if (tags.isNotEmpty()) {
+						tags.oneOrThrowIfMany()?.let {
 							append("/tags/")
 							append(it.key)
 						}

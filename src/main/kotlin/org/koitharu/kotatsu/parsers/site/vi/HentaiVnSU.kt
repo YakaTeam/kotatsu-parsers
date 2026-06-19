@@ -71,12 +71,13 @@ internal class HentaiVnSU(context: MangaLoaderContext) :
     )
 
     override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
         val apiUrl = urlBuilder().run {
             addPathSegments("api/library")
             when {
-                !filter.query.isNullOrEmpty() -> {
+                !query.isNullOrEmpty() -> {
                     addPathSegments("search")
-                    addQueryParameter("q", filter.query)
+                    addQueryParameter("q", query)
                 }
                 filter.tags.isNotEmpty() -> {
                     addPathSegments("advanced-search")

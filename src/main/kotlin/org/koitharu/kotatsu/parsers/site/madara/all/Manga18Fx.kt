@@ -31,13 +31,14 @@ internal class Manga18Fx(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&page=")
 					append(page.toString())
 				}

@@ -62,8 +62,9 @@ internal abstract class MangaPlusParser(
 	private val extraHeaders = Headers.headersOf("Session-Token", UUID.randomUUID().toString())
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		return when {
-			filter.query.isNullOrEmpty() -> {
+			query.isNullOrEmpty() -> {
 				when (order) {
 					SortOrder.POPULARITY -> getPopularList()
 					SortOrder.UPDATED -> getLatestList()
@@ -71,7 +72,7 @@ internal abstract class MangaPlusParser(
 				}
 			}
 
-			else -> getAllTitleList(filter.query)
+			else -> getAllTitleList(query)
 		}
 	}
 

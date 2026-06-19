@@ -42,13 +42,14 @@ internal class DynastyScans(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				val url = buildString {
 					append("https://")
 					append(domain)
 					append("/search?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&")
 					append("classes[]=Series&page=")
 					append(page.toString())

@@ -45,17 +45,18 @@ internal class LegacyScansParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val end = page * pageSize
 		val start = end - (pageSize - 1)
 
 		when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (page > 1) {
 					return emptyList()
 				}
 				val url = buildString {
 					append("https://api.$domain/misc/home/search?title=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 				return parseMangaListQuery(webClient.httpGet(url).parseJson())
 			}

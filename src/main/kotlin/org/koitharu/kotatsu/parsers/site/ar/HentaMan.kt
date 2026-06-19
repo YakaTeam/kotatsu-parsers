@@ -77,11 +77,12 @@ internal class HentaMan(context: MangaLoaderContext) : PagedMangaParser(
 	private val baseUrl get() = "https://$domain"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 
 		val url = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				val searchUrl = "$baseUrl/manga/search".toHttpUrl().newBuilder()
-					.addQueryParameter("query", filter.query)
+					.addQueryParameter("query", query)
 					.build()
 				val response = webClient.httpGet(searchUrl).parseJson()
 				val results = response.optJSONArray("results") ?: return emptyList()

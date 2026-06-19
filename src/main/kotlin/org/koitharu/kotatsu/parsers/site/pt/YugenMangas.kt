@@ -34,15 +34,16 @@ internal class YugenMangas(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions() = MangaListFilterOptions()
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val json = when {
 
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 
 				val url = buildString {
 					append("https://api.")
 					append(domain)
 					append("/api/series/?search=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 				}
 				webClient.httpGet(url).parseJsonArray()
 			}

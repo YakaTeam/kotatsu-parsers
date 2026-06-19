@@ -35,16 +35,17 @@ internal class MeHentaiVN(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val response =
 			when {
 				// url template: https://www.mehentaivn.xyz/tim-truyen?keyword=${query}
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					val url = buildString {
 						append("https://")
 						append(domain)
 						append(listUrl)
 						append("?keyword=")
-						append(filter.query.urlEncoded())
+						append(query.urlEncoded())
 						if (page > 1) {
 							append("&page=$page")
 						}

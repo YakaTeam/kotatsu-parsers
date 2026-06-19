@@ -37,6 +37,7 @@ internal class FlameComics(context: MangaLoaderContext) :
 	override val configKeyDomain = ConfigKey.Domain("flamecomics.xyz")
 
 	override suspend fun getList(order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = urlBuilder()
 			.addPathSegment("_next")
 			.addPathSegment("data")
@@ -51,8 +52,8 @@ internal class FlameComics(context: MangaLoaderContext) :
 		}
 
 		// Filter by search if provided
-		val filteredManga = if (!filter.query.isNullOrEmpty()) {
-			val normalizedQuery = removeSpecialCharsRegex.replace(filter.query.lowercase(), "")
+		val filteredManga = if (!query.isNullOrEmpty()) {
+			val normalizedQuery = removeSpecialCharsRegex.replace(query.lowercase(), "")
 			allManga.filter { manga ->
 				val titles = mutableListOf(manga.title)
 				titles.addAll(manga.altTitles)

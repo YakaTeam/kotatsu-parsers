@@ -47,6 +47,7 @@ internal class NHentaiToParser(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -55,9 +56,9 @@ internal class NHentaiToParser(context: MangaLoaderContext) :
 					append("/go/?")
 				}
 
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search/?q=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					append("&")
 				}
 
@@ -71,7 +72,7 @@ internal class NHentaiToParser(context: MangaLoaderContext) :
 						append("/tag/")
 						append(tag.key)
 						append("/?")
-					} else if (filter.locale != null) {
+					} else if (lang != null) {
 						append("/language/")
 						append(lang.toLanguagePath())
 						append("/?")

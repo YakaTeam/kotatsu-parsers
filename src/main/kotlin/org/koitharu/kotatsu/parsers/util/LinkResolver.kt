@@ -20,8 +20,9 @@ public class LinkResolver internal constructor(
 	public suspend fun getSource(): MangaParserSource? = source.get()
 
 	public suspend fun getManga(): Manga? {
-		val parser = context.newParserInstance(source.get() ?: return null)
-		return parser.resolveLink(this, link) ?: resolveManga(parser)
+		val parserSource = source.get() ?: return null
+		val parser = context.newParserInstance(parserSource)
+		return parser.resolveLink(link)
 	}
 
 	private suspend fun resolveSource(): MangaParserSource? = runInterruptible(Dispatchers.Default) {
@@ -37,7 +38,7 @@ public class LinkResolver internal constructor(
 		null
 	}
 
-	internal suspend fun resolveManga(
+	public suspend fun resolveManga(
 		parser: MangaParser,
 		url: String = link.toString().toRelativeUrl(link.host),
 		id: Long = parser.generateUid(url),
@@ -74,14 +75,14 @@ public class LinkResolver internal constructor(
 			seed.authors.isNotEmpty() -> seed.authors.first()
 			else -> return seed // unfortunately we do not know a real manga title so unable to find it
 		}
-		val resolved = runCatchingCancellable {
+		val resolved = runCatching {
 			val list = parser.getList(0, parser.bestSortOrder(), MangaListFilter(query = query))
 			list.singleOrNull { manga -> isSameUrl(manga.publicUrl) }
 		}.getOrNull()
 		if (resolved == null) {
 			return seed
 		}
-		return runCatchingCancellable {
+		return runCatching {
 			parser.getDetails(resolved)
 		}.getOrElse {
 			resolved.copy(

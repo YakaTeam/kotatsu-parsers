@@ -86,6 +86,8 @@ internal abstract class YuriGardenParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val url = buildString {
 			append("https://")
 			append(apiSuffix)
@@ -104,9 +106,9 @@ internal abstract class YuriGardenParser(
 				else -> "newest" // default
 			})
 
-			if (!filter.query.isNullOrEmpty()) {
+			if (!query.isNullOrEmpty()) {
 				append("&search=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 
 			filter.states.oneOrThrowIfMany()?.let { state ->
@@ -128,14 +130,14 @@ internal abstract class YuriGardenParser(
 				append(filter.tags.joinToString(separator = ",") { it.key })
 			}
 
-			if (!filter.author.isNullOrEmpty()) {
+			if (!author.isNullOrEmpty()) {
 				clear()
 
 				append("https://")
 				append(apiSuffix)
 				append("/creators/authors/")
 				append(
-					filter.author.substringAfter("(").substringBefore(")")
+					author.substringAfter("(").substringBefore(")")
 				)
 
 				return@buildString // end of buildString

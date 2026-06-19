@@ -55,14 +55,15 @@ internal class NudeMoonParser(
 	)
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val domain = domain
 
 		val url = when {
-			!filter.query.isNullOrEmpty() -> {
+			!query.isNullOrEmpty() -> {
 				if (!isAuthorized()) {
 					throw AuthRequiredException(source)
 				}
-				"https://$domain/search?stext=${filter.query.urlEncoded()}&rowstart=$offset"
+				"https://$domain/search?stext=${query.urlEncoded()}&rowstart=$offset"
 			}
 
 			else -> {

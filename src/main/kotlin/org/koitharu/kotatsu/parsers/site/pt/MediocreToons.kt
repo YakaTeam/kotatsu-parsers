@@ -75,8 +75,9 @@ internal class MediocreToons(context: MangaLoaderContext) : PagedMangaParser(
 	private val chapterDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", sourceLocale)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = when {
-			!filter.query.isNullOrEmpty() || filter.tags.isNotEmpty() || filter.states.isNotEmpty() || filter.types.isNotEmpty() -> buildSearchUrl(
+			!query.isNullOrEmpty() || filter.tags.isNotEmpty() || filter.states.isNotEmpty() || filter.types.isNotEmpty() -> buildSearchUrl(
 				page,
 				filter,
 			)
@@ -96,12 +97,13 @@ internal class MediocreToons(context: MangaLoaderContext) : PagedMangaParser(
 	}
 
 	private fun buildSearchUrl(page: Int, filter: MangaListFilter): HttpUrl {
+		val query = filter.query
 		val builder = "$apiUrl/obras".toHttpUrl().newBuilder().addQueryParameter("limite", pageSize.toString())
 			.addQueryParameter("pagina", page.toString())
 
 		// Add search query
-		if (!filter.query.isNullOrEmpty()) {
-			builder.addQueryParameter("string", filter.query)
+		if (!query.isNullOrEmpty()) {
+			builder.addQueryParameter("string", query)
 		}
 
 		// Add tags

@@ -82,6 +82,7 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append(apiUrl)
 			append("/listing/manga?page=").append(page)
@@ -98,7 +99,7 @@ internal class ZonaTmoParser(context: MangaLoaderContext) : PagedMangaParser(
 			)
 			append("&order=").append(if (order == SortOrder.ALPHABETICAL) "asc" else "desc")
 
-			filter.query?.takeIf { it.isNotEmpty() }?.let {
+			query?.takeIf { it.isNotEmpty() }?.let {
 				append("&search=").append(it.urlEncoded())
 			}
 			filter.tags.oneOrThrowIfMany()?.let {

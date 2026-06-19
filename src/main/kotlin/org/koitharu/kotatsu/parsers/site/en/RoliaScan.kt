@@ -52,9 +52,10 @@ internal class RoliaScan(context: MangaLoaderContext) : PagedMangaParser(context
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val body = JSONObject().apply {
 			put("page", page)
-			put("search", filter.query.orEmpty())
+			put("search", query.orEmpty())
 			put("years", "[]")
 			put("genres", buildJsonArrayString(filter.tags.map { it.key }))
 			put(

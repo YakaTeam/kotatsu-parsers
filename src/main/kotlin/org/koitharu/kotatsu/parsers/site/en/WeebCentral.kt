@@ -131,15 +131,16 @@ internal class WeebCentral(context: MangaLoaderContext) : AbstractMangaParser(co
 	}
 
 	override suspend fun getList(offset: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = "https://$domain/search/data".toHttpUrl().newBuilder().apply {
 			addQueryParameter("limit", "32")
 			addQueryParameter("offset", offset.toString())
-			filter.query?.let {
-				val query = it
+			query?.let { q ->
+				val normalized = q
 					.replace(Regex("""[^a-zA-Z0-9\s]"""), " ")
 					.replace(Regex("""\s+"""), " ")
 					.trim()
-				addQueryParameter("text", query)
+				addQueryParameter("text", normalized)
 			}
 			addQueryParameter(
 				name = "sort",

@@ -42,14 +42,15 @@ internal class DoujinHentaiNet(context: MangaLoaderContext) :
 	)
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val pageNum = page + 1
 		val url = buildString {
 			append("https://")
 			append(domain)
 			when {
-				!filter.query.isNullOrEmpty() -> {
+				!query.isNullOrEmpty() -> {
 					append("/search?query=")
-					append(filter.query.urlEncoded())
+					append(query.urlEncoded())
 					if (pageNum > 1) {
 						append("&page=")
 						append(pageNum)

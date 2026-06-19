@@ -91,6 +91,7 @@ internal abstract class FuzzyDoodleParser(
 	protected open val comicsValue = "bande-dessinee"
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
 		val url = buildString {
 			append("https://")
 			append(domain)
@@ -110,9 +111,9 @@ internal abstract class FuzzyDoodleParser(
 				)
 			}
 
-			filter.query?.let {
+			query?.let { query ->
 				append("&title=")
-				append(filter.query.urlEncoded())
+				append(query.urlEncoded())
 			}
 			append("&status=")
 			filter.states.oneOrThrowIfMany()?.let {

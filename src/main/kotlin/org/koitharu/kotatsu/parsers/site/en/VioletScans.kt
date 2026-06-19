@@ -36,8 +36,9 @@ internal class VioletScans(context: MangaLoaderContext) :
 	override suspend fun getFilterOptions(): MangaListFilterOptions = MangaListFilterOptions()
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
-        return if (!filter.query.isNullOrEmpty()) {
-            scrapeSearchList(filter.query, page)
+		val query = filter.query
+        return if (!query.isNullOrEmpty()) {
+            scrapeSearchList(query, page)
         } else {
             scrapeNonSearchList(page)
         }

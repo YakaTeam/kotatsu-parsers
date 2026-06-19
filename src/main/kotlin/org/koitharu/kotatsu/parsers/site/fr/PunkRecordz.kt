@@ -103,8 +103,10 @@ internal class PunkRecordz(context: MangaLoaderContext) :
 	}
 
 	override suspend fun getListPage(page: Int, order: SortOrder, filter: MangaListFilter): List<Manga> {
+		val query = filter.query
+		val author = filter.author
 		val filtered = filterManga(getCatalogManga(), filter)
-		val sorted = sortManga(filtered, order, filter.query)
+		val sorted = sortManga(filtered, order, query)
 		val fromIndex = ((page - 1) * pageSize).coerceAtLeast(0)
 		if (fromIndex >= sorted.size) {
 			return emptyList()
