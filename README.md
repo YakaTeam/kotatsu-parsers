@@ -5,6 +5,10 @@ Please move to: [UMA](https://github.com/InvalidDavid/UMA)
 > # NOTE:
 > 
 > This plugin can still work in the future but will not receive any updates if somethings breaks!
+Support Server: [![Discord][discord-shield]][discord-url]
+
+[discord-shield]: https://img.shields.io/discord/1518057632064209017?style=for-the-badge&logo=discord&label=Discord&color=5865F2
+[discord-url]: https://discord.gg/CyJeVDP7Cw
 
 # kotatsu-parsers
 
